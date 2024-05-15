@@ -1,6 +1,6 @@
-<p align="center">
+
 # accessDenied : Cybersecurity and Infrastructure Card Game
-  
+<p align="center">
 <img src="./images/accessDenied.jpg" alt="Main image of the accessDenied card game." width="256">
 </p>
 
@@ -35,7 +35,9 @@ In real life winning means nobody gets attacked successfully, but in the game wh
     - Place one 2pt facility face up in front of yourself.
     - Decide on how each player’s facilities will be connected when they are drawn over time from the facilities deck. Examples for the 8 facilities of a facility deck appear below. Both players should know each other’s connection diagrams, so draw it somewhere so both players can see.
 
-<div style="text-align: center;"><img src="./images/stationConnections1.png" alt="One way stations may be connected." width="250">    <img src="./images/stationConnections2.png" alt="A second way stations may be connected." width="250"></div>
+<p align="center">
+<img src="./images/stationConnections1.png" alt="One way stations may be connected." width="250">    <img src="./images/stationConnections2.png" alt="A second way stations may be connected." width="250">
+</p>
 
   - Attackers are simulated by a d20 die roll. To get an online die look up the words: d20 roll.
 
