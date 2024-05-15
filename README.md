@@ -1,5 +1,5 @@
 
-# accessDenied : Cybersecurity and Infrastructure Card Game {align=center}
+# <p align="center">accessDenied : Cybersecurity and Infrastructure Card Game</p>
 
 <p align="center">
 <img src="./images/accessDenied.jpg" alt="Main image of the accessDenied card game." width="256">
