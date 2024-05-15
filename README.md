@@ -1,6 +1,8 @@
+<p align="center">
 # accessDenied : Cybersecurity and Infrastructure Card Game
-
-<div style="text-align: center;"><img src="./images/accessDenied.jpg" alt="Main image of the accessDenied card game." width="256"></div>
+  
+<img src="./images/accessDenied.jpg" alt="Main image of the accessDenied card game." width="256">
+</p>
 
 **Objective**: A fork of the resilience card game project for non-cyber security people. It's meant to help folks learn some basics about cyber security through learning attack and mitigation terms to help people be more productive when they participate in a scenario or war game with cyber security components after.
 
