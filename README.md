@@ -1,6 +1,6 @@
 
-# accessDenied : Cybersecurity and 
-# Infrastructure Card Game
+# accessDenied : Cybersecurity and Infrastructure Card Game {align=center}
+
 <p align="center">
 <img src="./images/accessDenied.jpg" alt="Main image of the accessDenied card game." width="256">
 </p>
