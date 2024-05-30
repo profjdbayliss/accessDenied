@@ -18,7 +18,13 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
 
     public float minScale;
 
+    public Vector2 originalScale;
+
+    public Vector3 originalPosition;
+
     public InputAction resetScale;
+
+    public InputAction resetPosition;
 
     public PlayerInput playerInput;
 
@@ -27,21 +33,15 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     {
         maxScale = 3.0f;
         minScale = 0.5f;
-        if(this.gameObject.GetComponentInParent<Player>() == null)
+        if(this.gameObject.GetComponentInParent<CardPlayer>() == null)
         {
-            if (this.gameObject.GetComponentInParent<MaliciousActor>() == null)
-            {
+           
                 Debug.Log("GOT Slippy");
                 resetScale = playerInput.actions["Reset Scale"];
-            }
+           
         }
-
-        //if(this.gameObject.GetComponentInParent<Player>().isActiveAndEnabled == false && this.gameObject.GetComponentInParent<MaliciousActor>().isActiveAndEnabled == false)
-        //{
-        //    resetScale = playerInput.actions["Reset Scale"];
-
-        //}
-
+        originalScale = this.gameObject.transform.localScale;
+        originalPosition = this.gameObject.transform.position;
     }
 
     // Update is called once per frame
@@ -50,6 +50,22 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         if (resetScale.WasPressedThisFrame())
         {
             ResetScale();
+        }
+
+        //forces a cap in case anything gets too large or small accidentally 
+        if(map.transform.localScale.x > maxScale)
+        {
+            Vector2 tempScale = map.transform.localScale;
+            tempScale.x = maxScale;
+            tempScale.y = maxScale;
+            map.transform.localScale = tempScale;
+        }
+        else if (map.transform.localScale.x < minScale)
+        {
+            Vector2 tempScale = map.transform.localScale;
+            tempScale.x = minScale;
+            tempScale.y = minScale;
+            map.transform.localScale = tempScale;
         }
 
     }
@@ -71,8 +87,6 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
                 tempScale.y = maxScale;
                 map.transform.localScale = tempScale;
             }
-
-
         }
         else
         {
@@ -90,7 +104,6 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
                 tempScale.y = minScale;
                 map.transform.localScale = tempScale;
             }
-
         }
     }
 
@@ -98,6 +111,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     {
         if (map.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
         {
+            UpdatePosition();
             // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
             Vector2 tempVec2 = default(Vector2);
             RectTransform target = map.gameObject.GetComponent<RectTransform>();
@@ -116,8 +130,31 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         }
     }
 
+    public void UpdatePosition()
+    {
+        originalPosition = gameObject.transform.position;
+    }
+    public void UpdateScale()
+    {
+        originalPosition = this.gameObject.transform.localScale;
+
+    }
+
     public void ResetScale()
     {
-        map.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+        Transform parent = this.gameObject.transform.parent;
+        this.gameObject.transform.SetParent(null,true);
+        this.gameObject.transform.localScale = originalScale;
+        this.gameObject.transform.SetParent(parent, true);
+        Debug.Log("resetting scale on" +this.gameObject.name + "to " + originalScale);
+    }
+
+    public void ResetPosition()
+    {
+        Transform parent = this.gameObject.transform.parent;
+        this.gameObject.transform.SetParent(null, true);
+        this.gameObject.transform.SetPositionAndRotation(new Vector3(),gameObject.transform.rotation);
+        this.gameObject.transform.SetParent(parent, true);
+        Debug.Log("resetting position on " + this.gameObject.name + "to " + originalPosition);
     }
 }

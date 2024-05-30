@@ -17,8 +17,8 @@ public class RGNetworkManager : NetworkManager
         base.OnStartServer();
 
         GameObject obj = Instantiate(playerListPrefab);
+        playerListPrefab.transform.localScale = Vector3.one;
         NetworkServer.Spawn(obj);
-        //cardReader.CSVRead();
     }
 
 
@@ -60,7 +60,7 @@ public class RGNetworkManager : NetworkManager
             RGNetworkAuthenticator.playerNames.Remove((string)conn.authenticationData);
 
         // remove connection from Dictionary of conn > names
-        RGGameExampleUI.connNames.Remove(conn);
+        //RGGameExampleUI.connNames.Remove(conn);
 
         RGNetworkPlayerList.instance.RemovePlayer(conn.connectionId);
 
