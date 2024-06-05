@@ -37,7 +37,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         {
            
                 Debug.Log("GOT Slippy");
-                resetScale = playerInput.actions["Reset Scale"];
+                //resetScale = playerInput.actions["Reset Scale"];
            
         }
         originalScale = this.gameObject.transform.localScale;

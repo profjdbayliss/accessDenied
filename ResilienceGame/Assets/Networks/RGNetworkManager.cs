@@ -8,9 +8,9 @@ using TMPro;
 public class RGNetworkManager : NetworkManager
 {
     public GameObject playerListPrefab;
-    public CardReader cardReader;
-    public CreateTextureAtlas textAtlas;
-    public CreateTextureAtlas atlasMaker;
+    //public CardReader cardReader;
+    //public TextureAtlas textureAtlas;
+    //public CreateTextureAtlas atlasMaker;
 
     public override void OnStartServer()
     {
@@ -25,7 +25,9 @@ public class RGNetworkManager : NetworkManager
     public override void OnStartClient()
     {
         base.OnStartClient();
-        textAtlas.DelayedStart();
+
+        // create or load texture atlas
+        //textAtlas.DelayedStart();
 
     }
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)

@@ -23,23 +23,24 @@ public class RGGameExampleUI : MonoBehaviour
     internal static string localPlayerName;
     internal static int localPlayerID;
   
-    public void SetStartTeamInfo(CardPlayer player, int teamID, float funds)
-    {        
-        if (teamID == 0)
-        { 
-            activePlayer.text = "Malicious " + localPlayerName;
-            cardHolder = GameManager.instance.maliciousActor.handDropZone;
-            cardPlayedHolder = GameManager.instance.maliciousActor.cardDropZone;
+    public void SetStartTeamInfo(CardPlayer player)
+    {
+        //if (teamID == 0)
+        //{
+            activePlayer.text = "Player: " + localPlayerName;
+            cardHolder = player.handDropZone;
+            cardPlayedHolder =player.cardDropZone;
             ShowPlayUI();
-        } else
-        {
-            activePlayer.text = "Resilient " + localPlayerName;
-            cardHolder = GameManager.instance.resiliencePlayer.handDropZone;
-            cardPlayedHolder = GameManager.instance.resiliencePlayer.cardDropZone;   
-        }
+        // }
+        //else
+        //{
+        //    activePlayer.text = "Resilient " + localPlayerName;
+        //    cardHolder = GameManager.instance.resiliencePlayer.handDropZone;
+        //    cardPlayedHolder = GameManager.instance.resiliencePlayer.cardDropZone;
+        //}
 
-        showCardHolder.SetActive(false);
-        ShowPlayUI();
+        //showCardHolder.SetActive(false);
+        //ShowPlayUI();
         turnText.text = "Turn: " + GameManager.instance.GetTurn();
     }
 
@@ -76,8 +77,6 @@ public class RGGameExampleUI : MonoBehaviour
             cardCanvas.gameObject.SetActive(true);
             cardHolder.SetActive(true);
             cardPlayedHolder.SetActive(true);
-            //  to get rid of the show cards command because it's annoying after a while
-            showCardHolder.SetActive(false);
     }
 
     public void HidePlayUI()

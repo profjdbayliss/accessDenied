@@ -21,13 +21,13 @@ public class CreateTextureAtlas : MonoBehaviour
 
     public void DelayedStart()
     {
-        UnityEngine.Debug.Log("Starting");
+        //UnityEngine.Debug.Log("Starting");
 
-        TextureAtlas.instance.CreateAtlasComponentData(mDirectoryName, mOutputFileName); // Not generating the atlas in build rn
+        //TextureAtlas.instance.CreateAtlasComponentData(mDirectoryName, mOutputFileName); // Not generating the atlas in build rn
 
-        UnityEngine.Debug.Log("Done with creation of texture atlas.");
+        //UnityEngine.Debug.Log("Done with creation of texture atlas.");
 
-        mReader = GetComponent<CardReader>();
-        mReader.CSVRead();
+        //mReader = GetComponent<CardReader>();
+        //mReader.CSVRead();
     }
 }

@@ -6,40 +6,25 @@ using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using Unity.Collections;
 
+// Enum to track the state of the card
+public enum CardState
+{
+    NotInDeck,
+    CardInDeck,
+    CardDrawn,
+    CardInPlay,
+    CardDiscarded
+};
+
 public class Card : MonoBehaviour, IDropHandler
 {
-
-    // Enum to track card type in reference for which team it goes to
-    public enum Type
-    {
-        WaterAndWasteWater,
-        Energy,
-        None
-    };
-
-    // Enum to track the state of the card
-    public enum CardState
-    {
-        NotInDeck,
-        CardInDeck,
-        CardDrawn,
-        CardInPlay,
-        CardDiscarded
-    };
-
-    // Separate these -- As they will change more often, will need type
-    public float percentSuccess;
-    public int cardID;
-    public int teamID;
-    public int cost;
-    public float duration;
+    public CardData data;
     public CardFront front;
     public CardState state;
     public GameObject cardDropZone;
     public GameObject handDropZone;
     public GameObject gameCanvas;
     public GameObject originalParent;
-    public CardReader reader;
 
     // Start is called before the first frame update
     void Start()
@@ -47,16 +32,10 @@ public class Card : MonoBehaviour, IDropHandler
         //img = this.gameObject.GetComponent<RawImage>();
         //Debug.Log("Card Made");
         //reader = GameObject.Find("Card Reader").GetComponent<CardReader>();
-        handDropZone = this.gameObject.transform.parent.gameObject;
-        originalParent = this.gameObject.transform.parent.transform.parent.gameObject;
+        //handDropZone = this.gameObject.transform.parent.gameObject;
+        //originalParent = this.gameObject.transform.parent.transform.parent.gameObject;
         this.gameObject.transform.localScale = Vector3.one;
-        gameCanvas = GameObject.Find("Central Map");
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+        //gameCanvas = GameObject.Find("Central Map");
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -84,9 +63,9 @@ public class Card : MonoBehaviour, IDropHandler
             {
                 Debug.Log("card dropped in card drop zone");
                 // check the cards teamID to see which team they belong to so they can call the proper Select facility method to then see if they have met all conditions to play the card
-                if (this.teamID == 0)
+                if (this.data.teamID == 0)
                 {
-                    if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.cardID))
+                    if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.data.cardID))
                     {
                         if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
                         {
@@ -116,12 +95,12 @@ public class Card : MonoBehaviour, IDropHandler
                     else
                     {
                         this.gameObject.transform.SetParent(handDropZone.transform, false);
-                       
+
                     }
                 }
-                else if (this.teamID == 1)
+                else if (this.data.teamID == 1)
                 {
-                    if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.cardID))
+                    if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.data.cardID))
                     {
                         if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
                         {
@@ -168,18 +147,3 @@ public class Card : MonoBehaviour, IDropHandler
         }
     }
 }
-public struct CardFront2
-{
-    public Card.Type type;
-    public byte[] title;
-    public byte[] description;
-    public Texture2D img;
-
-
-    public void OnDestroy()
-    {
-        // Must dispose of the allocated memory
-        //title.Dispose();
-        //description.Dispose();
-    }
-};

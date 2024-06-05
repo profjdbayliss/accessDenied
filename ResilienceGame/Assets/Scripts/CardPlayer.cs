@@ -5,13 +5,21 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Enum to track player type
+public enum PlayerType
+{
+    WaterAndWasteWater,
+    Energy,
+    Any
+};
+
 public class CardPlayer : MonoBehaviour
 {
     // Establish necessary fields
-    public Card.Type playerType = Card.Type.Energy;
+    public PlayerType playerType = PlayerType.Energy;
     public float funds = 100.0f;
     public GameManager manager;
-    public CardReader cardReader;
+    public List<Card> cards;
     public List<int> Deck;
     public List<int> CardCountList;
     public List<int> targetIDList;
@@ -29,19 +37,15 @@ public class CardPlayer : MonoBehaviour
     public void InitializeCards()
     {
         // NOTE: set funds in scene var
-        cardReader = GameObject.FindObjectOfType<CardReader>();
-        manager = GameObject.FindObjectOfType<GameManager>();
-        int count = 0;
-        for (int i = 0; i < cardReader.CardIDs.Length; i++)
+        //cardReader = GameObject.FindObjectOfType<CardReader>();
+        //manager = GameObject.FindObjectOfType<GameManager>();
+        manager = GameManager.instance;
+
+        for (int i = 0; i <manager.cards.Count; i++)
         {
-            if (cardReader.CardTeam[i] == (int)playerType) 
-            {
-                Deck.Add(i);
-                CardCountList.Add(cardReader.CardCount[i]);
-                count++;
-            }
+            Deck.Add(manager.cards[i].data.cardID);
         }
-        
+
         if (HandList.Count < maxHandSize)
         {
             for (int i = 0; i < maxHandSize; i++)
@@ -57,32 +61,36 @@ public class CardPlayer : MonoBehaviour
         if (random)
         {
             rng = UnityEngine.Random.Range(0, Deck.Count);
-        } else
+        }
+        else
         {
             rng = cardId;
         }
-        
-        if (CardCountList.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
+
+        if (Deck.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
         {
             Debug.Log("no cards drawn.");
             return;
         }
-        if (CardCountList[rng] > 0)
+
+        if (Deck[rng] > 0)
         {
-            CardCountList[rng]--;
+            //CardCountList[rng]--;
             GameObject tempCardObj = Instantiate(cardPrefab);
             Card tempCard = tempCardObj.GetComponent<Card>();
             tempCard.cardDropZone = cardDropZone;
-            tempCard.cardID = Deck[rng];
+            Card actualCard = manager.cards[Deck[rng]];
+            tempCard.data = actualCard.data;
+            CardFront front = actualCard.GetComponent<CardFront>();
+            tempCard.front = front;
+            //tempCard.handDropZone = actualCard.handDropZone;
 
-            // WORK: not sure the below case ever happens
-            if (cardReader.CardFronts[Deck[rng]] == null && redoCardRead == false)
-            {
-                cardReader.CSVRead();
-                redoCardRead = true;
-            }
-
-            tempCard.front = cardReader.CardFronts[Deck[rng]];
+            //    // WORK: not sure the below case ever happens
+            //    //if (cardReader.CardFronts[Deck[rng]] == null && redoCardRead == false)
+            //    //{
+            //    //    cardReader.CSVRead();
+            //    //    redoCardRead = true;
+            //    //}
 
             RawImage[] tempRaws = tempCardObj.GetComponentsInChildren<RawImage>();
             for (int i = 0; i < tempRaws.Length; i++)
@@ -93,7 +101,7 @@ public class CardPlayer : MonoBehaviour
                 }
                 else if (tempRaws[i].name == "Background")
                 {
-                    //tempRaws[i].color = new Color(0.8067818f, 0.8568867f, 0.9245283f, 1.0f);
+                    tempRaws[i].color = tempCard.front.titleColor;
                 }
             }
 
@@ -102,29 +110,27 @@ public class CardPlayer : MonoBehaviour
             {
                 if (tempTexts[i].name == "Title Text")
                 {
-                    tempTexts[i].text = Encoding.ASCII.GetString(tempCard.front.title);
+                    tempTexts[i].text = tempCard.front.title;
                 }
                 else if (tempTexts[i].name == "Description Text")
                 {
-                    tempTexts[i].text = Encoding.ASCII.GetString(tempCard.front.description);
+                    tempTexts[i].text = tempCard.front.description;
                 }
             }
-            TextMeshProUGUI[] tempInnerText = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
-            for (int i = 0; i < tempInnerText.Length; i++)
-            {  
-                if (tempInnerText[i].name == "Cost Text")
-                {
-                    tempInnerText[i].text = cardReader.CardCost[Deck[rng]].ToString();
-                } 
-            }
+            //TextMeshProUGUI[] tempInnerText = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
+            //for (int i = 0; i < tempInnerText.Length; i++)
+            //{
+            //    //if (tempInnerText[i].name == "Cost Text")
+            //    //{
+            //    //    tempInnerText[i].text = cardReader.CardCost[Deck[rng]].ToString();
+            //    //} 
+            //}
 
-            tempCard.percentSuccess = cardReader.CardPercentChance[Deck[rng]];
-
-            tempCard.duration = cardReader.CardDuration[Deck[rng]];
-            tempCard.cost = cardReader.CardCost[Deck[rng]];
-            tempCard.teamID = cardReader.CardTeam[Deck[rng]];
+            //    //tempCard.duration = cardReader.CardDuration[Deck[rng]];
+            //    //tempCard.cost = cardReader.CardCost[Deck[rng]];
+            //    //tempCard.teamID = cardReader.CardTeam[Deck[rng]];
             tempCardObj.GetComponent<slippy>().map = tempCardObj;
-            tempCard.state = Card.CardState.CardDrawn;
+            tempCard.state = CardState.CardDrawn;
             Vector3 tempPos = tempCardObj.transform.position;
             tempCardObj.transform.position = tempPos;
             tempCardObj.transform.SetParent(handDropZone.transform, false);
@@ -144,33 +150,33 @@ public class CardPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (HandList != null)
-        {
-            foreach (GameObject card in HandList)
-            {
-                if (card.GetComponent<Card>().state == Card.CardState.CardInPlay)
-                {
-                    HandList.Remove(card);
-                    ActiveCardList.Add(card);
-                    activeCardIDs.Add(card.GetComponent<Card>().cardID);
-                    card.GetComponent<Card>().duration = cardReader.CardDuration[card.GetComponent<Card>().cardID] + manager.turnCount;
-                    break;
-                }
-            }
-        }
-        if (ActiveCardList != null)
-        {
-            foreach (GameObject card in ActiveCardList)
-            {
-                if (manager.turnCount >= card.GetComponent<Card>().duration)
-                {
-                    ActiveCardList.Remove(card);
-                    activeCardIDs.Remove(card.GetComponent<Card>().cardID);
-                    card.SetActive(false);
-                    break;
-                }
-            }
-        }
+        //if (HandList != null)
+        //{
+        //    foreach (GameObject card in HandList)
+        //    {
+        //        //if (card.GetComponent<Card>().state == CardState.CardInPlay)
+        //        //{
+        //        //    HandList.Remove(card);
+        //        //    ActiveCardList.Add(card);
+        //        //    activeCardIDs.Add(card.GetComponent<Card>().data.cardID);
+        //        //    card.GetComponent<Card>().duration = cardReader.CardDuration[card.GetComponent<Card>().cardID] + manager.turnCount;
+        //        //    break;
+        //        //}
+        //    }
+        //}
+        //if (ActiveCardList != null)
+        //{
+        //    foreach (GameObject card in ActiveCardList)
+        //    {
+        //        //if (manager.turnCount >= card.GetComponent<Card>().duration)
+        //        //{
+        //        //    ActiveCardList.Remove(card);
+        //        //    activeCardIDs.Remove(card.GetComponent<Card>().cardID);
+        //        //    card.SetActive(false);
+        //        //    break;
+        //        //}
+        //    }
+        //}
     }
 
     // there are no facilities in this game

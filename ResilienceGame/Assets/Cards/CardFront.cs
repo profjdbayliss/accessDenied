@@ -2,29 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Visual parts of the card
 public class CardFront : MonoBehaviour
 {
-    // Establish necessary fields
-    public Card.Type type;
-    //public NativeArray<byte> title;
-    public byte[] title;
-    public byte[] description;
-    public byte[] impact;
+    public CardType type;
+    public bool worthCircle;
+    public bool costCircle;
+    public Color titleColor;
+    public string title;
+    public string description;
     public GameObject innerTexts;
-    //public NativeArray<byte> description;
+    public Texture2D background;
     public Texture2D img;
-
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
