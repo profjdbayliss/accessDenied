@@ -8,10 +8,7 @@ using TMPro;
 public class RGNetworkManager : NetworkManager
 {
     public GameObject playerListPrefab;
-    //public CardReader cardReader;
-    //public TextureAtlas textureAtlas;
-    //public CreateTextureAtlas atlasMaker;
-
+   
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -25,10 +22,6 @@ public class RGNetworkManager : NetworkManager
     public override void OnStartClient()
     {
         base.OnStartClient();
-
-        // create or load texture atlas
-        //textAtlas.DelayedStart();
-
     }
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
@@ -38,14 +31,10 @@ public class RGNetworkManager : NetworkManager
         if (conn.identity.isLocalPlayer && (RGNetworkPlayerList.instance.playerIDs.Contains(0) == false)) // if the player is host, join red team
         {
             RGNetworkPlayerList.instance.AddPlayer(playerID, 0);
-            // Add their cards to the player
-
         }
         else // if the player is client, join blue team
         {
             RGNetworkPlayerList.instance.AddPlayer(playerID, 1);
-            // Add their cards to the blue players
-
         }
     }
 

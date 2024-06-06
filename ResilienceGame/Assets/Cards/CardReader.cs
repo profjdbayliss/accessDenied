@@ -1,12 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Text;
+using System;
 
 public class CardReader : MonoBehaviour
 {
     // filename - directory path is assumed to be Application.streamingAssetsPath
     // extension is assumed to be csv
     public string cardFileName;
+
+    // output atlas filename
+    public string outputAtlasName;
 
     // filename + directory path
     string fileLocation;
@@ -45,24 +50,28 @@ public class CardReader : MonoBehaviour
                 for (int i = 1; i < allCSVObjects.Length; i++)
                 {
                     string[] singleLineCSVObjects = allCSVObjects[i].Split(",");
-                    //Debug.Log("number of items in a line is: " + singleLineCSVObjects.Length);
-                    if (!singleLineCSVObjects[5].Equals(string.Empty))
+                    if (singleLineCSVObjects.Length > 1) // excel adds an empty line at the end
                     {
-                        filenames.Add(singleLineCSVObjects[5].Trim());
-                    }
-                    else
-                    {
-                        filenames.Add(string.Empty);
+                        //Debug.Log("number of items in a line is: " + singleLineCSVObjects.Length);
+                        if (!singleLineCSVObjects[5].Equals(string.Empty) && !singleLineCSVObjects[5].Equals(""))
+                        {
+                            filenames.Add(singleLineCSVObjects[5].Trim());
+                        }
+                        else
+                        {
+                            filenames.Add(string.Empty);
+                        }
                     }
                 }
 
-                currentAtlas.CreateAtlasFromFilenameList("images/", "atlas.png", filenames);
-                byte[] tempBytes = File.ReadAllBytes("../atlas.png");
+                // create atlas and load back in from image
+                currentAtlas.CreateAtlasFromFilenameList("images/", outputAtlasName, filenames);
+                byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
                 tex.LoadImage(tempBytes);
             }
             else
             {
-                byte[] tempBytes = File.ReadAllBytes("../atlas.png");
+                byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
                 tex.LoadImage(tempBytes);
             }
 
@@ -73,155 +82,175 @@ public class CardReader : MonoBehaviour
                 // Then in each of the lines of csv data, split them based on commas to get the different pieces of information on each object
                 // and instantiate a base card object to then fill in with data.
                 string[] individualCSVObjects = allCSVObjects[i].Split(",");
-
-                // columns in the spreadsheet: changes depending on game
-                // 0:  how many cards of this type in the deck
-                // 1:  type of the card
-                // 2: played on (some cards are only played on a specific infrastructure type)
-                // 3:  title
-                // 4:  title color
-                // 5:  card image
-                // 6:  background image
-                // 7:  does it have a worth circle?
-                // 8:  what's in the worth circle?
-                // 9:  cost of card if there is one
-                // 10: the category of the card if there is one
-                // 11: column
-                // 12: row
-                // 13:  text description
-
-                // 0: if there's one or more cards to be inserted into the deck
-                int numberOfCards = int.Parse(individualCSVObjects[0].Trim());
-                if (numberOfCards > 0) {
-
-                    // get appropriate game objects to set up
-                    GameObject tempCardObj = Instantiate(cardPrefab);
-
-                    // Get a reference to the Card component on the card gameobject.
-                    Card tempCard = tempCardObj.GetComponent<Card>();
-                    CardFront tempCardFront = tempCard.GetComponent<CardFront>();
-                    tempCard.data.cardID = i;
-
-                    // 1: which type of card is this?
-                    string type = individualCSVObjects[1].Trim();
-                    Debug.Log("card name is : " + individualCSVObjects[3] + " with type " + type);
-                    switch(type)
-                    {
-                        case "Defense":
-                            tempCard.data.type = CardType.Defense;
-                            tempCardFront.type = CardType.Defense;
-                            break;
-                        case "Mitigation":
-                            tempCard.data.type = CardType.Mitigation;
-                            tempCardFront.type = CardType.Mitigation;   
-                            break;
-                        case "Vulnerability":
-                            tempCard.data.type = CardType.Vulnerability;
-                            tempCardFront.type = CardType.Vulnerability;
-                            break;
-                        case "Station":
-                            tempCard.data.type = CardType.Station;
-                            tempCardFront.type = CardType.Station;
-                            break;
-                        case "Instant":
-                            tempCard.data.type = CardType.Instant;
-                            tempCardFront.type = CardType.Instant;
-                            break;
-                        case "Special":
-                            tempCard.data.type = CardType.Special;
-                            tempCardFront.type = CardType.Special;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    // 2: is this card only played on a specific player type?
-                    string onlyPlayedOn = individualCSVObjects[2].Trim();
-                    switch(onlyPlayedOn)
-                    {
-                        case "any":
-                            tempCard.data.onlyPlayedOn = PlayerType.Any;
-                            break;
-                        case "power":
-                            tempCard.data.onlyPlayedOn = PlayerType.Energy;
-                            break;
-                        case "water":
-                            tempCard.data.onlyPlayedOn = PlayerType.WaterAndWasteWater;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    // 3: set up the card title
-                    // WORK: do we really need to set both of these?
-                    tempCardObj.name = individualCSVObjects[3];
-                    tempCardFront.title = tempCardObj.name;
-
-                    // 4: set up the title color, which also 
-                    // determines the card type in this game
-                    Color titleColor;
-                    ColorUtility.TryParseHtmlString(individualCSVObjects[4], out titleColor);
-                    tempCardFront.titleColor = titleColor;
-
-                    // 5: card image
-                    Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                    string imageFilename = individualCSVObjects[5].Trim();
-                    Debug.Log("image name is :"+ imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
-
-                    if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
-                    {
-                        int col = int.Parse(individualCSVObjects[11].Trim());
-                        int row = int.Parse(individualCSVObjects[12].Trim());
-                        Debug.Log("col is " + col + " row is " + row);
-                        float aWidth = (float)tex.width;
-                        float aHeight = (float)tex.height;
-
-                        Color[] tempColors = tex.GetPixels((int)(((col * TextureAtlas.SIZE) + 1) / aWidth),(int) (((row * TextureAtlas.SIZE) + 1) / aHeight), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        tex3.SetPixels(tempColors);
-                        tex3.Apply();
-                        
-                    }
-                    tempCardFront.img = tex3;
-
-                    // 6: card background
-                    // WORK: I don't know if the background will change per card type yet. Maybe?
-
-                    // 13: text description
-                    // WORK - pick up any extra things with commas in them that got incorrectly separated
-                    tempCardFront.description = individualCSVObjects[13];
-
-                    // 8:  does it have a worth circle?
-                    if (individualCSVObjects[7].Equals(string.Empty) ||
-                        individualCSVObjects[7].Equals("")) {
-                        tempCardFront.worthCircle = false;
-                        tempCard.data.worth = 0;
-                    } else
-                    {
-                        Debug.Log("worth circle is true and will be: "+ individualCSVObjects[8].Trim());
-                        tempCardFront.worthCircle = true;
-                        // 8:  what's in the worth circle?
-                        tempCard.data.worth = int.Parse(individualCSVObjects[8].Trim());
-                    }
-
+                if (individualCSVObjects.Length > 1) // excel adds an empty line at the end
+                {
+                    // columns in the spreadsheet: changes depending on game
+                    // 0:  how many cards of this type in the deck
+                    // 1:  type of the card
+                    // 2: played on (some cards are only played on a specific infrastructure type)
+                    // 3:  title
+                    // 4:  title color
+                    // 5:  card image
+                    // 6:  background image
+                    // 7:  does it have a worth circle?
+                    // 8:  what's in the worth circle?
                     // 9:  cost of card if there is one
-                    if (individualCSVObjects[9].Equals(string.Empty) ||
-                        individualCSVObjects[9].Equals("")) {
-                        tempCardFront.costCircle = false;
-                        tempCard.data.cost = 0;
-                    }
-                    else
-                    {
-                        tempCardFront.costCircle = true;
-                        // 9:  what's in the worth circle?
-                        tempCard.data.worth = int.Parse(individualCSVObjects[9].Trim());
-                    }
-
                     // 10: the category of the card if there is one
-                    // WORK
+                    // 11: column
+                    // 12: row
+                    // 13:  text description
 
-                    for (int j = 0; j < numberOfCards; j++)
+                    // 0: if there's one or more cards to be inserted into the deck
+                    int numberOfCards = int.Parse(individualCSVObjects[0].Trim());
+                    if (numberOfCards > 0)
                     {
-                        cards.Add(tempCard);
+
+                        // get appropriate game objects to set up
+                        GameObject tempCardObj = Instantiate(cardPrefab);
+
+                        // Get a reference to the Card component on the card gameobject.
+                        Card tempCard = tempCardObj.GetComponent<Card>();
+                        CardFront tempCardFront = tempCard.GetComponent<CardFront>();
+                        tempCard.data.cardID = i;
+
+                        // 1: which type of card is this?
+                        string type = individualCSVObjects[1].Trim();
+                        Debug.Log("card name is : " + individualCSVObjects[3] + " with type " + type);
+                        switch (type)
+                        {
+                            case "Defense":
+                                tempCard.data.type = CardType.Defense;
+                                tempCardFront.type = CardType.Defense;
+                                break;
+                            case "Mitigation":
+                                tempCard.data.type = CardType.Mitigation;
+                                tempCardFront.type = CardType.Mitigation;
+                                break;
+                            case "Vulnerability":
+                                tempCard.data.type = CardType.Vulnerability;
+                                tempCardFront.type = CardType.Vulnerability;
+                                break;
+                            case "Station":
+                                tempCard.data.type = CardType.Station;
+                                tempCardFront.type = CardType.Station;
+                                break;
+                            case "Instant":
+                                tempCard.data.type = CardType.Instant;
+                                tempCardFront.type = CardType.Instant;
+                                break;
+                            case "Special":
+                                tempCard.data.type = CardType.Special;
+                                tempCardFront.type = CardType.Special;
+                                break;
+                            default:
+                                break;
+                        }
+
+                        // 2: is this card only played on a specific player type?
+                        string onlyPlayedOn = individualCSVObjects[2].Trim();
+                        switch (onlyPlayedOn)
+                        {
+                            case "any":
+                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                break;
+                            case "power":
+                                tempCard.data.onlyPlayedOn = PlayerType.Energy;
+                                break;
+                            case "water":
+                                tempCard.data.onlyPlayedOn = PlayerType.WaterAndWasteWater;
+                                break;
+                            default:
+                                break;
+                        }
+
+                        // 3: set up the card title
+                        // WORK: do we really need to set both of these?
+                        tempCardObj.name = individualCSVObjects[3];
+                        tempCardFront.title = tempCardObj.name;
+
+                        // 4: set up the title color, which also 
+                        // determines the card type in this game
+                        Color titleColor;
+                        ColorUtility.TryParseHtmlString(individualCSVObjects[4], out titleColor);
+                        tempCardFront.titleColor = titleColor;
+
+                        // 5: card image
+                        Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        string imageFilename = individualCSVObjects[5].Trim();
+                        Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
+
+                        if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
+                        {
+                            int col = int.Parse(individualCSVObjects[11].Trim());
+                            int row = int.Parse(individualCSVObjects[12].Trim());
+                            //Debug.Log("col is " + col + " row is " + row);
+
+                            Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                            tex3.SetPixels(tempColors);
+                            tex3.Apply();
+
+                        }
+                        tempCardFront.img = tex3;
+
+                        // 6: card background
+                        // WORK: I don't know if the background will change per card type yet. Maybe?
+
+                        // 13: text description
+                        // pick up any extra things with commas in them that got incorrectly separated
+                        tempCardFront.description = individualCSVObjects[13];
+
+                        if (individualCSVObjects.Length > 14)
+                        {
+                            // means the text description itself contains commas, which are our
+                            // separator. So now put these pieces together!
+                            StringBuilder fullDescription = new StringBuilder(tempCardFront.description);
+
+                            int extras = individualCSVObjects.Length - 14; // this is one more than the # we have
+                                                                           //Debug.Log("Extra commas: length should be " + individualCSVObjects.Length + " with extras as " + extras);
+                            for (int j = 0; j < extras; j++)
+                            {
+                                fullDescription.Append("," + individualCSVObjects[14 + j]);
+                            }
+                            tempCardFront.description = fullDescription.ToString();
+                        }
+
+                        // 8:  does it have a worth circle?
+                        if (individualCSVObjects[7].Equals(string.Empty) ||
+                            individualCSVObjects[7].Equals(""))
+                        {
+                            tempCardFront.worthCircle = false;
+                            tempCard.data.worth = 0;
+                        }
+                        else
+                        {
+                            Debug.Log("worth circle is true and will be: " + individualCSVObjects[8].Trim());
+                            tempCardFront.worthCircle = true;
+                            // 8:  what's in the worth circle?
+                            tempCard.data.worth = int.Parse(individualCSVObjects[8].Trim());
+                        }
+
+                        // 9:  cost of card if there is one
+                        if (individualCSVObjects[9].Equals(string.Empty) ||
+                            individualCSVObjects[9].Equals(""))
+                        {
+                            tempCardFront.costCircle = false;
+                            tempCard.data.cost = 0;
+                        }
+                        else
+                        {
+                            tempCardFront.costCircle = true;
+                            // 9:  what's in the worth circle?
+                            tempCard.data.worth = int.Parse(individualCSVObjects[9].Trim());
+                        }
+
+                        // 10: the category of the card if there is one
+                        // WORK
+
+                        // now add one copy of this card for every instance in the card game
+                        for (int j = 0; j < numberOfCards; j++)
+                        {
+                            cards.Add(tempCard);
+                        }
                     }
                 }
 

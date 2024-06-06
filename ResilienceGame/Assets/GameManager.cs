@@ -6,12 +6,17 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
+using System.Diagnostics.Eventing.Reader;
 
 public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 {
     public CardReader energyDeckReader;
     public CardReader waterDeckReader;
-    public List<Card> cards;
+    public bool mCreateEnergyAtlas = false;
+    public bool mCreateWaterAtlas = false;
+
+    public List<Card> energyCards;
+    public List<Card> waterCards;
 
     // is it my turn?
     bool myTurn = false;
@@ -22,7 +27,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     // set up the proper player cards and type
     PlayerType playerType = PlayerType.Energy;
     public GameObject playerDeckList;
-    Dropdown playerDeckChoice;
+    TMPro.TMP_Dropdown playerDeckChoice;
     public bool gameStarted = false;
 
     // has everything been set?
@@ -42,7 +47,10 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     // player types
     public CardPlayer energyPlayer;
     public CardPlayer waterPlayer;
-    
+
+    // var's we use so we don't have to switch between
+    // the player types for generic stuff
+    public CardPlayer actualPlayer;
 
     public GameObject gameCanvas;
     public GameObject startScreen;
@@ -83,109 +91,47 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         CardReader reader = energyDeckReader.GetComponent<CardReader>();
         if (reader != null)
         {
-            cards = reader.CSVRead(true);
+            energyCards = reader.CSVRead(mCreateEnergyAtlas);
+            energyPlayer.cards = energyCards;
+            energyPlayer.playerType = playerType;
+            
         } else
         {
             Debug.Log("reader is null");
         }
+
+        reader = waterDeckReader.GetComponent<CardReader>();
+        if (reader != null)
+        {
+            waterCards = reader.CSVRead(mCreateWaterAtlas);
+            waterPlayer.cards = waterCards;
+            waterPlayer.playerType = playerType;
+        }
+        else
+        {
+            Debug.Log("reader is null");
+        }
+
         Debug.Log("deck should be read");
     }
 
 
     public void setupActors()
     {
-
-        if (playerType == PlayerType.Energy)
+        if (playerType==PlayerType.Energy)
         {
-            if (energyPlayer != null)
-            {
-                energyPlayer.InitializeCards();
-                GameObject obj = GameObject.Find("RGTitle");
-                obj.GetComponent<TextMeshProUGUI>().text = "M " + energyPlayer.Deck.Count;
-                energyPlayer.cardDropZone.SetActive(true);
-                energyPlayer.handDropZone.SetActive(true);
-            } else
-            {
-                Debug.Log("energy player is null!!!!!!!");
-            }
-            //    CardPlayer baseRes = GameObject.FindObjectOfType<CardPlayer>();
-            //    baseRes.gameObject.SetActive(false);
-            //    CardPlayer baseMal = GameObject.FindObjectOfType<CardPlayer>();
-            //    baseMal.InitializeCards();
-            //    maliciousActor = this.gameObject.AddComponent<CardPlayer>();
-
-            //    this.gameObject.transform.localScale = new Vector3(1, 1, 1);
-            //    baseMal.handDropZone.transform.localScale = new Vector3(1, 1, 1);
-            //    Debug.Log("RGNETWORKPLAYER SIZE:" + this.gameObject.transform.localScale);
-
-            //    maliciousActor.funds = baseMal.funds;
-            //    maliciousActor.Deck = baseMal.Deck; 
-            //    maliciousActor.CardCountList = baseMal.CardCountList;
-            //    maliciousActor.cardReader = baseMal.cardReader;
-            //    maliciousActor.cardDropZone = baseMal.cardDropZone;
-            //    baseMal.cardDropZone.transform.parent = maliciousActor.transform;
-            //    maliciousActor.handDropZone = baseMal.handDropZone;
-            //    baseMal.handDropZone.transform.parent = maliciousActor.transform;
-            //    maliciousActor.cardPrefab = baseMal.cardPrefab;
-            //    maliciousActor.HandList = baseMal.HandList;
-            //    maliciousActor.ActiveCardList = baseMal.ActiveCardList;
-            //    maliciousActor.activeCardIDs = baseMal.activeCardIDs;
-            //    maliciousActor.manager = baseMal.manager;
-            //    maliciousActor.facilitiesActedUpon = baseMal.facilitiesActedUpon;
-            //    maliciousActor.targetIDList = baseMal.targetIDList;
-            //    baseMal.gameObject.SetActive(false);
-            //    GameObject centralMap = GameObject.Find("Central Map");
-            //    this.gameObject.transform.SetParent(centralMap.transform);
-            //    GameObject obj = GameObject.Find("RGTitle");
-            //    obj.GetComponent<TextMeshProUGUI>().text = "M " + maliciousActor.Deck.Count;
-            //    maliciousActor.cardDropZone.SetActive(true);
-            //    maliciousActor.handDropZone.SetActive(true);
-
-            //    //forcing the networkplayer to be 1 by 1 by 1 to make future calculations easier
-            //    this.gameObject.transform.localScale = new Vector3(1, 1, 1);
-            //    maliciousActor.handDropZone.transform.localScale = new Vector3(1, 1, 1);
-            //    baseMal.handDropZone.transform.localScale = new Vector3(1, 1, 1);
-            //    Debug.Log("RGNETWORKPLAYER SIZE:" + this.gameObject.transform.localScale);
-            //    Debug.Log(this.gameObject.name);
-            //    Debug.Log(maliciousActor.Deck.Count);
+            actualPlayer = energyPlayer;
         }
-        //else
-        //{
-        //    // regular blue type player
-        //    CardPlayer baseMal = GameObject.FindObjectOfType<CardPlayer>();
-        //    baseMal.gameObject.SetActive(false);
-        //    CardPlayer baseRes = GameObject.FindObjectOfType<CardPlayer>();
-        //    resiliencePlayer = this.gameObject.AddComponent<CardPlayer>();
-        //    baseRes.InitializeCards();
-        //    resiliencePlayer.funds = baseRes.funds;
-        //    resiliencePlayer.Deck = baseRes.Deck;
-        //    // WORK - needs real type!
-        //    resiliencePlayer.playerType = 0;
-        //    resiliencePlayer.Deck = baseRes.Deck;
-        //    resiliencePlayer.CardCountList = baseRes.CardCountList;
-        //    resiliencePlayer.cardReader = baseRes.cardReader;
-        //    resiliencePlayer.cardDropZone = baseRes.cardDropZone;
-        //    baseRes.cardDropZone.transform.parent = resiliencePlayer.transform;
-        //    resiliencePlayer.handDropZone = baseRes.handDropZone;
-        //    baseRes.handDropZone.transform.parent = resiliencePlayer.transform;
-        //    resiliencePlayer.cardPrefab = baseRes.cardPrefab;
-        //    resiliencePlayer.HandList = baseRes.HandList;
-        //    resiliencePlayer.ActiveCardList = baseRes.ActiveCardList;
-        //    resiliencePlayer.activeCardIDs = baseRes.activeCardIDs;
-        //    resiliencePlayer.manager = baseRes.manager;
-        //    resiliencePlayer.facilitiesActedUpon = baseRes.facilitiesActedUpon;
-        //    resiliencePlayer.targetIDList = baseRes.targetIDList;
-        //    baseRes.gameObject.SetActive(false);
-        //    GameObject centralMap = GameObject.Find("Central Map");
-        //    this.gameObject.transform.SetParent(centralMap.transform);
-        //    GameObject obj = GameObject.Find("RGTitle");
-        //    obj.GetComponent<TextMeshProUGUI>().text = "R " + resiliencePlayer.Deck.Count;
-        //    Debug.Log(resiliencePlayer.Deck.Count);
-        //    resiliencePlayer.cardDropZone.SetActive(true);
-        //    resiliencePlayer.handDropZone.SetActive(true);
-        //}
+        else if (playerType==PlayerType.WaterAndWasteWater)
+        {
+            actualPlayer = waterPlayer;
+        }
 
-
+        actualPlayer.InitializeCards();
+        //GameObject obj = GameObject.Find("RGTitle");
+        //obj.GetComponent<TextMeshProUGUI>().text = "M " + actualPlayer.Deck.Count;
+        actualPlayer.cardDropZone.SetActive(true);
+        actualPlayer.handDropZone.SetActive(true); 
     }
 
     // Update is called once per frame
@@ -225,7 +171,6 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
                 RegisterObserver(mRGNetworkPlayerList);
                 isServer = mRGNetworkPlayerList.isServer;
                 CardPlayer player = GameObject.FindObjectOfType<CardPlayer>();
-                int team = 0;
 
                 if (player != null)
                 {
@@ -235,82 +180,13 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
                     GameObject obj = GameObject.Find("ExampleGameUI");
                     gameView = obj.GetComponent<RGGameExampleUI>();
-                    gameView.SetStartTeamInfo(energyPlayer);
+                    gameView.SetStartTeamInfo(actualPlayer);
                   
-
                     isInit = true;
-
                 }
             }
         }
 
-    }
-
-    // Will want to move to a game manager later
-    public void EnableAllOutline(bool toggled)
-    {
-        //FacilityOutline[] allOutlines = GameObject.FindObjectsOfType<FacilityOutline>();
-        //for (int i = 0; i < allOutlines.Length; i++)
-        //{
-        //    allOutlines[i].outline.SetActive(toggled);
-        //}
-    }
-
-
-    public void EnableCriticalOutline(bool toggled)
-    {
-        //criticalEnabled = toggled;
-        //FacilityOutline[] criticalOutlines = GameObject.FindObjectsOfType<FacilityOutline>();
-        //for (int i = 0; i < criticalOutlines.Length; i++)
-        //{
-        //    // Comms
-        //    if (criticalOutlines[i].gameObject.GetComponent<Communications>() != null)
-        //    {
-        //        criticalOutlines[i].outline.GetComponent<RawImage>().color = new Color(1.0f, 0.8431372549f, 0.0f, 1.0f);
-        //        criticalOutlines[i].outline.SetActive(toggled);
-        //    }
-
-        //    // Water
-        //    else if (criticalOutlines[i].gameObject.GetComponent<Water>() != null)
-        //    {
-        //        criticalOutlines[i].outline.GetComponent<RawImage>().color = new Color(1.0f, 0.8431372549f, 0.0f, 1.0f);
-
-        //        criticalOutlines[i].outline.SetActive(toggled);
-
-        //    }
-
-        //    // Power
-        //    else if (criticalOutlines[i].gameObject.GetComponent<ElectricityDistribution>() != null)
-        //    {
-        //        criticalOutlines[i].outline.GetComponent<RawImage>().color = new Color(1.0f, 0.8431372549f, 0.0f, 1.0f);
-
-        //        criticalOutlines[i].outline.SetActive(toggled);
-
-        //    }
-        //    else if (criticalOutlines[i].gameObject.GetComponent<ElectricityGeneration>() != null)
-        //    {
-        //        criticalOutlines[i].outline.GetComponent<RawImage>().color = new Color(1.0f, 0.8431372549f, 0.0f, 1.0f);
-
-        //        criticalOutlines[i].outline.SetActive(toggled);
-
-        //    }
-
-        //    // IT
-
-        //    // Transport
-        //    else if (criticalOutlines[i].gameObject.GetComponent<Transportation>() != null)
-        //    {
-        //        criticalOutlines[i].outline.GetComponent<RawImage>().color = new Color(1.0f, 0.8431372549f, 0.0f, 1.0f);
-
-        //        criticalOutlines[i].outline.SetActive(toggled);
-
-        //    }
-        //    else
-        //    {
-        //        criticalOutlines[i].outline.SetActive(false);
-
-        //    }
-        //}
     }
 
     public void SwapPlayer()
@@ -406,14 +282,6 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         //    }
         //}
 
-    }
-    public void DisableAllOutline()
-    {
-        //FacilityOutline[] allOutlines = GameObject.FindObjectsOfType<FacilityOutline>();
-        //for (int i = 0; i < allOutlines.Length; i++)
-        //{
-        //    allOutlines[i].outline.SetActive(false);
-        //}
     }
 
     public void EnableSwapPlayerMenu()
@@ -761,20 +629,29 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     {
         if (playerDeckChoice == null)
         {
-            playerDeckChoice = playerDeckList.GetComponent<Dropdown>();
+            playerDeckChoice = playerDeckList.GetComponent<TMPro.TMP_Dropdown>();
+            if (playerDeckChoice == null)
+            {
+                Debug.Log("deck choice is null!");
+            }
         }
 
-       switch(playerDeckChoice.value)
+        if (playerDeckChoice != null)
         {
-            case (int)PlayerType.Energy:
-                playerType = PlayerType.Energy;
-                break;
-            case (int)PlayerType.WaterAndWasteWater:
-                playerType = PlayerType.WaterAndWasteWater;
-                break;
-            default:
-                break;
+            switch (playerDeckChoice.value)
+            {
+                case 0:
+                    playerType = PlayerType.Energy;
+                    break;
+                case 1:
+                    playerType = PlayerType.WaterAndWasteWater;
+                    break;
+                default:
+                    break;
+            }
+            Debug.Log("player type set to be " + playerType);
         }
+        
     }
 
     public void EndGame(int whoWins, bool sendMessage)

@@ -17,7 +17,6 @@ public class CardPlayer : MonoBehaviour
 {
     // Establish necessary fields
     public PlayerType playerType = PlayerType.Energy;
-    public float funds = 100.0f;
     public GameManager manager;
     public List<Card> cards;
     public List<int> Deck;
@@ -36,14 +35,11 @@ public class CardPlayer : MonoBehaviour
 
     public void InitializeCards()
     {
-        // NOTE: set funds in scene var
-        //cardReader = GameObject.FindObjectOfType<CardReader>();
-        //manager = GameObject.FindObjectOfType<GameManager>();
         manager = GameManager.instance;
 
-        for (int i = 0; i <manager.cards.Count; i++)
+        for (int i = 0; i <cards.Count; i++)
         {
-            Deck.Add(manager.cards[i].data.cardID);
+            Deck.Add(cards[i].data.cardID);
         }
 
         if (HandList.Count < maxHandSize)
@@ -79,7 +75,7 @@ public class CardPlayer : MonoBehaviour
             GameObject tempCardObj = Instantiate(cardPrefab);
             Card tempCard = tempCardObj.GetComponent<Card>();
             tempCard.cardDropZone = cardDropZone;
-            Card actualCard = manager.cards[Deck[rng]];
+            Card actualCard = cards[Deck[rng]];
             tempCard.data = actualCard.data;
             CardFront front = actualCard.GetComponent<CardFront>();
             tempCard.front = front;

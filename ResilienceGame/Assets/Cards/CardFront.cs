@@ -11,7 +11,7 @@ public class CardFront : MonoBehaviour
     public Color titleColor;
     public string title;
     public string description;
-    public GameObject innerTexts;
+    //public GameObject innerTexts;
     public Texture2D background;
     public Texture2D img;
 }
