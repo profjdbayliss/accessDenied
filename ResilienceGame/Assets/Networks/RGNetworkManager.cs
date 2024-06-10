@@ -28,15 +28,14 @@ public class RGNetworkManager : NetworkManager
         base.OnServerAddPlayer(conn);
 
         int playerID = conn.connectionId;
-        if (conn.identity.isLocalPlayer && (RGNetworkPlayerList.instance.playerIDs.Contains(0) == false)) // if the player is host, join red team
-        {
-            RGNetworkPlayerList.instance.AddPlayer(playerID, 0);
-        }
-        else // if the player is client, join blue team
-        {
-            RGNetworkPlayerList.instance.AddPlayer(playerID, 1);
-        }
+        
+        RGNetworkPlayer player = (RGNetworkPlayer)conn.identity.GetComponent<RGNetworkPlayer>();
+        string name = (string)player.mPlayerName;
+        int tempId = player.mPlayerID;
+        Debug.Log("are the ids the same? " + tempId + " " + playerID);
+        RGNetworkPlayerList.instance.AddPlayer(playerID, name);
     }
+
 
     // Called by UI element NetworkAddressInput.OnValueChanged
     public void SetHostname(string hostname)
@@ -49,9 +48,6 @@ public class RGNetworkManager : NetworkManager
         // remove player name from the HashSet
         if (conn.authenticationData != null)
             RGNetworkAuthenticator.playerNames.Remove((string)conn.authenticationData);
-
-        // remove connection from Dictionary of conn > names
-        //RGGameExampleUI.connNames.Remove(conn);
 
         RGNetworkPlayerList.instance.RemovePlayer(conn.connectionId);
 

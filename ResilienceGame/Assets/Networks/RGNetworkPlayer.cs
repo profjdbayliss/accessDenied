@@ -1,4 +1,5 @@
 using Mirror;
+using UnityEngine;
 
 public class RGNetworkPlayer : NetworkBehaviour
 {
@@ -12,6 +13,7 @@ public class RGNetworkPlayer : NetworkBehaviour
         mPlayerID = connectionToClient.connectionId;
         RGGameExampleUI.localPlayerName = mPlayerName;
         RGGameExampleUI.localPlayerID = mPlayerID;
+        Debug.Log(" network player says id is " + mPlayerID);
     }
 
     public override void OnStartLocalPlayer()
@@ -19,5 +21,6 @@ public class RGNetworkPlayer : NetworkBehaviour
         RGGameExampleUI.localPlayerName = mPlayerName;
         RGGameExampleUI.localPlayerID = mPlayerID;
         RGNetworkPlayerList.instance.localPlayerID = mPlayerID;
+        Debug.Log(" local player says id is " + mPlayerID);
     }
 }

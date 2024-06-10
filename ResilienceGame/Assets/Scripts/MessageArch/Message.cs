@@ -7,10 +7,11 @@ using System.Text;
 /// </summary>
 public enum CardMessageType
 {
+    StartGame,
     StartTurn,
     EndTurn,
     IncrementTurn,
-    ShowCards,
+    SharePlayerType,
     EndGame,
     None
 }
@@ -20,6 +21,13 @@ public enum CardMessageType
 /// </summary>
 public class Message
 {
+    private bool isBytes = false;
+    public bool IsBytes
+    {
+        get { return isBytes; }
+        set { isBytes = value; }
+    }
+
     // not all messages have args
     private bool hasArgs = false;
     public bool HasArgs
@@ -44,6 +52,7 @@ public class Message
     /// This is the normal way messages are sent.
     /// </summary>
     public List<int> arguments;
+    public List<byte> byteArguments;
 
     /// <summary>
     /// A constructor that sets message info for short messages without args.
@@ -53,6 +62,7 @@ public class Message
     {
         type = t;
         hasArgs = false;
+        isBytes = false;
     }
 
     /// <summary>
@@ -64,11 +74,22 @@ public class Message
     {
         type = t;
         hasArgs = true;
-        arguments = new List<int>(args.Count);
-        foreach (int element in args)
-        {
-            arguments.Add(element);
-        }
+        isBytes = false;
+        arguments = new List<int>(args);
+    }
+
+    /// <summary>
+    /// A constructor that sets message info.
+    /// </summary>
+    /// <param name="t">The type of the message</param>
+    /// <param name="args">A list of the arguments for the message.</param>
+    public Message(CardMessageType t, List<byte> args)
+    {
+        type = t;
+        hasArgs = true;
+        isBytes = true;
+        byteArguments = new List<byte>(args);
+       
     }
 
     /// <summary>

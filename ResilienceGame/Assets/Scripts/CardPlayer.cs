@@ -42,9 +42,15 @@ public class CardPlayer : MonoBehaviour
             Deck.Add(cards[i].data.cardID);
         }
 
+       
+    }
+
+    public virtual void DrawCards()
+    {
         if (HandList.Count < maxHandSize)
         {
-            for (int i = 0; i < maxHandSize; i++)
+            int count = HandList.Count;
+            for (int i = 0; i < maxHandSize-count; i++)
             {
                 DrawCard(true, 0);
             }
@@ -133,6 +139,7 @@ public class CardPlayer : MonoBehaviour
             Vector3 tempPos2 = handDropZone.transform.position;
             handSize++;
             tempCardObj.transform.position = tempPos2;
+            tempCardObj.SetActive(true);
             HandList.Add(tempCardObj);
         }
         else

@@ -34,7 +34,7 @@ public class Card : MonoBehaviour, IDropHandler
         //reader = GameObject.Find("Card Reader").GetComponent<CardReader>();
         //handDropZone = this.gameObject.transform.parent.gameObject;
         //originalParent = this.gameObject.transform.parent.transform.parent.gameObject;
-        this.gameObject.transform.localScale = Vector3.one;
+        //this.gameObject.transform.localScale = Vector3.one;
         //gameCanvas = GameObject.Find("Central Map");
     }
 
@@ -44,6 +44,7 @@ public class Card : MonoBehaviour, IDropHandler
         if (cardDropZone != null && this.state == CardState.CardDrawn) // Make sure that the card actually has a reference to the card drop location where it will be dropped and that it is currently in the players hand
         {
 
+            Debug.Log("drawn card dropped!");
             // Get the bounds of the card Drop Zone
             Vector2 cardDropMin = new Vector2();
             cardDropMin.x = cardDropZone.GetComponent<RectTransform>().localPosition.x - (cardDropZone.GetComponent<RectTransform>().rect.width / 2);
@@ -67,27 +68,27 @@ public class Card : MonoBehaviour, IDropHandler
                 {
                     if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.data.cardID))
                     {
-                        if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
-                        {
-                            GameManager gm = FindObjectOfType<GameManager>();
-                            gm.AddFunds(-100);
-                            foreach (var facility in this.gameObject.GetComponentInParent<CardPlayer>().facilitiesActedUpon)
-                            {
-                                facility.GetComponent<FacilityV3>().health += 20;
-                                if (facility.GetComponent<FacilityV3>().health > 100)
-                                {
-                                    facility.GetComponent<FacilityV3>().health = 100;
-                                }
-                                facility.GetComponent<FacilityV3>().Health.text = facility.GetComponent<FacilityV3>().health.ToString();
-                            }
-                            //List<FacilityV3Info> tempFacs = new List<FacilityV3Info>();
-                            //Debug.Log("Facilities Count: " + gm.allFacilities.Count + ", " + teamID);
-                            //for (int i = 0; i < gm.allFacilities.Count; i++)
-                            //{
-                            //    tempFacs.Add(gm.allFacilities[i].GetComponent<FacilityV3>().ToFacilityV3Info());
-                            //}
-                            //RGNetworkPlayerList.instance.AskUpdateFacilities(tempFacs); //Update facilities' info
-                        }
+                        //if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
+                        //{
+                        //    //GameManager gm = FindObjectOfType<GameManager>();
+                        //    ////gm.AddFunds(-100);
+                        //    //foreach (var facility in this.gameObject.GetComponentInParent<CardPlayer>().facilitiesActedUpon)
+                        //    //{
+                        //    //    facility.GetComponent<FacilityV3>().health += 20;
+                        //    //    if (facility.GetComponent<FacilityV3>().health > 100)
+                        //    //    {
+                        //    //        facility.GetComponent<FacilityV3>().health = 100;
+                        //    //    }
+                        //    //    facility.GetComponent<FacilityV3>().Health.text = facility.GetComponent<FacilityV3>().health.ToString();
+                        //    //}
+                        //    //List<FacilityV3Info> tempFacs = new List<FacilityV3Info>();
+                        //    //Debug.Log("Facilities Count: " + gm.allFacilities.Count + ", " + teamID);
+                        //    //for (int i = 0; i < gm.allFacilities.Count; i++)
+                        //    //{
+                        //    //    tempFacs.Add(gm.allFacilities[i].GetComponent<FacilityV3>().ToFacilityV3Info());
+                        //    //}
+                        //    //RGNetworkPlayerList.instance.AskUpdateFacilities(tempFacs); //Update facilities' info
+                        //}
                         this.state = CardState.CardInPlay;
                         this.gameObject.GetComponentInParent<slippy>().enabled = false;
                         // Set the time the card is to be disposed of by adding the duration of the card to the current turn count
@@ -102,32 +103,33 @@ public class Card : MonoBehaviour, IDropHandler
                 {
                     if (this.gameObject.GetComponentInParent<CardPlayer>().SelectFacility(this.data.cardID))
                     {
-                        if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
-                        {
-                            GameManager gm = FindObjectOfType<GameManager>();
-                            gm.AddFunds(-100);
-                            foreach (var facility in this.gameObject.GetComponentInParent<CardPlayer>().facilitiesActedUpon)
-                            {
-                                facility.GetComponent<FacilityV3>().health -= 30;
-                                if (facility.GetComponent<FacilityV3>().health <= 0)
-                                {
-                                    gm.EndGame(1, true);
-                                    //RGNetworkPlayerList.instance.CmdEndGame(1);
-                                }
-                                facility.GetComponent<FacilityV3>().Health.text = facility.GetComponent<FacilityV3>().health.ToString();
-                            }
+                        //if (FindObjectOfType<GameManager>()) // Reduce funds of the local player when play a card
+                        //{
+                        //    //GameManager gm = FindObjectOfType<GameManager>();
+                        //    //gm.AddFunds(-100);
+                        //    //foreach (var facility in this.gameObject.GetComponentInParent<CardPlayer>().facilitiesActedUpon)
+                        //    //{
+                        //    //    facility.GetComponent<FacilityV3>().health -= 30;
+                        //    //    if (facility.GetComponent<FacilityV3>().health <= 0)
+                        //    //    {
+                        //    //        gm.EndGame(1, true);
+                        //    //        //RGNetworkPlayerList.instance.CmdEndGame(1);
+                        //    //    }
+                        //    //    facility.GetComponent<FacilityV3>().Health.text = facility.GetComponent<FacilityV3>().health.ToString();
+                        //    //}
 
-                            //List<FacilityV3Info> tempFacs = new List<FacilityV3Info>();
-                            //Debug.Log("Facilities Count: " + gm.allFacilities.Count + ", " + teamID);
-                            //for (int i = 0; i < gm.allFacilities.Count; i++)
-                            //{
-                            //    tempFacs.Add(gm.allFacilities[i].GetComponent<FacilityV3>().ToFacilityV3Info());
-                            //}
-                            //RGNetworkPlayerList.instance.AskUpdateFacilities(tempFacs); //Update facilities' info
-                        }
+                        //    //List<FacilityV3Info> tempFacs = new List<FacilityV3Info>();
+                        //    //Debug.Log("Facilities Count: " + gm.allFacilities.Count + ", " + teamID);
+                        //    //for (int i = 0; i < gm.allFacilities.Count; i++)
+                        //    //{
+                        //    //    tempFacs.Add(gm.allFacilities[i].GetComponent<FacilityV3>().ToFacilityV3Info());
+                        //    //}
+                        //    //RGNetworkPlayerList.instance.AskUpdateFacilities(tempFacs); //Update facilities' info
+                        //}
                         this.state = CardState.CardInPlay;
                         this.gameObject.GetComponentInParent<slippy>().enabled = false;
                         this.gameObject.GetComponentInParent<slippy>().ResetScale();
+                        Debug.Log("card reset scale done");
                     }
                     else
                     {
@@ -142,7 +144,8 @@ public class Card : MonoBehaviour, IDropHandler
                 this.gameObject.transform.SetParent(handDropZone.transform, false);
                 this.state = CardState.CardDrawn;
                 this.gameObject.GetComponentInParent<slippy>().enabled = true;
-                this.gameObject.GetComponent<slippy>().ResetPosition();
+                //this.gameObject.GetComponent<slippy>().ResetPosition();
+                Debug.Log("card reset position done");
             }
         }
     }

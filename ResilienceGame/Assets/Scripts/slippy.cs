@@ -31,13 +31,13 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     // Start is called before the first frame update
     void Start()
     {
-        maxScale = 3.0f;
-        minScale = 0.5f;
+        //maxScale = 3.0f;
+        //minScale = 0.5f;
         if(this.gameObject.GetComponentInParent<CardPlayer>() == null)
         {
            
                 Debug.Log("GOT Slippy");
-                resetScale = playerInput.actions["Reset Scale"];
+                //resetScale = playerInput.actions["Reset Scale"];
            
         }
         originalScale = this.gameObject.transform.localScale;
@@ -55,6 +55,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         //forces a cap in case anything gets too large or small accidentally 
         if(map.transform.localScale.x > maxScale)
         {
+            //Debug.Log("greater than max scale!");
             Vector2 tempScale = map.transform.localScale;
             tempScale.x = maxScale;
             tempScale.y = maxScale;
@@ -71,6 +72,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     }
     public void OnScroll(PointerEventData pointer)
     {
+        Debug.Log("onscroll is being called");
         if (pointer.scrollDelta.y > 0.0f) // Zoom in
         {
             if ((map.transform.localScale.x + 0.05f) <= maxScale) // Only zoom in when the zoom is less than the max, we allow the zoom in
@@ -111,6 +113,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     {
         if (map.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
         {
+            Debug.Log("ondrag is being called");
             UpdatePosition();
             // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
             Vector2 tempVec2 = default(Vector2);

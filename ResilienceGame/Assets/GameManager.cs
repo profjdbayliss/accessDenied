@@ -8,6 +8,18 @@ using UnityEngine.EventSystems;
 using Mirror;
 using System.Diagnostics.Eventing.Reader;
 
+public enum GamePhase
+{
+    Start,
+    DrawAndDiscard,
+    Defense,
+    Vulnerability,
+    Mitigate,
+    Attack,
+    AddStation,
+    End
+};
+
 public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 {
     public CardReader energyDeckReader;
@@ -18,7 +30,8 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     public List<Card> energyCards;
     public List<Card> waterCards;
 
-    // is it my turn?
+    // where are we in game phases?
+    GamePhase mGamePhase = GamePhase.Start;
     bool myTurn = false;
     bool endGame = false;
     int turnTotal = 0;
@@ -26,6 +39,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     // set up the proper player cards and type
     PlayerType playerType = PlayerType.Energy;
+    
     public GameObject playerDeckList;
     TMPro.TMP_Dropdown playerDeckChoice;
     public bool gameStarted = false;
@@ -51,7 +65,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     // var's we use so we don't have to switch between
     // the player types for generic stuff
     public CardPlayer actualPlayer;
-
+    public TextMeshProUGUI turnText;
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject tiles;
@@ -88,29 +102,32 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     void Start()
     {
         startScreen.SetActive(true);
-        CardReader reader = energyDeckReader.GetComponent<CardReader>();
-        if (reader != null)
-        {
-            energyCards = reader.CSVRead(mCreateEnergyAtlas);
-            energyPlayer.cards = energyCards;
-            energyPlayer.playerType = playerType;
-            
-        } else
-        {
-            Debug.Log("reader is null");
-        }
 
-        reader = waterDeckReader.GetComponent<CardReader>();
+        CardReader reader = waterDeckReader.GetComponent<CardReader>();
         if (reader != null)
         {
             waterCards = reader.CSVRead(mCreateWaterAtlas);
             waterPlayer.cards = waterCards;
-            waterPlayer.playerType = playerType;
+            waterPlayer.playerType = PlayerType.WaterAndWasteWater;
         }
         else
         {
             Debug.Log("reader is null");
         }
+        reader = energyDeckReader.GetComponent<CardReader>();
+        if (reader != null)
+        {
+            energyCards = reader.CSVRead(mCreateEnergyAtlas);
+            energyPlayer.cards = energyCards;
+            energyPlayer.playerType = PlayerType.Energy;
+
+        }
+        else
+        {
+            Debug.Log("reader is null");
+        }
+
+      
 
         Debug.Log("deck should be read");
     }
@@ -118,20 +135,24 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     public void setupActors()
     {
+
         if (playerType==PlayerType.Energy)
         {
             actualPlayer = energyPlayer;
+            actualPlayer.cards = energyCards;
+            actualPlayer.playerType = PlayerType.Energy;
         }
         else if (playerType==PlayerType.WaterAndWasteWater)
         {
             actualPlayer = waterPlayer;
+            actualPlayer.cards = waterCards;
+            actualPlayer.playerType = PlayerType.WaterAndWasteWater;
         }
 
         actualPlayer.InitializeCards();
-        //GameObject obj = GameObject.Find("RGTitle");
-        //obj.GetComponent<TextMeshProUGUI>().text = "M " + actualPlayer.Deck.Count;
         actualPlayer.cardDropZone.SetActive(true);
-        actualPlayer.handDropZone.SetActive(true); 
+        actualPlayer.handDropZone.SetActive(true);
+
     }
 
     // Update is called once per frame
@@ -162,26 +183,16 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         } else
         {
             mRGNetworkPlayerList = RGNetworkPlayerList.instance;
-            if (mRGNetworkPlayerList == null)
+            if (mRGNetworkPlayerList != null)
             {
-                //Debug.Log("player list is a null var!");
-            }
-            else
-            {
+                // means network init is done
+                // and we're joined
                 RegisterObserver(mRGNetworkPlayerList);
                 isServer = mRGNetworkPlayerList.isServer;
                 CardPlayer player = GameObject.FindObjectOfType<CardPlayer>();
-
                 if (player != null)
                 {
-                    turnTotal = 0;
-                    setupActors();
-                    myTurn = false;
-
-                    GameObject obj = GameObject.Find("ExampleGameUI");
-                    gameView = obj.GetComponent<RGGameExampleUI>();
-                    gameView.SetStartTeamInfo(actualPlayer);
-                  
+                    // player is initialized and ready to go
                     isInit = true;
                 }
             }
@@ -189,365 +200,73 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     }
 
-    public void SwapPlayer()
+    public void HandlePhases(GamePhase phase)
     {
-        //if ((continueButton.activeSelf == false) && (yarnSpinner.activeSelf == true))
-        //{
-        //    return;
-        //}
-        //else
-        //{
-        //    maliciousPlayerEndMenu.SetActive(false);
-        //    resilientPlayerEndMenu.SetActive(false);
-        //    playerActive = !playerActive;
-
-        //    DisableAllOutline();
-        //    resiliencePlayer.facilitiesActedUpon.Clear();
-           
-        //    maliciousActor.facilitiesActedUpon.Clear();
-        //    maliciousActor.targetIDList.Clear();
-        //    turnCount += 0.5f;
-        //    if (playerActive)
-        //    {
-        //        activePlayerText.text = resiliencePlayer.playerType + " Player";
-        //        fundText.text = "Funds: " + resiliencePlayer.funds;
-
-        //        activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
-        //        activePlayerText.color = activePlayerColor;
-        //        yarnSpinner.SetActive(true);
-        //        facilityEvents.SpawnEvent();
-        //        ChangePlayers();
-        //        foreach (GameObject card in maliciousActor.HandList)
-        //        {
-        //            card.SetActive(false);
-        //        }
-        //        foreach (GameObject card in maliciousActor.ActiveCardList)
-        //        {
-        //            card.SetActive(false);
-        //        }
-        //        foreach (GameObject obj in allPlayers)
-        //        {
-        //            obj.GetComponent<CardPlayer>().facilitiesActedUpon.Clear();
-        //        }
-        //        foreach (GameObject obj in allPlayers)
-        //        {
-        //            obj.GetComponent<CardPlayer>().targetIDList.Clear();
-        //        }
-        //        maliciousActor.cardDropZone.SetActive(false);
-        //        maliciousActor.handDropZone.SetActive(false);
-
-        //    }
-        //    else
-        //    {
-        //        fundText.text = "Funds: " + maliciousActor.funds;
-        //        activePlayerText.text = "Malicious Player";
-        //        activePlayerColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
-        //        activePlayerText.color = activePlayerColor;
-        //        yarnSpinner.SetActive(false);
-        //        MalActorObject.SetActive(true);
-        //        foreach (GameObject fac in allFacilities)
-        //        {
-        //            Color tempColor = fac.GetComponent<SVGImage>().color;
-        //            tempColor.a = 1.0f;
-        //            fac.GetComponent<SVGImage>().color = tempColor;
-        //        }
-        //        Debug.Log(maliciousActor.handSize);
-        //        if (maliciousActor.handSize < 5)
-        //        {
-        //            maliciousActor.DrawCard(true, 0);
-        //        }
-        //        resiliencePlayer.cardDropZone.SetActive(false);
-        //        resiliencePlayer.handDropZone.SetActive(false);
-        //        foreach (GameObject card in resiliencePlayer.HandList)
-        //        {
-        //            card.SetActive(false);
-        //        }
-        //        foreach (GameObject card in resiliencePlayer.ActiveCardList)
-        //        {
-        //            card.SetActive(false);
-        //        }
-               
-        //        foreach (GameObject card in maliciousActor.HandList)
-        //        {
-        //            card.SetActive(true);
-        //        }
-        //        foreach (GameObject card in maliciousActor.ActiveCardList)
-        //        {
-        //            card.SetActive(true);
-        //        }
-        //        maliciousActor.targetIDList.Clear();
-        //        maliciousActor.facilitiesActedUpon.Clear();
-        //        maliciousActor.cardDropZone.SetActive(true);
-        //        maliciousActor.handDropZone.SetActive(true);
-        //    }
-        //}
-
-    }
-
-    public void EnableSwapPlayerMenu()
-    {
-        //if ((continueButton.activeSelf == false) && (yarnSpinner.activeSelf == true))
-        //{
-        //    return;
-        //}
-        //else
-        //{
-        //    if (playerActive)
-        //    {
-        //        resilientPlayerEndMenu.SetActive(true);
-        //    }
-        //    else
-        //    {
-        //        maliciousPlayerEndMenu.SetActive(true);
-        //    }
-        //}
-
+        switch (phase)
+        {
+            case GamePhase.Start:
+                // handled with specialty code outside of this
+                break;
+            case GamePhase.DrawAndDiscard:
+                // draw cards if necessary
+                actualPlayer.DrawCards();
+                // set the discard button to work
+                break;
+            default:
+                break;
+        }
     }
 
     public void StartGame()
     {
+        setupActors();
+        // in this game people go in parallel to each other
+        // per phase
+        myTurn = true;
+
+        GameObject obj = GameObject.Find("ExampleGameUI");
+        gameView = obj.GetComponent<RGGameExampleUI>();
+        gameView.SetStartTeamInfo(actualPlayer);
         gameCanvas.SetActive(true);
-        startScreen.SetActive(false); // DUsable the start menu where you determine how many of each facility you would like
+        startScreen.SetActive(false); // Start menu isn't necessary now
         gameStarted = true;
+        mGamePhase = GamePhase.DrawAndDiscard;
+        turnTotal = 0;
+        turnText.text = "Turn: " + GetTurn();
 
-        activePlayerNumber = 0;
-
-        //if(!isServer)
-        //{
-        //    // this is a resilience player
-        //    //if(resiliencePlayer.facilitiesActedUpon != null)
-        //    //{
-        //    //    resiliencePlayer.facilitiesActedUpon.Clear();
-        //    //}
-        //    //playerActive = true;
-
-        //}
-        //else 
-        //{
-        //    //maliciousActor.facilitiesActedUpon.Clear();
-        //    activePlayerColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
-        //    activePlayerText.color = activePlayerColor;
-        //}
-
+       
         activePlayerText.text = playerType + " Player";
         Debug.Log("set active player to be: " + playerType);
         activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
         activePlayerText.color = activePlayerColor;
         //yarnSpinner.SetActive(true);
-        //Debug.Log("Starting player: " + resiliencePlayer.name);
-        //Debug.Log("set active player to be resilient with number of cards1 " + resiliencePlayer.HandList.Count);
-        //foreach (GameObject card in maliciousActor.HandList)
-        //{
-        //    card.SetActive(true);
-        //}
-        //foreach (GameObject card in maliciousActor.ActiveCardList)
-        //{
-        //    card.SetActive(true);
-        //}
-
-        //foreach (GameObject fac in allFacilities)
-        //{
-        //    //if (fac.GetComponent<FacilityV3>().type == allPlayers[activePlayerNumber].GetComponent<Player>().type)
-        //    if (fac.GetComponent<FacilityV3>().type == resiliencePlayer.type)
-        //    {
-        //        Color tempColor = fac.GetComponent<SVGImage>().color;
-        //        tempColor.a = 1.0f;
-        //        fac.GetComponent<SVGImage>().color = tempColor;
-        //    }
-        //    //else if (fac.GetComponent<FacilityV3>().type == FacilityV3.Type.ElectricityGeneration)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //    //else if (fac.GetComponent<FacilityV3>().type == FacilityV3.Type.ElectricityDistribution)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //    //else if (fac.GetComponent<FacilityV3>().type == FacilityV3.Type.Water)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //    //else if (fac.GetComponent<FacilityV3>().type == FacilityV3.Type.Transportation)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //    //else if (fac.GetComponent<FacilityV3>().type == FacilityV3.Type.Communications)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //    else
-        //    {
-        //        Color tempColor = fac.GetComponent<SVGImage>().color;
-        //        tempColor.a = 0.5f;
-        //        fac.GetComponent<SVGImage>().color = tempColor;
-        //    }
-        //}
+       
         Debug.Log("player active");
 
-
+        // tell everybody else of this player's type
+        if (!isServer)
+        {
+            Message msg;
+            List<int> tmpList = new List<int>(1);
+            tmpList.Add((int)playerType);
+            msg = new Message(CardMessageType.SharePlayerType, tmpList);
+            AddMessage(msg);
+        } else
+        {
+            RGNetworkPlayerList.instance.SetPlayerType(playerType);
+        }
     }
 
-    public void ChangePlayers()
+    public void RealGameStart()
     {
-        //if (playerActive)
-        //{
-        //    activePlayerNumber++;
-        //    if (activePlayerNumber >= allPlayers.Length)
-        //    {
-        //        activePlayerNumber = 0;
-        //    }
-        //    activePlayerText.text = allPlayers[activePlayerNumber].GetComponent<CardPlayer>().playerType + " Player";
-        //    fundText.text = "Funds: " + allPlayers[activePlayerNumber].GetComponent<CardPlayer>().funds;
-        //    allPlayers[activePlayerNumber].SetActive(true);
-        //    foreach (GameObject players in allPlayers)
-        //    {
-        //        if (players != allPlayers[activePlayerNumber])
-        //        {
-        //            players.GetComponent<CardPlayer>().cardDropZone.SetActive(false);
-        //            players.GetComponent<CardPlayer>().handDropZone.SetActive(false);
-        //            foreach (GameObject card in players.GetComponent<CardPlayer>().HandList)
-        //            {
-        //                card.SetActive(false);
-
-        //            }
-        //            foreach (GameObject card in players.GetComponent<CardPlayer>().ActiveCardList)
-        //            {
-        //                card.SetActive(false);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            players.GetComponent<CardPlayer> ().cardDropZone.SetActive(true);
-        //            players.GetComponent<CardPlayer>().handDropZone.SetActive(true);
-        //            if (allPlayers[activePlayerNumber].GetComponent<CardPlayer>().handSize < 5)
-        //            {
-        //                allPlayers[activePlayerNumber].GetComponent<CardPlayer>().DrawCard(true, 0);
-        //            }
-        //            foreach (GameObject card in players.GetComponent<CardPlayer>().HandList)
-        //            {
-        //                card.SetActive(true);
-
-        //            }
-        //            foreach (GameObject card in players.GetComponent<CardPlayer>().ActiveCardList)
-        //            {
-        //                card.SetActive(true);
-        //            }
-        //        }
-        //    }
-        //    //foreach (GameObject fac in allFacilities)
-        //    //{
-        //    //    if (fac.GetComponent<FacilityV3>().type == allPlayers[activePlayerNumber].GetComponent<Player>().type)
-        //    //    {
-        //    //        Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //        tempColor.a = 1.0f;
-        //    //        fac.GetComponent<SVGImage>().color = tempColor;
-        //    //    }
-                
-        //    //    else
-        //    //    {
-        //    //        Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //        tempColor.a = 0.5f;
-        //    //        fac.GetComponent<SVGImage>().color = tempColor;
-        //    //    }
-        //    //}
-        //    foreach (GameObject card in maliciousActor.HandList)
-        //    {
-        //        card.SetActive(false);
-        //    }
-        //    foreach (GameObject card in maliciousActor.ActiveCardList)
-        //    {
-        //        card.SetActive(false);
-        //    }
-        //    DisableAllOutline();
-        //}
-        //else
-        //{
-
-        //    //foreach (GameObject fac in allFacilities)
-        //    //{
-        //    //    Color tempColor = fac.GetComponent<SVGImage>().color;
-        //    //    tempColor.a = 1.0f;
-        //    //    fac.GetComponent<SVGImage>().color = tempColor;
-        //    //}
-        //}
+        Debug.Log("sending fake start game to all clients");
+        if (isServer)
+        {
+            Message msg = RGNetworkPlayerList.instance.CreateStartGameMessage();
+            AddMessage(msg);
+        } 
+        
     }
-
-    public void SpawnPlayers(int playerCount)
-    {
-        //GameObject basePlayer = GameObject.Find("Base Player");
-        //allPlayers = new GameObject[playerCount];
-        //for (int i = 0; i < playerCount; i++)
-        //{
-        //    GameObject newPlayer = Instantiate(basePlayer);
-        //    //switch (i)
-        //    //{
-        //    //    case 0:
-        //    //        newPlayer.GetComponent<CardPlayer>().playerType = FacilityV3.Type.Fuel;
-        //    //        break;
-
-        //    //    case 1:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.Commodities;
-        //    //        break;
-
-        //    //    case 2:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.Health;
-        //    //        break;
-
-        //    //    case 3:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.Security;
-        //    //        break;
-
-        //    //    case 4:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.FireDept;
-        //    //        break;
-
-        //    //    case 5:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.City;
-        //    //        break;
-
-        //    //    case 6:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.PublicGoods;
-        //    //        break;
-
-        //    //    case 7:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.ElectricityGeneration;
-        //    //        break;
-        //    //    case 8:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.ElectricityDistribution;
-        //    //        break;
-        //    //    case 9:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.Water;
-        //    //        break;
-        //    //    case 10:
-        //    //        newPlayer.GetComponent<CardPlayer>().type = FacilityV3.Type.Transportation;
-        //    //        break;
-        //    //}
-        //    newPlayer.transform.SetParent(map.transform, false);
-        //    newPlayer.name = newPlayer.GetComponent<CardPlayer>().playerType + " Player";
-        //    allPlayers[i] = newPlayer;
-        //}
-        //basePlayer.SetActive(false);
-    }
-    public void SpawnMaliciousActor()
-    {
-        //GameObject baseMalPlayer = GameObject.Find("Base Malicious Actor");
-        //GameObject newPlayer = Instantiate(baseMalPlayer);
-        //newPlayer.transform.SetParent(map.transform, false);
-        //newPlayer.name = "Malicious Actor";
-        //maliciousActor = newPlayer.GetComponent<CardPlayer>();
-        //MalActorObject = maliciousActor.gameObject;
-        //baseMalPlayer.SetActive(false);
-    }
-
 
     public void OnDrag(PointerEventData pointer)
     {
@@ -569,22 +288,6 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
                 }
             }
         }
-    }
-
-   
-
-    public void AddFunds(int count)
-    {
-        //if (isServer)
-        //{
-        //    maliciousActor.funds += count;
-        //    fundText.text = "Funds: " + maliciousActor.funds;
-        //} else
-        //{
-        //    resiliencePlayer.funds += count;
-        //    fundText.text = "Funds: " + resiliencePlayer.funds;
-
-        //}
     }
 
     public void ShowEndGameCanvas(int gameState)
@@ -620,11 +323,6 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     }
 
-    public void TestEndGame()
-    {
-       // RGNetworkPlayerList.instance.CmdEndGame(2);
-    }
-
     public void SetPlayerType()
     {
         if (playerDeckChoice == null)
@@ -638,6 +336,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
         if (playerDeckChoice != null)
         {
+            // set this player's type
             switch (playerDeckChoice.value)
             {
                 case 0:
@@ -649,9 +348,17 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
                 default:
                     break;
             }
+
+            // display player type on view???
             Debug.Log("player type set to be " + playerType);
         }
         
+    }
+
+    public void DisplayOtherPlayerTypes( string playerName, PlayerType type)
+    {
+        // need to do something with a view here...
+        Debug.Log("The player " + playerName + " joined with type " + type);
     }
 
     public void EndGame(int whoWins, bool sendMessage)
@@ -684,7 +391,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     public void IncrementTurn()
     {
         turnTotal++;
-        gameView.turnText.text = "Turn: " + GetTurn();
+        turnText.text = "Turn: " + GetTurn();
         if (isServer)
         {
             Debug.Log("server adding increment turn message");
@@ -696,31 +403,17 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     {
         //if (!myTurn)
         //{
-        //    if (isServer)
+        //    foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().HandList)
         //    {
-        //        foreach (GameObject card in maliciousActor.GetComponent<CardPlayer>().HandList)
-        //        {
-        //            card.SetActive(true);
-        //        }
-        //        foreach (GameObject card in maliciousActor.GetComponent<CardPlayer>().ActiveCardList)
-        //        {
-        //            card.SetActive(true);
-        //        }
+        //        card.SetActive(true);
         //    }
-        //    else
+        //    foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().ActiveCardList)
         //    {
-        //        foreach (GameObject card in resiliencePlayer.GetComponent<CardPlayer>().HandList)
-        //        {
-        //            card.SetActive(true);
-        //        }
-        //        foreach (GameObject card in resiliencePlayer.GetComponent<CardPlayer>().ActiveCardList)
-        //        {
-        //            card.SetActive(true);
-        //        }
+        //        card.SetActive(true);
         //    }
+           
         //    myTurn = true;
         //    gameView.ShowPlayUI();
-        //    AddFunds(100);
         //    Debug.Log("play ui shown");
         //}
 
