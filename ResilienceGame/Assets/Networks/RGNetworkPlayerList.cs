@@ -49,6 +49,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     {
         if (isServer)
         {
+            Debug.Log("adding player to server : " + id);
             playerIDs.Add(id);
             playerNetworkReadyFlags.Add(true);
             playerTurnTakenFlags.Add(false);
@@ -66,6 +67,11 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             {
                 Debug.Log("Ready to start server is last!!");
                 GameManager.instance.RealGameStart();
+                // get the turn taking flags ready to go again
+                for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                {
+                    playerTurnTakenFlags[i] = false;
+                }
             }
         }
     }
@@ -122,7 +128,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     Debug.Log("SERVER SENT a new player name and id to clients");
                 }
                 break;
-            case CardMessageType.EndTurn:
+            case CardMessageType.EndPhase:
                 {
                     // turn taking is handled here because the list of players on 
                     // the network happens here
@@ -131,45 +137,52 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         indexId = (uint)localPlayerID,
                         type = (uint)data.Type
                     };
-                    Debug.Log("update observer called end turn! ");
+                    Debug.Log("update observer called end phase! ");
                     if (isServer)
                     {
                         // we've played so we're no longer on the ready list
                         int playerIndex = localPlayerID;
-
                         playerTurnTakenFlags[playerIndex] = true;
                         // find next player to ok to play and send them a message
                         int nextPlayerId = -1;
-                        for (int i = playerIndex + 1; i < playerTurnTakenFlags.Count; i++)
+                        for (int i = 0; i < playerTurnTakenFlags.Count; i++)
                         {
                             if (!playerTurnTakenFlags[i])
                             {
                                 nextPlayerId = i;
+                                Debug.Log("first player not done is " + i);
                                 break;
                             }
                         }
 
-                        if (nextPlayerId != -1)
+                        if (nextPlayerId == -1)
                         {
-                            // send the start turn ok to the next player
-                            NetworkConnectionToClient connection = NetworkServer.connections[nextPlayerId];
-                            msg.type = (uint)CardMessageType.StartTurn;
-                            connection.Send(msg);
-                            Debug.Log("next client should receive message " + nextPlayerId + " with connection id " + connection.identity.netId);
-                        }
-                        else
-                        {
+                            Debug.Log("update observer everybody has ended phase!");
+                            GamePhase nextPhase = manager.GetNextPhase();
+
                             // need to increment the turn and set all the players to ready again
                             for (int i = 0; i < playerTurnTakenFlags.Count; i++)
                             {
                                 playerTurnTakenFlags[i] = false;
                             }
-                            // set turn to the server
-                            manager.StartTurn();
+
+                            // tell all the clients to go to the next phase
+                            msg.type = (uint)CardMessageType.StartNextPhase;
+                            NetworkServer.SendToAll(msg);
+
+                            // server needs to start their next phase too
+                            manager.StartNextPhase();
+
+                            if (nextPhase == GamePhase.DrawAndDiscard)
+                            {
+                                manager.IncrementTurn();
+                                Debug.Log("Turn is done - incrementing and starting again.");
+                            }
                         }
                     }
                     else
                     {
+
                         NetworkClient.Send(msg);
                         Debug.Log("CLIENT ENDED TURN AND GAVE IT BACK TO SERVER");
                     }
@@ -246,16 +259,15 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         {
             switch (type)
             {
-                case CardMessageType.StartTurn:
-                    Debug.Log("received start turn message");
-                    manager.StartTurn();
+                case CardMessageType.StartNextPhase:
+                    Debug.Log("received start next phase message");
+                    manager.StartNextPhase();
                     break;
-                case CardMessageType.EndTurn:
+                case CardMessageType.EndPhase:
                     // only the server should get and end turn message!
-                    Debug.Log("client received end turn message!");
+                    Debug.Log("client received end phase message and it shouldn't!");
                     break;
                 case CardMessageType.IncrementTurn:
-                    // only the server should get and end turn message!
                     Debug.Log("client received increment turn message!");
                     manager.IncrementTurn();
                     break;             
@@ -274,20 +286,23 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
         switch (type)
         {
-            case CardMessageType.StartTurn:
+            case CardMessageType.StartNextPhase:
                 // nobody tells server to start a turn, so this shouldn't happen
-                Debug.Log("server start turn message");
+                Debug.Log("server start next phase message when it shouldn't!");
                 break;
-            case CardMessageType.EndTurn:
+            case CardMessageType.EndPhase:
                 // end turn is handled here because the player list is kept
                 // in this class
-                Debug.Log("server received end turn message");
+                Debug.Log("server received end phase message from sender: " + senderId);
+                Debug.Log("player turn count : " + playerTurnTakenFlags.Count);
                 // note this player's turn has ended      
                 int playerIndex = (int)senderId;
+                Debug.Log("player index : " +playerIndex);
                 playerTurnTakenFlags[playerIndex] = true;
+                Debug.Log("got here");
                 // find next player to ok to play and send them a message
                 int nextPlayerId = -1;
-                for (int i = playerIndex + 1; i < playerTurnTakenFlags.Count; i++)
+                for (int i = 0; i < playerTurnTakenFlags.Count; i++)
                 {
                     if (!playerTurnTakenFlags[i])
                     {
@@ -295,27 +310,36 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         break;
                     }
                 }
-
-                if (nextPlayerId != -1)
+                Debug.Log("got here 2");
+                if (nextPlayerId == -1)
                 {
-                    // send my turn to the next player
-                    NetworkConnectionToClient connection = NetworkServer.connections[nextPlayerId];
-                    msg.indexId = (uint)nextPlayerId;
-                    msg.type = (uint)CardMessageType.StartTurn;
-                    connection.Send(msg);
-                    Debug.Log("next client should receive message " + nextPlayerId);
+                    Debug.Log("got here 3");
+                    GamePhase nextPhase = manager.GetNextPhase();
+                    Debug.Log("getting next phase : " + nextPhase);
 
-                }
-                else
-                {
                     // need to increment the turn and set all the players to ready again
                     for (int i = 0; i < playerTurnTakenFlags.Count; i++)
                     {
                         playerTurnTakenFlags[i] = false;
                     }
-                    manager.IncrementTurn();
-                    manager.StartTurn();
-                    Debug.Log("Turn is done - incrementing and starting again.");
+                    // 
+
+                    Debug.Log("sending start next phase");
+                    // tell all the clients to go to the next phase
+                    msg.indexId = (uint)localPlayerID;
+                    msg.type = (uint)CardMessageType.StartNextPhase;
+                    NetworkServer.SendToAll(msg);
+                    Debug.Log("doing the next phase");
+                    // server needs to start next phase as well
+                    manager.StartNextPhase();
+                    Debug.Log("checking to make sure it's not the next turn");
+                    if (nextPhase == GamePhase.DrawAndDiscard)
+                    {
+                        manager.IncrementTurn();
+                        Debug.Log("Turn is done - incrementing and starting again.");
+                    }
+                    Debug.Log("next phase stuff done");
+
                 }
                 break;
             case CardMessageType.IncrementTurn:
@@ -371,6 +395,9 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             element += actualInt;
                             Debug.Log("player being added : " + playerIDs[i] + " " + playerTypes[i] +
                                 " " + playerNames[i]);
+
+                            // now start the next phase
+                            GameManager.instance.RealGameStart();
                         }
 
                     }
@@ -441,7 +468,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             PlayerType playerType = (PlayerType)BitConverter.ToInt32(msg.payload);
                             int playerIndex = (int)msg.indexId;
                             playerTypes[playerIndex] = playerType;
-                            playerTurnTakenFlags.Add(true);
+                            playerTurnTakenFlags[playerIndex] = true;
                             Debug.Log("setting player type to " + playerType);
 
                             // check to see if we've got a player type for everybody!
@@ -449,6 +476,11 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             {
                                 Debug.Log("Ready to start!");
                                 GameManager.instance.RealGameStart();
+                                // get the turn taking flags ready to go again
+                                for (int i=0; i<playerTurnTakenFlags.Count; i++)
+                                {
+                                    playerTurnTakenFlags[i] = false;
+                                }
                             }
 
                             // let the game manager display the new info

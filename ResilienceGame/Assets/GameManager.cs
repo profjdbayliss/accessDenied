@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 using System.Diagnostics.Eventing.Reader;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 public enum GamePhase
 {
@@ -32,6 +33,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     // where are we in game phases?
     GamePhase mGamePhase = GamePhase.Start;
+    GamePhase mPreviousGamePhase = GamePhase.Start;
     bool myTurn = false;
     bool endGame = false;
     int turnTotal = 0;
@@ -65,7 +67,8 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     // var's we use so we don't have to switch between
     // the player types for generic stuff
     public CardPlayer actualPlayer;
-    public TextMeshProUGUI turnText;
+    public TextMeshProUGUI mTurnText;
+    public TextMeshProUGUI mPhaseText;
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject tiles;
@@ -162,21 +165,22 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         {
             if (gameStarted)
             {
-                if (isServer)
-                {
-                    if (!endGame && turnTotal >= 4)
-                    {
-                        EndGame(0, true);
-                    }
-                }
+                HandlePhases(mGamePhase);
+                //if (isServer)
+                //{
+                //    if (!endGame && turnTotal >= 4)
+                //    {
+                //        EndGame(0, true);
+                //    }
+                //}
                 
             }
             else
             {
-                if (isServer)
-                {
-                    StartTurn();
-                }
+                //if (isServer)
+                //{
+                //    StartTurn();
+                //}
             }
             NotifyObservers();
 
@@ -202,6 +206,13 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     public void HandlePhases(GamePhase phase)
     {
+        mGamePhase = phase;
+        if (!mGamePhase.Equals(mPreviousGamePhase))
+        {
+            mPhaseText.text = mGamePhase.ToString();
+            mPreviousGamePhase = phase;
+        }
+
         switch (phase)
         {
             case GamePhase.Start:
@@ -210,7 +221,19 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
             case GamePhase.DrawAndDiscard:
                 // draw cards if necessary
                 actualPlayer.DrawCards();
-                // set the discard button to work
+                // set the discard area to work
+                break;
+            case GamePhase.Defense:
+                break;
+            case GamePhase.Vulnerability:
+                break;
+            case GamePhase.Mitigate:
+                break;
+            case GamePhase.Attack:
+                break;
+            case GamePhase.AddStation:
+                break;
+            case GamePhase.End:
                 break;
             default:
                 break;
@@ -220,20 +243,14 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     public void StartGame()
     {
         setupActors();
-        // in this game people go in parallel to each other
-        // per phase
-        myTurn = true;
-
         GameObject obj = GameObject.Find("ExampleGameUI");
         gameView = obj.GetComponent<RGGameExampleUI>();
         gameView.SetStartTeamInfo(actualPlayer);
         gameCanvas.SetActive(true);
         startScreen.SetActive(false); // Start menu isn't necessary now
-        gameStarted = true;
-        mGamePhase = GamePhase.DrawAndDiscard;
         turnTotal = 0;
-        turnText.text = "Turn: " + GetTurn();
-
+        mTurnText.text = "Turn: " + GetTurn();
+        mPhaseText.text = "Phase: " + mGamePhase.ToString();
        
         activePlayerText.text = playerType + " Player";
         Debug.Log("set active player to be: " + playerType);
@@ -259,13 +276,19 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     public void RealGameStart()
     {
-        Debug.Log("sending fake start game to all clients");
+        // send out the starting message with all player info
+        // and start the next phase
         if (isServer)
         {
             Message msg = RGNetworkPlayerList.instance.CreateStartGameMessage();
             AddMessage(msg);
-        } 
-        
+        }
+
+        mGamePhase = GamePhase.DrawAndDiscard;
+        // in this game people go in parallel to each other
+        // per phase
+        myTurn = true;
+        gameStarted = true;
     }
 
     public void OnDrag(PointerEventData pointer)
@@ -355,6 +378,11 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         
     }
 
+    public void Discard()
+    {
+
+    }
+
     public void DisplayOtherPlayerTypes( string playerName, PlayerType type)
     {
         // need to do something with a view here...
@@ -377,21 +405,57 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         endGame = true;
     }
 
-    public void EndTurn()
+    public void EndPhase()
     {
         if (myTurn)
         {
             gameView.HidePlayUI();
-            Debug.Log("play ui hidden");
-            AddMessage(new Message(CardMessageType.EndTurn));
+            AddMessage(new Message(CardMessageType.EndPhase));
             myTurn = false;
         }
+    }
+
+    public GamePhase GetNextPhase()
+    {
+        GamePhase nextPhase = GamePhase.Start;
+
+        switch(mGamePhase)
+        {
+            case GamePhase.Start:
+                nextPhase = GamePhase.DrawAndDiscard;
+                break;
+            case GamePhase.DrawAndDiscard:
+                nextPhase = GamePhase.Defense;
+                break;
+            case GamePhase.Defense:
+                nextPhase = GamePhase.Vulnerability;
+                break;
+            case GamePhase.Vulnerability:
+                nextPhase = GamePhase.Mitigate;
+                break;
+            case GamePhase.Mitigate:
+                nextPhase = GamePhase.Attack;
+                break;
+            case GamePhase.Attack:
+                nextPhase = GamePhase.AddStation;
+                break;
+            case GamePhase.AddStation:
+                nextPhase = GamePhase.DrawAndDiscard;
+                break;
+            case GamePhase.End:
+                nextPhase = GamePhase.End;
+                break;
+            default:
+                break;
+        }
+
+        return nextPhase;
     }
 
     public void IncrementTurn()
     {
         turnTotal++;
-        turnText.text = "Turn: " + GetTurn();
+        mTurnText.text = "Turn: " + GetTurn();
         if (isServer)
         {
             Debug.Log("server adding increment turn message");
@@ -399,23 +463,24 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         }
     }
 
-    public void StartTurn()
+    public void StartNextPhase()
     {
-        //if (!myTurn)
-        //{
-        //    foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().HandList)
-        //    {
-        //        card.SetActive(true);
-        //    }
-        //    foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().ActiveCardList)
-        //    {
-        //        card.SetActive(true);
-        //    }
-           
-        //    myTurn = true;
-        //    gameView.ShowPlayUI();
-        //    Debug.Log("play ui shown");
-        //}
+        if (!myTurn)
+        {
+            foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().HandList)
+            {
+                card.SetActive(true);
+            }
+            foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().ActiveCardList)
+            {
+                card.SetActive(true);
+            }
+
+            myTurn = true;
+            mGamePhase = GetNextPhase();
+            gameView.ShowPlayUI();
+            Debug.Log("play ui shown");
+        }
 
     }
 

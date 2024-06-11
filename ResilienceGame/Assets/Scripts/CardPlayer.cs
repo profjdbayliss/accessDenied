@@ -19,7 +19,8 @@ public class CardPlayer : MonoBehaviour
     public PlayerType playerType = PlayerType.Energy;
     public GameManager manager;
     public List<Card> cards;
-    public List<int> Deck;
+    public List<int> Facilities = new List<int>(10);
+    public List<int> Deck = new List<int>(52);
     public List<int> CardCountList;
     public List<int> targetIDList;
     public List<GameObject> HandList;
@@ -30,7 +31,9 @@ public class CardPlayer : MonoBehaviour
     public GameObject cardPrefab;
     public GameObject cardDropZone;
     public GameObject handDropZone;
-    public List<GameObject> facilitiesActedUpon;
+    public GameObject playedCardZone;
+
+    //public List<GameObject> facilitiesActedUpon;
     public bool redoCardRead = false;
 
     public void InitializeCards()
@@ -39,10 +42,15 @@ public class CardPlayer : MonoBehaviour
 
         for (int i = 0; i <cards.Count; i++)
         {
-            Deck.Add(cards[i].data.cardID);
-        }
-
-       
+            if (cards[i].data.type != CardType.Station)
+            {
+                Deck.Add(cards[i].data.cardID);
+            } else
+            {
+                Facilities.Add(cards[i].data.cardID);
+            }
+            
+        }  
     }
 
     public virtual void DrawCards()
@@ -52,36 +60,37 @@ public class CardPlayer : MonoBehaviour
             int count = HandList.Count;
             for (int i = 0; i < maxHandSize-count; i++)
             {
-                DrawCard(true, 0);
+                DrawCard(true, 0, Deck);
             }
         }
     }
 
-    public virtual void DrawCard(bool random, int cardId)
+    
+    public virtual void DrawCard(bool random, int cardId, List<int> deckToDrawFrom)
     {
         int rng;
         if (random)
         {
-            rng = UnityEngine.Random.Range(0, Deck.Count);
+            rng = UnityEngine.Random.Range(0, deckToDrawFrom.Count);
         }
         else
         {
             rng = cardId;
         }
 
-        if (Deck.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
+        if (deckToDrawFrom.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
         {
             Debug.Log("no cards drawn.");
             return;
         }
 
-        if (Deck[rng] > 0)
+        if (deckToDrawFrom[rng] > 0)
         {
             //CardCountList[rng]--;
             GameObject tempCardObj = Instantiate(cardPrefab);
             Card tempCard = tempCardObj.GetComponent<Card>();
             tempCard.cardDropZone = cardDropZone;
-            Card actualCard = cards[Deck[rng]];
+            Card actualCard = cards[deckToDrawFrom[rng]];
             tempCard.data = actualCard.data;
             CardFront front = actualCard.GetComponent<CardFront>();
             tempCard.front = front;
@@ -146,7 +155,7 @@ public class CardPlayer : MonoBehaviour
         {
             // WORK: does this condition ever happen? Is there a card with the id of 0???
             Debug.Log("random number was less than 0");
-            DrawCard(true, cardId);
+            DrawCard(true, cardId, deckToDrawFrom);
         }
     }
 

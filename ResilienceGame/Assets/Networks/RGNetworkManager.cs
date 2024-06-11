@@ -28,11 +28,8 @@ public class RGNetworkManager : NetworkManager
         base.OnServerAddPlayer(conn);
 
         int playerID = conn.connectionId;
-        
         RGNetworkPlayer player = (RGNetworkPlayer)conn.identity.GetComponent<RGNetworkPlayer>();
         string name = (string)player.mPlayerName;
-        int tempId = player.mPlayerID;
-        Debug.Log("are the ids the same? " + tempId + " " + playerID);
         RGNetworkPlayerList.instance.AddPlayer(playerID, name);
     }
 

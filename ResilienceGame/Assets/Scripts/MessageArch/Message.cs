@@ -8,8 +8,8 @@ using System.Text;
 public enum CardMessageType
 {
     StartGame,
-    StartTurn,
-    EndTurn,
+    StartNextPhase,
+    EndPhase,
     IncrementTurn,
     SharePlayerType,
     EndGame,

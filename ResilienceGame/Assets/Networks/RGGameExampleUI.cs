@@ -73,29 +73,29 @@ public class RGGameExampleUI : MonoBehaviour
 
     public void ShowPlayUI()
     {      
-            endTurnButton.gameObject.SetActive(true);
-            cardCanvas.gameObject.SetActive(true);
+            //endTurnButton.gameObject.SetActive(true);
+            //cardCanvas.gameObject.SetActive(true);
             cardHolder.SetActive(true);
             cardPlayedHolder.SetActive(true);
     }
 
     public void HidePlayUI()
     {    
-            endTurnButton.gameObject.SetActive(false);
+            //endTurnButton.gameObject.SetActive(false);
             cardHolder.SetActive(false);
-            cardCanvas.gameObject.SetActive(false);
+            //cardCanvas.gameObject.SetActive(false);
             cardPlayedHolder.SetActive(false);
     }
 
     public void EndTurn()
     {
-        GameManager.instance.EndTurn();
-        Debug.Log("manager end turn called!");
+        //GameManager.instance.EndTurn();
+        //Debug.Log("manager end turn called!");
     }
 
     public void ShowAllCards()
     {
-        Debug.Log("button for showing all cards clicked");
-        GameManager.instance.ShowMyCardsToEverybody();
+        //Debug.Log("button for showing all cards clicked");
+        //GameManager.instance.ShowMyCardsToEverybody();
     }
 }
