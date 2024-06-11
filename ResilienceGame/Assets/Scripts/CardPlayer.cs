@@ -32,6 +32,8 @@ public class CardPlayer : MonoBehaviour
     public GameObject cardDropZone;
     public GameObject handDropZone;
     public GameObject playedCardZone;
+    public GameObject playerPlayedZone;
+    public GameObject opponentPlayedZone;
 
     //public List<GameObject> facilitiesActedUpon;
     public bool redoCardRead = false;
@@ -44,13 +46,20 @@ public class CardPlayer : MonoBehaviour
         {
             if (cards[i].data.type != CardType.Station)
             {
-                Deck.Add(cards[i].data.cardID);
+                for (int j=0; j < cards[i].data.numberInDeck; j++)
+                {
+                    Deck.Add(cards[i].data.cardID);
+                }
+                
             } else
             {
-                Facilities.Add(cards[i].data.cardID);
+                for (int j = 0; j < cards[i].data.numberInDeck; j++)
+                {
+                    Facilities.Add(cards[i].data.cardID);
+                }  
             }
             
-        }  
+        }
     }
 
     public virtual void DrawCards()
@@ -60,13 +69,37 @@ public class CardPlayer : MonoBehaviour
             int count = HandList.Count;
             for (int i = 0; i < maxHandSize-count; i++)
             {
-                DrawCard(true, 0, Deck);
+                DrawCard(true, 0, ref Deck, handDropZone);
             }
         }
     }
 
-    
-    public virtual void DrawCard(bool random, int cardId, List<int> deckToDrawFrom)
+    public virtual void DrawFacility(bool isRandom, int worth)
+    {
+        
+        if (Facilities.Count > 0)
+        {
+            if (isRandom)
+            {
+                DrawCard(true, 0, ref Facilities, playerPlayedZone);
+            } else
+            {
+                // need to draw the 2 pt facility according to rules
+                // at the beginning!
+                for (int i=0; i<Facilities.Count; i++)
+                {
+                    if (cards[Facilities[i]].data.worth == worth)
+                    {
+                        DrawCard(false, i, ref Facilities, playerPlayedZone);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public virtual void DrawCard(bool random, int cardId, ref List<int> deckToDrawFrom,
+        GameObject dropZone)
     {
         int rng;
         if (random)
@@ -84,9 +117,6 @@ public class CardPlayer : MonoBehaviour
             return;
         }
 
-        if (deckToDrawFrom[rng] > 0)
-        {
-            //CardCountList[rng]--;
             GameObject tempCardObj = Instantiate(cardPrefab);
             Card tempCard = tempCardObj.GetComponent<Card>();
             tempCard.cardDropZone = cardDropZone;
@@ -144,19 +174,15 @@ public class CardPlayer : MonoBehaviour
             tempCard.state = CardState.CardDrawn;
             Vector3 tempPos = tempCardObj.transform.position;
             tempCardObj.transform.position = tempPos;
-            tempCardObj.transform.SetParent(handDropZone.transform, false);
-            Vector3 tempPos2 = handDropZone.transform.position;
+            tempCardObj.transform.SetParent(dropZone.transform, false);
+            Vector3 tempPos2 = dropZone.transform.position;
             handSize++;
             tempCardObj.transform.position = tempPos2;
             tempCardObj.SetActive(true);
             HandList.Add(tempCardObj);
-        }
-        else
-        {
-            // WORK: does this condition ever happen? Is there a card with the id of 0???
-            Debug.Log("random number was less than 0");
-            DrawCard(true, cardId, deckToDrawFrom);
-        }
+
+            // remove this card so we don't draw it again
+            deckToDrawFrom.RemoveAt(rng);
     }
 
     // Update is called once per frame

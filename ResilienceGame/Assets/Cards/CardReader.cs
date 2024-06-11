@@ -25,10 +25,10 @@ public class CardReader : MonoBehaviour
 
         // Check to see if the file exists
         fileLocation = Application.streamingAssetsPath + "/" + cardFileName;
-        Debug.Log("trying to read file at location: " + fileLocation);
+        //Debug.Log("trying to read file at location: " + fileLocation);
         if (File.Exists(fileLocation))
         {
-            Debug.Log("reading the file!");
+            //Debug.Log("reading the file!");
             FileStream stream = File.OpenRead(fileLocation);
             TextReader reader = new StreamReader(stream);
             Texture2D tex = new Texture2D(1, 1);
@@ -36,7 +36,7 @@ public class CardReader : MonoBehaviour
 
             // Split the read in CSV file into seperate objects at the new line character
             string[] allCSVObjects = allCardText.Split("\n");
-            Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
+            //Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
 
             // get all the image elements in the csv file
             if (createAtlas)
@@ -111,11 +111,11 @@ public class CardReader : MonoBehaviour
                         // Get a reference to the Card component on the card gameobject.
                         Card tempCard = tempCardObj.GetComponent<Card>();
                         CardFront tempCardFront = tempCard.GetComponent<CardFront>();
-                        tempCard.data.cardID = i;
+                        tempCard.data.cardID = i-1;
 
                         // 1: which type of card is this?
                         string type = individualCSVObjects[1].Trim();
-                        Debug.Log("card name is : " + individualCSVObjects[3] + " with type " + type);
+                        //Debug.Log("card name is : " + individualCSVObjects[3] + " with type " + type);
                         switch (type)
                         {
                             case "Defense":
@@ -177,7 +177,7 @@ public class CardReader : MonoBehaviour
                         // 5: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
                         string imageFilename = individualCSVObjects[5].Trim();
-                        Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
+                        //Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
 
                         if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
                         {
@@ -223,7 +223,7 @@ public class CardReader : MonoBehaviour
                         }
                         else
                         {
-                            Debug.Log("worth circle is true and will be: " + individualCSVObjects[8].Trim());
+                            //Debug.Log("worth circle is true and will be: " + individualCSVObjects[8].Trim());
                             tempCardFront.worthCircle = true;
                             // 8:  what's in the worth circle?
                             tempCard.data.worth = int.Parse(individualCSVObjects[8].Trim());
@@ -240,17 +240,18 @@ public class CardReader : MonoBehaviour
                         {
                             tempCardFront.costCircle = true;
                             // 9:  what's in the worth circle?
-                            tempCard.data.worth = int.Parse(individualCSVObjects[9].Trim());
+                            tempCard.data.cost = int.Parse(individualCSVObjects[9].Trim());
                         }
 
                         // 10: the category of the card if there is one
                         // WORK
 
                         // now add one copy of this card for every instance in the card game
-                        for (int j = 0; j < numberOfCards; j++)
-                        {
-                            cards.Add(tempCard);
-                        }
+                        tempCard.data.numberInDeck = numberOfCards;
+
+                        // now add to the deck of single types of cards
+
+                        cards.Add(tempCard);
                     }
                 }
 

@@ -155,6 +155,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         actualPlayer.InitializeCards();
         actualPlayer.cardDropZone.SetActive(true);
         actualPlayer.handDropZone.SetActive(true);
+        actualPlayer.playerPlayedZone.SetActive(true);
 
     }
 
@@ -232,6 +233,8 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
             case GamePhase.Attack:
                 break;
             case GamePhase.AddStation:
+                actualPlayer.DrawFacility(true, 0);
+                EndPhase();
                 break;
             case GamePhase.End:
                 break;
@@ -289,6 +292,18 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         // per phase
         myTurn = true;
         gameStarted = true;
+
+        // draw our first 2 pt facility
+        actualPlayer.DrawFacility(false, 2);
+
+        foreach (GameObject card in actualPlayer.HandList)
+        {
+            card.SetActive(true);
+        }
+        foreach (GameObject card in actualPlayer.ActiveCardList)
+        {
+            card.SetActive(true);
+        }
     }
 
     public void OnDrag(PointerEventData pointer)
@@ -467,11 +482,11 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     {
         if (!myTurn)
         {
-            foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().HandList)
+            foreach (GameObject card in actualPlayer.HandList)
             {
                 card.SetActive(true);
             }
-            foreach (GameObject card in actualPlayer.GetComponent<CardPlayer>().ActiveCardList)
+            foreach (GameObject card in actualPlayer.ActiveCardList)
             {
                 card.SetActive(true);
             }

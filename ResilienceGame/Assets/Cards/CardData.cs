@@ -16,6 +16,7 @@ public enum CardType
 
 public struct CardData
 {
+    public int numberInDeck;
     public CardType type;
     public float percentSuccess;
     public int cardID;

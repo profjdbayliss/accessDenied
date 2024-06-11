@@ -25,7 +25,7 @@ public class Card : MonoBehaviour, IDropHandler
     public GameObject handDropZone;
     public GameObject gameCanvas;
     public GameObject originalParent;
-
+  
     // Start is called before the first frame update
     void Start()
     {
