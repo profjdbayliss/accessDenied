@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 
-public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
+public class GameManager : MonoBehaviour, IRGObservable
 {
     // Deck readers and resulting card lists.
     public CardReader energyDeckReader;
@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     // set up the proper player cards and type
     PlayerType playerType = PlayerType.Energy;
+    PlayerType opponentType = PlayerType.Water;
     
     public GameObject playerDeckList;
     TMPro.TMP_Dropdown playerDeckChoice;
@@ -35,7 +36,6 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
 
     // keep track of all game messages
     MessageQueue mMessageQueue = new MessageQueue();
-    Message mMessage;
 
     // network connections
     RGNetworkPlayerList mRGNetworkPlayerList;
@@ -51,8 +51,14 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     // var's we use so we don't have to switch between
     // the player types for generic stuff
     public CardPlayer actualPlayer;
+    public CardPlayer opponentPlayer;
+    public GameObject opponentPlayedZone;
     public TextMeshProUGUI mTurnText;
     public TextMeshProUGUI mPhaseText;
+    public TextMeshProUGUI mPlayerName;
+    public TextMeshProUGUI mPlayerDeckType;
+    public TextMeshProUGUI mOpponentName;
+    public TextMeshProUGUI mOpponentDeckType;
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject tiles;
@@ -96,7 +102,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         {
             waterCards = reader.CSVRead(mCreateWaterAtlas);
             waterPlayer.cards = waterCards;
-            waterPlayer.playerType = PlayerType.WaterAndWasteWater;
+            waterPlayer.playerType = PlayerType.Water;
         }
         else
         {
@@ -132,11 +138,11 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
             actualPlayer.cards = energyCards;
             actualPlayer.playerType = PlayerType.Energy;
         }
-        else if (playerType==PlayerType.WaterAndWasteWater)
+        else if (playerType==PlayerType.Water)
         {
             actualPlayer = waterPlayer;
             actualPlayer.cards = waterCards;
-            actualPlayer.playerType = PlayerType.WaterAndWasteWater;
+            actualPlayer.playerType = PlayerType.Water;
         }
 
         // Initialize the deck info and set various
@@ -221,6 +227,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
                     // draw cards if necessary
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
+
                 } else
                 {
                     // check for discard and if there's a discard draw again
@@ -235,11 +242,22 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
             case GamePhase.Attack:
                 break;
             case GamePhase.AddStation:
-                // we only need one cycle for this particular
-                // phase as it's automated.
-                actualPlayer.DrawFacility(true, 0);
-                EndPhase();
-                // network messages will take care of forwarding the phase
+                if (phaseJustChanged)
+                {
+                    // we only need one cycle for this particular
+                    // phase as it's automated.
+                    int id = actualPlayer.DrawFacility(true, 0);
+                    // send message about what facility got drawn                 
+                    if (id != -1)
+                    {
+                        List<int> facilityList = new List<int>(1);
+                        facilityList.Add(id);
+                        Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
+                        AddMessage(facilityMessage);
+                    }
+                    EndPhase();
+                    // network will end this phase when messages are sent
+                }
                 break;
             case GamePhase.End:
                 // end of game phase
@@ -263,13 +281,15 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         turnTotal = 0;
         mTurnText.text = "Turn: " + GetTurn();
         mPhaseText.text = "Phase: " + mGamePhase.ToString();
+        mPlayerName.text = RGNetworkPlayerList.instance.localPlayerName;
+        mPlayerDeckType.text = "" + playerType;
        
         //activePlayerText.text = playerType + " Player";
         //Debug.Log("set active player to be: " + playerType);
         //activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
         ///activePlayerText.color = activePlayerColor;
         //yarnSpinner.SetActive(true);
-       
+
         // tell everybody else of this player's type
         if (!isServer)
         {
@@ -300,16 +320,52 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
         gameStarted = true;
 
         // draw our first 2 pt facility
-        actualPlayer.DrawFacility(false, 2);
+       int id = actualPlayer.DrawFacility(false, 2);
+        // send message about what facility got drawn
+        List<int> facilityList = new List<int>(1);
+        if (id != -1)
+        {
+            facilityList.Add(id);
+            Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
+            AddMessage(facilityMessage);
+        }
 
         // make sure to show all our cards
         foreach (GameObject card in actualPlayer.HandList)
         {
             card.SetActive(true);
         }
-        foreach (GameObject card in actualPlayer.ActiveCardList)
+        // don't think this does anything right now
+        //foreach (GameObject card in actualPlayer.ActiveCardList)
+        //{
+        //    card.SetActive(true);
+        //}
+
+        // set up the opponent name text
+        if (RGNetworkPlayerList.instance.playerIDs.Count > 0)
         {
-            card.SetActive(true);
+            if (RGNetworkPlayerList.instance.localPlayerID == 0)
+            {
+                mOpponentName.text = RGNetworkPlayerList.instance.playerNames[1];
+                mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[1];
+                opponentType = RGNetworkPlayerList.instance.playerTypes[1];
+               
+            }
+            else
+            {
+                mOpponentName.text = RGNetworkPlayerList.instance.playerNames[0];
+                mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
+                opponentType = RGNetworkPlayerList.instance.playerTypes[0];
+            }
+            if (opponentType == PlayerType.Energy)
+            {
+                opponentPlayer = energyPlayer;
+            }
+            else
+            {
+                opponentPlayer = waterPlayer;
+            }
+            opponentPlayer.InitializeCards();
         }
 
         // go on to the next phase
@@ -318,27 +374,27 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
     }
 
     // WORK needs to be redone
-    public void OnDrag(PointerEventData pointer)
-    {
-        if (tiles.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
-        {
-            // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
-            Vector2 tempVec2 = default(Vector2);
-            RectTransform target = tiles.gameObject.GetComponent<RectTransform>();
-            Vector2 tempPos = target.transform.localPosition;
+    //public void OnDrag(PointerEventData pointer)
+    //{
+    //    if (tiles.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
+    //    {
+    //        // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
+    //        Vector2 tempVec2 = default(Vector2);
+    //        RectTransform target = tiles.gameObject.GetComponent<RectTransform>();
+    //        Vector2 tempPos = target.transform.localPosition;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position - pointer.delta, pointer.pressEventCamera, out tempVec2) == true) // Check the older position of the element and see if it was previously
-            {
-                Vector2 tempNewVec = default(Vector2); // Create a new Vec2 to track the current position of the object
-                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position, pointer.pressEventCamera, out tempNewVec) == true)
-                {
-                    tempPos.x += tempNewVec.x - tempVec2.x;
-                    tempPos.y = tiles.transform.localPosition.y;
-                    tiles.transform.localPosition = tempPos;
-                }
-            }
-        }
-    }
+    //        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position - pointer.delta, pointer.pressEventCamera, out tempVec2) == true) // Check the older position of the element and see if it was previously
+    //        {
+    //            Vector2 tempNewVec = default(Vector2); // Create a new Vec2 to track the current position of the object
+    //            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position, pointer.pressEventCamera, out tempNewVec) == true)
+    //            {
+    //                tempPos.x += tempNewVec.x - tempVec2.x;
+    //                tempPos.y = tiles.transform.localPosition.y;
+    //                tiles.transform.localPosition = tempPos;
+    //            }
+    //        }
+    //    }
+    //}
 
     // WORK rewrite for this card game
     public void ShowEndGameCanvas(int gameState)
@@ -396,7 +452,7 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
                     playerType = PlayerType.Energy;
                     break;
                 case 1:
-                    playerType = PlayerType.WaterAndWasteWater;
+                    playerType = PlayerType.Water;
                     break;
                 default:
                     break;
@@ -534,6 +590,16 @@ public class GameManager : MonoBehaviour, IDragHandler, IRGObservable
             Debug.Log("play ui shown");
         }
 
+    }
+
+    public void AddOpponentFacility(int id)
+    {
+       
+        opponentPlayer.DrawCard(false, id, ref opponentPlayer.Facilities, opponentPlayedZone, false);
+        foreach (GameObject card in opponentPlayer.HandList)
+        {
+            card.SetActive(true);
+        }
     }
 
     // Gets which turn it is.

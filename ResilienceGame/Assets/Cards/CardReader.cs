@@ -157,7 +157,7 @@ public class CardReader : MonoBehaviour
                                 tempCard.data.onlyPlayedOn = PlayerType.Energy;
                                 break;
                             case "water":
-                                tempCard.data.onlyPlayedOn = PlayerType.WaterAndWasteWater;
+                                tempCard.data.onlyPlayedOn = PlayerType.Water;
                                 break;
                             default:
                                 break;

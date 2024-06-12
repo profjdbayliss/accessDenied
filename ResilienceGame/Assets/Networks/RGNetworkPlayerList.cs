@@ -29,13 +29,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     public static RGNetworkPlayerList instance;
 
     public int localPlayerID;
+    public string localPlayerName;
     public List<int> playerIDs = new List<int>();
     private GameManager manager;
 
     private List<bool> playerNetworkReadyFlags = new List<bool>();
     private List<bool> playerTurnTakenFlags = new List<bool>();
-    private List<PlayerType> playerTypes = new List<PlayerType>();
-    private List<string> playerNames = new List<string>();
+    public List<PlayerType> playerTypes = new List<PlayerType>();
+    public List<string> playerNames = new List<string>();
 
     private void Awake()
     {
@@ -55,6 +56,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             playerTurnTakenFlags.Add(false);
             playerTypes.Add(PlayerType.Any);
             playerNames.Add(name);
+            
         } 
     }
 
@@ -114,18 +116,20 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         switch (data.Type)
         {
             case CardMessageType.StartGame:
-                if (isServer)
                 {
-                    // only servers start the game!
-                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    if (isServer)
                     {
-                        indexId = (uint)localPlayerID,
-                        type = (uint)data.Type,
-                        count = (uint)playerIDs.Count,
-                        payload = data.byteArguments.ToArray()
-                    };
-                    NetworkServer.SendToAll(msg);
-                    Debug.Log("SERVER SENT a new player name and id to clients");
+                        // only servers start the game!
+                        RGNetworkLongMessage msg = new RGNetworkLongMessage
+                        {
+                            indexId = (uint)localPlayerID,
+                            type = (uint)data.Type,
+                            count = (uint)playerIDs.Count,
+                            payload = data.byteArguments.ToArray()
+                        };
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT a new player name and id to clients");
+                    }
                 }
                 break;
             case CardMessageType.EndPhase:
@@ -189,17 +193,20 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 }
                 break;
             case CardMessageType.IncrementTurn:
-                Debug.Log("update observer called increment turn! ");
-                if (isServer)
                 {
-                    RGNetworkShortMessage msg = new RGNetworkShortMessage
+                    Debug.Log("update observer called increment turn! ");
+                    if (isServer)
                     {
-                        indexId = (uint)localPlayerID,
-                        type = (uint)data.Type
-                    };
-                    NetworkServer.SendToAll(msg);
-                    Debug.Log("sending turn increment to all clients");
+                        RGNetworkShortMessage msg = new RGNetworkShortMessage
+                        {
+                            indexId = (uint)localPlayerID,
+                            type = (uint)data.Type
+                        };
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("sending turn increment to all clients");
+                    }
                 }
+
                 break;
             case CardMessageType.SharePlayerType:
                 {
@@ -239,6 +246,27 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     {
                         NetworkClient.Send(msg);
                         Debug.Log("CLIENT SENT GAME END MESSAGE FIRST");
+                    }
+                }
+                break;
+            case CardMessageType.SendPlayedFacility:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count(),
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+                    if (isServer)
+                    {
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT PLAYED FACILITY MESSAGE");
+                    }
+                    else
+                    {
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT SENT PLAYED FACILITY MESSAGE");
                     }
                 }
                 break;
@@ -394,12 +422,10 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
                             element += actualInt;
                             Debug.Log("player being added : " + playerIDs[i] + " " + playerTypes[i] +
-                                " " + playerNames[i]);
-
-                            // now start the next phase
-                            GameManager.instance.RealGameStart();
+                                " " + playerNames[i]); 
                         }
-
+                        // now start the next phase
+                        GameManager.instance.RealGameStart();
                     }
                     break;
                 //case CardMessageType.ShowCards:
@@ -425,6 +451,15 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         int whoWins = BitConverter.ToInt32(msg.payload);
                         manager.EndGame(whoWins, false);
                         Debug.Log("received end game message and will now end game on client");
+
+                    }
+                    break;
+                case CardMessageType.SendPlayedFacility:
+                    if (msg.count == 1)
+                    {
+                        int facilityId = BitConverter.ToInt32(msg.payload);
+                        manager.AddOpponentFacility(facilityId);
+                        Debug.Log("received facility message from opponent");
 
                     }
                     break;
@@ -512,6 +547,16 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         manager.EndGame(whoWins, false);
                         Debug.Log("received end game message and will now end game on server");
 
+                    }
+                    break;
+                case CardMessageType.SendPlayedFacility:
+                    if (msg.count == 1)
+                    {
+                        int facilityId = BitConverter.ToInt32(msg.payload);
+                        manager.AddOpponentFacility(facilityId);
+                        Debug.Log("received facility message from opponent");
+                        // WORK : for many player case would want server to resend this message
+                        // to everybody else.
                     }
                     break;
                 default:

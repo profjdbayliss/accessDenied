@@ -8,7 +8,7 @@ using UnityEngine.UI;
 // Enum to track player type
 public enum PlayerType
 {
-    WaterAndWasteWater,
+    Water,
     Energy,
     Any
 };
@@ -26,6 +26,7 @@ public class CardPlayer : MonoBehaviour
     public List<GameObject> HandList;
     public List<GameObject> ActiveCardList;
     public List<int> activeCardIDs;
+    public List<int> activeFacilityIDs = new List<int>(8);
     public int handSize;
     public int maxHandSize = 6;
     public GameObject cardPrefab;
@@ -33,9 +34,7 @@ public class CardPlayer : MonoBehaviour
     public GameObject handDropZone;
     public GameObject playedCardZone;
     public GameObject playerPlayedZone;
-    public GameObject opponentPlayedZone;
 
-    //public List<GameObject> facilitiesActedUpon;
     public bool redoCardRead = false;
 
     public void InitializeCards()
@@ -69,19 +68,23 @@ public class CardPlayer : MonoBehaviour
             int count = HandList.Count;
             for (int i = 0; i < maxHandSize-count; i++)
             {
-                DrawCard(true, 0, ref Deck, handDropZone);
+                DrawCard(true, 0, ref Deck, handDropZone, true);
             }
         }
     }
 
-    public virtual void DrawFacility(bool isRandom, int worth)
+    public virtual int DrawFacility(bool isRandom, int worth)
     {
-        
+        int id = -1;
         if (Facilities.Count > 0)
         {
             if (isRandom)
             {
-                DrawCard(true, 0, ref Facilities, playerPlayedZone);
+                id = DrawCard(true, 0, ref Facilities, playerPlayedZone, false);
+                if (id != -1)
+                {
+                    activeFacilityIDs.Add(id);
+                }
             } else
             {
                 // need to draw the 2 pt facility according to rules
@@ -90,18 +93,24 @@ public class CardPlayer : MonoBehaviour
                 {
                     if (cards[Facilities[i]].data.worth == worth)
                     {
-                        DrawCard(false, i, ref Facilities, playerPlayedZone);
+                        id = DrawCard(false, i, ref Facilities, playerPlayedZone, false);
+                        if (id != -1)
+                        {
+                            activeFacilityIDs.Add(id);
+                        }
                         break;
                     }
                 }
             }
         }
+
+        return id;
     }
 
-    public virtual void DrawCard(bool random, int cardId, ref List<int> deckToDrawFrom,
-        GameObject dropZone)
+    public virtual int DrawCard(bool random, int cardId, ref List<int> deckToDrawFrom,
+        GameObject dropZone, bool allowSlippy)
     {
-        int rng;
+        int rng = -1;
         if (random)
         {
             rng = UnityEngine.Random.Range(0, deckToDrawFrom.Count);
@@ -114,75 +123,81 @@ public class CardPlayer : MonoBehaviour
         if (deckToDrawFrom.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
         {
             Debug.Log("no cards drawn.");
-            return;
+            return rng;
         }
 
-            GameObject tempCardObj = Instantiate(cardPrefab);
-            Card tempCard = tempCardObj.GetComponent<Card>();
-            tempCard.cardDropZone = cardDropZone;
-            Card actualCard = cards[deckToDrawFrom[rng]];
-            tempCard.data = actualCard.data;
-            CardFront front = actualCard.GetComponent<CardFront>();
-            tempCard.front = front;
-            //tempCard.handDropZone = actualCard.handDropZone;
+        GameObject tempCardObj = Instantiate(cardPrefab);
+        Card tempCard = tempCardObj.GetComponent<Card>();
+        tempCard.cardDropZone = cardDropZone;
+        Card actualCard = cards[deckToDrawFrom[rng]];
+        tempCard.data = actualCard.data;
+        CardFront front = actualCard.GetComponent<CardFront>();
+        tempCard.front = front;
+        //tempCard.handDropZone = actualCard.handDropZone;
 
-            //    // WORK: not sure the below case ever happens
-            //    //if (cardReader.CardFronts[Deck[rng]] == null && redoCardRead == false)
-            //    //{
-            //    //    cardReader.CSVRead();
-            //    //    redoCardRead = true;
-            //    //}
+        //    // WORK: not sure the below case ever happens
+        //    //if (cardReader.CardFronts[Deck[rng]] == null && redoCardRead == false)
+        //    //{
+        //    //    cardReader.CSVRead();
+        //    //    redoCardRead = true;
+        //    //}
 
-            RawImage[] tempRaws = tempCardObj.GetComponentsInChildren<RawImage>();
-            for (int i = 0; i < tempRaws.Length; i++)
+        RawImage[] tempRaws = tempCardObj.GetComponentsInChildren<RawImage>();
+        for (int i = 0; i < tempRaws.Length; i++)
+        {
+            if (tempRaws[i].name == "Image")
             {
-                if (tempRaws[i].name == "Image")
-                {
-                    tempRaws[i].texture = tempCard.front.img;
-                }
-                else if (tempRaws[i].name == "Background")
-                {
-                    tempRaws[i].color = tempCard.front.titleColor;
-                }
+                tempRaws[i].texture = tempCard.front.img;
             }
-
-            TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
-            for (int i = 0; i < tempTexts.Length; i++)
+            else if (tempRaws[i].name == "Background")
             {
-                if (tempTexts[i].name == "Title Text")
-                {
-                    tempTexts[i].text = tempCard.front.title;
-                }
-                else if (tempTexts[i].name == "Description Text")
-                {
-                    tempTexts[i].text = tempCard.front.description;
-                }
+                tempRaws[i].color = tempCard.front.titleColor;
             }
-            //TextMeshProUGUI[] tempInnerText = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
-            //for (int i = 0; i < tempInnerText.Length; i++)
-            //{
-            //    //if (tempInnerText[i].name == "Cost Text")
-            //    //{
-            //    //    tempInnerText[i].text = cardReader.CardCost[Deck[rng]].ToString();
-            //    //} 
-            //}
+        }
 
-            //    //tempCard.duration = cardReader.CardDuration[Deck[rng]];
-            //    //tempCard.cost = cardReader.CardCost[Deck[rng]];
-            //    //tempCard.teamID = cardReader.CardTeam[Deck[rng]];
-            tempCardObj.GetComponent<slippy>().map = tempCardObj;
-            tempCard.state = CardState.CardDrawn;
-            Vector3 tempPos = tempCardObj.transform.position;
-            tempCardObj.transform.position = tempPos;
-            tempCardObj.transform.SetParent(dropZone.transform, false);
-            Vector3 tempPos2 = dropZone.transform.position;
-            handSize++;
-            tempCardObj.transform.position = tempPos2;
-            tempCardObj.SetActive(true);
-            HandList.Add(tempCardObj);
+        TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
+        for (int i = 0; i < tempTexts.Length; i++)
+        {
+            if (tempTexts[i].name == "Title Text")
+            {
+                tempTexts[i].text = tempCard.front.title;
+            }
+            else if (tempTexts[i].name == "Description Text")
+            {
+                tempTexts[i].text = tempCard.front.description;
+            }
+        }
+        //TextMeshProUGUI[] tempInnerText = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
+        //for (int i = 0; i < tempInnerText.Length; i++)
+        //{
+        //    //if (tempInnerText[i].name == "Cost Text")
+        //    //{
+        //    //    tempInnerText[i].text = cardReader.CardCost[Deck[rng]].ToString();
+        //    //} 
+        //}
 
-            // remove this card so we don't draw it again
-            deckToDrawFrom.RemoveAt(rng);
+        //    //tempCard.duration = cardReader.CardDuration[Deck[rng]];
+        //    //tempCard.cost = cardReader.CardCost[Deck[rng]];
+        //    //tempCard.teamID = cardReader.CardTeam[Deck[rng]];
+        tempCardObj.GetComponent<slippy>().map = tempCardObj;
+        if (!allowSlippy)
+        {
+            slippy tempSlippy = tempCardObj.GetComponent<slippy>();
+            tempSlippy.enabled = false;
+        }
+        tempCard.state = CardState.CardDrawn;
+        Vector3 tempPos = tempCardObj.transform.position;
+        tempCardObj.transform.position = tempPos;
+        tempCardObj.transform.SetParent(dropZone.transform, false);
+        Vector3 tempPos2 = dropZone.transform.position;
+        handSize++;
+        tempCardObj.transform.position = tempPos2;
+        tempCardObj.SetActive(true);
+        HandList.Add(tempCardObj);
+
+        // remove this card so we don't draw it again
+        deckToDrawFrom.RemoveAt(rng);
+        return rng;
     }
 
     // Update is called once per frame

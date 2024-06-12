@@ -17,6 +17,7 @@ public class RGNetworkPlayer : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {      
         RGNetworkPlayerList.instance.localPlayerID = mPlayerID;
+        RGNetworkPlayerList.instance.localPlayerName = mPlayerName;
         Debug.Log(" local player says id is " + mPlayerID);
     }
 }
