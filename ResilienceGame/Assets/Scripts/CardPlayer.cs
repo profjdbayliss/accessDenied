@@ -24,15 +24,16 @@ public class CardPlayer : MonoBehaviour
     public List<int> CardCountList;
     public List<int> targetIDList;
     public List<GameObject> HandList;
+    public List<int> HandListIds = new List<int>(6);
     public List<GameObject> ActiveCardList;
     public List<int> activeCardIDs;
     public List<int> activeFacilityIDs = new List<int>(8);
     public int handSize;
     public int maxHandSize = 6;
     public GameObject cardPrefab;
-    public GameObject cardDropZone;
+    public GameObject discardDropZone;
     public GameObject handDropZone;
-    public GameObject playedCardZone;
+    public GameObject cardPlayedZone;
     public GameObject playerPlayedZone;
 
     public bool redoCardRead = false;
@@ -128,7 +129,7 @@ public class CardPlayer : MonoBehaviour
 
         GameObject tempCardObj = Instantiate(cardPrefab);
         Card tempCard = tempCardObj.GetComponent<Card>();
-        tempCard.cardDropZone = cardDropZone;
+        tempCard.cardPlayedZone = cardPlayedZone;
         Card actualCard = cards[deckToDrawFrom[rng]];
         tempCard.data = actualCard.data;
         CardFront front = actualCard.GetComponent<CardFront>();
@@ -194,6 +195,7 @@ public class CardPlayer : MonoBehaviour
         tempCardObj.transform.position = tempPos2;
         tempCardObj.SetActive(true);
         HandList.Add(tempCardObj);
+        HandListIds.Add(tempCard.data.cardID);
 
         // remove this card so we don't draw it again
         deckToDrawFrom.RemoveAt(rng);
@@ -203,33 +205,38 @@ public class CardPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (HandList != null)
-        //{
-        //    foreach (GameObject card in HandList)
-        //    {
-        //        //if (card.GetComponent<Card>().state == CardState.CardInPlay)
-        //        //{
-        //        //    HandList.Remove(card);
-        //        //    ActiveCardList.Add(card);
-        //        //    activeCardIDs.Add(card.GetComponent<Card>().data.cardID);
-        //        //    card.GetComponent<Card>().duration = cardReader.CardDuration[card.GetComponent<Card>().cardID] + manager.turnCount;
-        //        //    break;
-        //        //}
-        //    }
-        //}
-        //if (ActiveCardList != null)
-        //{
-        //    foreach (GameObject card in ActiveCardList)
-        //    {
-        //        //if (manager.turnCount >= card.GetComponent<Card>().duration)
-        //        //{
-        //        //    ActiveCardList.Remove(card);
-        //        //    activeCardIDs.Remove(card.GetComponent<Card>().cardID);
-        //        //    card.SetActive(false);
-        //        //    break;
-        //        //}
-        //    }
-        //}
+        if (HandList != null)
+        {
+            foreach (GameObject card in HandList)
+            {
+                if (card.GetComponent<Card>().state == CardState.CardInPlay)
+                {
+                    int index = HandList.FindIndex(x => x.Equals(card));
+                    if (index >= 0)
+                    {
+                        HandList.Remove(card);
+                        HandListIds.RemoveAt(index);
+                        ActiveCardList.Add(card);
+                        activeCardIDs.Add(card.GetComponent<Card>().data.cardID);
+                        //card.GetComponent<Card>().duration = cardReader.CardDuration[card.GetComponent<Card>().cardID] + manager.turnCount;
+                    }
+                    break;
+                }
+            }
+        }
+        if (ActiveCardList != null)
+        {
+            foreach (GameObject card in ActiveCardList)
+            {
+                //if (manager.turnCount >= card.GetComponent<Card>().duration)
+                //{
+                //    ActiveCardList.Remove(card);
+                //    activeCardIDs.Remove(card.GetComponent<Card>().cardID);
+                //    card.SetActive(false);
+                //    break;
+                //}
+            }
+        }
     }
 
     // there are no facilities in this game

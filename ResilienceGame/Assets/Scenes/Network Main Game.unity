@@ -2163,8 +2163,9 @@ GameObject:
   - component: {fileID: 180208929}
   - component: {fileID: 180208931}
   - component: {fileID: 180208930}
+  - component: {fileID: 180208932}
   m_Layer: 5
-  m_Name: Player Card Drop
+  m_Name: Discard Drop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2228,6 +2229,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180208928}
   m_CullTransparentMesh: 1
+--- !u!114 &180208932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180208928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &184888348
 GameObject:
   m_ObjectHideFlags: 0
@@ -7030,9 +7051,9 @@ MonoBehaviour:
   handSize: 0
   maxHandSize: 6
   cardPrefab: {fileID: 4414296152829722398}
-  cardDropZone: {fileID: 180208928}
+  discardDropZone: {fileID: 180208928}
   handDropZone: {fileID: 2036154772}
-  playedCardZone: {fileID: 1920413917}
+  cardPlayedZone: {fileID: 1920413917}
   playerPlayedZone: {fileID: 1920413917}
   redoCardRead: 0
 --- !u!1 &689357524
@@ -11716,9 +11737,9 @@ MonoBehaviour:
   handSize: 0
   maxHandSize: 6
   cardPrefab: {fileID: 4414296152829722398}
-  cardDropZone: {fileID: 180208928}
+  discardDropZone: {fileID: 180208928}
   handDropZone: {fileID: 2036154772}
-  playedCardZone: {fileID: 1920413917}
+  cardPlayedZone: {fileID: 1920413917}
   playerPlayedZone: {fileID: 1920413917}
   redoCardRead: 0
 --- !u!1 &1134896414
@@ -19209,6 +19230,8 @@ MonoBehaviour:
   waterCards: []
   playerDeckList: {fileID: 1570887177}
   gameStarted: 0
+  numberDiscarded: 0
+  isDiscardAllowed: 0
   energyPlayer: {fileID: 1125198114}
   waterPlayer: {fileID: 680164116}
   actualPlayer: {fileID: 0}
@@ -19436,15 +19459,23 @@ PrefabInstance:
     - target: {fileID: 1066679004973504317, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
       propertyPath: cardDropZone
       value: 
-      objectReference: {fileID: 180208928}
+      objectReference: {fileID: 1920413917}
     - target: {fileID: 1066679004973504317, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
       propertyPath: handDropZone
       value: 
       objectReference: {fileID: 2036154772}
     - target: {fileID: 1066679004973504317, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
+      propertyPath: cardPlayedZone
+      value: 
+      objectReference: {fileID: 1920413917}
+    - target: {fileID: 1066679004973504317, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
       propertyPath: originalParent
       value: 
       objectReference: {fileID: 1994761812}
+    - target: {fileID: 1066679004973504317, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
+      propertyPath: discardDropZone
+      value: 
+      objectReference: {fileID: 180208928}
     - target: {fileID: 2708969788422053173, guid: cabe2b4d111a5f046b4e3d44a26b98b7, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

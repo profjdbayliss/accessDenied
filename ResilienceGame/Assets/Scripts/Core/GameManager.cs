@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
+using System.Linq;
 
 public class GameManager : MonoBehaviour, IRGObservable
 {
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     // Various turn and game info.
     bool myTurn = false;
     int turnTotal = 0;
+    
 
     // set up the proper player cards and type
     PlayerType playerType = PlayerType.Energy;
@@ -30,6 +32,11 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject playerDeckList;
     TMPro.TMP_Dropdown playerDeckChoice;
     public bool gameStarted = false;
+
+    // var's for game rules
+    public readonly int MAX_DISCARDS = 2;
+    public int numberDiscarded = 0;
+    public bool isDiscardAllowed = false;
 
     // has everything been set?
     bool isInit = false;
@@ -148,7 +155,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         // Initialize the deck info and set various
         // player zones active
         actualPlayer.InitializeCards();
-        actualPlayer.cardDropZone.SetActive(true);
+        actualPlayer.discardDropZone.SetActive(true);
         actualPlayer.handDropZone.SetActive(true);
         actualPlayer.playerPlayedZone.SetActive(true);
     }
@@ -224,16 +231,35 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged)
                 {
+                    isDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
-
+                    actualPlayer.discardDropZone.SetActive(true);
+                    numberDiscarded = 0;
                 } else
                 {
+                    // draw cards if necessary
+                    actualPlayer.DrawCards();
+
                     // check for discard and if there's a discard draw again
+                    if (numberDiscarded == MAX_DISCARDS)
+                    {
+                        // maybe display a message 
+                        // that nothing else can be discarded?
+                        isDiscardAllowed=false;
+                        //Debug.Log("max discards reached and discard is turned off");
+                    }
                 }
                 break;
             case GamePhase.Defense:
+                if (phaseJustChanged)
+                {
+                   
+                } else
+                {
+                  
+                }
                 break;
             case GamePhase.Vulnerability:
                 break;
@@ -373,6 +399,23 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     }
 
+    public void HandleDiscard(int cardId)
+    {
+        if (numberDiscarded < MAX_DISCARDS)
+        {
+            numberDiscarded++;
+            // need to remove the card from hand list
+            int index = actualPlayer.HandListIds.FindIndex(0, actualPlayer.HandListIds.Count, x => x == cardId);
+            if (index >= 0)
+            {
+                actualPlayer.HandList.RemoveAt(index);
+                actualPlayer.HandListIds.RemoveAt(index);
+                Debug.Log("Card discard removed from lists!");
+            }
+            
+        }
+    }
+
     // WORK needs to be redone
     //public void OnDrag(PointerEventData pointer)
     //{
@@ -464,12 +507,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         
     }
 
-    // called whenever the player discards a card?
-    public void Discard()
-    {
-
-    }
-
     // WORK Displays opponent info - need to put on GUI
 
     public void DisplayOtherPlayerTypes( string playerName, PlayerType type)
@@ -499,21 +536,38 @@ public class GameManager : MonoBehaviour, IRGObservable
     public void ShowPlayUI()
     {
         actualPlayer.handDropZone.SetActive(true);
-        actualPlayer.cardDropZone.SetActive(true);
+        actualPlayer.discardDropZone.SetActive(true);
     }
 
     // Hide the cards and game UI for the player.
     public void HidePlayUI()
     {
         actualPlayer.handDropZone.SetActive(false);
-        actualPlayer.cardDropZone.SetActive(false);
+        actualPlayer.discardDropZone.SetActive(false);
     }
 
     // Ends the phase.
     public void EndPhase()
     {
+        switch(mGamePhase)
+        {
+            case GamePhase.DrawAndDiscard:
+                // make sure we have a full hand
+                actualPlayer.DrawCards();
+                // set the discard area to work if necessary
+                actualPlayer.discardDropZone.SetActive(false);
+                isDiscardAllowed = false;
+                Debug.Log("ending draw and discard game phase!");
+                // send a message with number of discards of the player???
+                // WORK
+                break;
+            default:
+                break;
+        }
+
         if (myTurn)
         {
+            Debug.Log("ending the game phase in gamemanager!");
             HidePlayUI();
             AddMessage(new Message(CardMessageType.EndPhase));
             myTurn = false;
