@@ -25,6 +25,7 @@ public class Card : MonoBehaviour, IDropHandler
     public GameObject handDropZone;
     public GameObject gameCanvas;
     public GameObject originalParent;
+    public Vector3 originalPosition;
   
     // Start is called before the first frame update
     void Start()
@@ -36,6 +37,8 @@ public class Card : MonoBehaviour, IDropHandler
         //originalParent = this.gameObject.transform.parent.transform.parent.gameObject;
         //this.gameObject.transform.localScale = Vector3.one;
         //gameCanvas = GameObject.Find("Central Map");
+        originalPosition = this.gameObject.transform.position;
+        //this.gameObject.GetComponent<HoverScale>().UpdateOriginalPosition(originalPosition);
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -144,7 +147,8 @@ public class Card : MonoBehaviour, IDropHandler
                 this.gameObject.transform.SetParent(handDropZone.transform, false);
                 this.state = CardState.CardDrawn;
                 this.gameObject.GetComponentInParent<slippy>().enabled = true;
-                //this.gameObject.GetComponent<slippy>().ResetPosition();
+                //this.gameObject.GetComponent<HoverScale>().ResetPosition(this.gameObject.transform.localPosition);
+                this.gameObject.GetComponent<HoverScale>().Drop();
                 Debug.Log("card reset position done");
             }
         }

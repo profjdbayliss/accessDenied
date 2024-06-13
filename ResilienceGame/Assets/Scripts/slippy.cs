@@ -128,6 +128,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
                     tempPos.x += tempNewVec.x - tempVec2.x;
                     tempPos.y += tempNewVec.y - tempVec2.y;
                     map.transform.localPosition = tempPos;
+                    
                 }
             }
         }
@@ -154,6 +155,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
 
     public void ResetPosition()
     {
+        //map.gameObject.GetComponent<HoverScale>().ResetPosition(this.gameObject.transform.position);
         Transform parent = this.gameObject.transform.parent;
         this.gameObject.transform.SetParent(null, true);
         this.gameObject.transform.SetPositionAndRotation(new Vector3(),gameObject.transform.rotation);

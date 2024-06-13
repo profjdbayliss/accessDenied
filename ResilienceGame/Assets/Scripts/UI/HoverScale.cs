@@ -8,14 +8,14 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public GameObject targetObject;
     public float delay = 0.5f; 
     public float maxHeightOffset = 100;
-    private Vector3 originalPosition;
     private float timer = 0; 
     private bool isHovering = false; 
     private bool isScaled = false;
-
+    private bool wasDropped = false;
+    private Vector2 previousScale = Vector2.zero;
     void Start()
     {
-        originalPosition = transform.position;
+        previousScale = this.gameObject.transform.localScale;
     }
     void Update()
     {
@@ -24,7 +24,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         {
             if (!isScaled) ScaleCard(.5f);
 
-            timer += Time.deltaTime;  
+            timer += Time.deltaTime;
             if (timer >= delay)
             {
                 targetObject.SetActive(true);
@@ -35,7 +35,9 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             }
         }
         //toggles the scaling effect to scale it back to its original size
-        else if (isScaled) ScaleCard(-.5f);
+        else if (isScaled && wasDropped) { ResetScale(); wasDropped = false; }
+        else if (isScaled) { ScaleCard(-.5f); }
+        //else if (isScaled) { ResetScale(); ResetPosition(originalPosition); }
     }
 
     public void ScaleCard(float scaleAmount)
@@ -49,6 +51,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
         Vector2 tempScale = targetObject.transform.localScale;
         Vector3 offset = targetObject.transform.localPosition;
+        previousScale = tempScale;
         tempScale.x = (float)(targetObject.transform.localScale.x + scaleAmount);
         tempScale.y = (float)(targetObject.transform.localScale.y + scaleAmount);
         offset.y = offset.y + scaleAmount * 200;
@@ -57,10 +60,21 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         targetObject.transform.localPosition = offset;
         
         isScaled = !isScaled;
+        Debug.Log("scaled card by " + scaleAmount);
+    }
+    public void ResetScale()
+    {
+        isScaled = false;
+        targetObject.transform.localScale = previousScale;
+    }
+    public void Drop()
+    {
+        wasDropped = true;
     }
     public void OnPointerEnter(PointerEventData eventData)
     {
         isHovering = true; 
+
         timer = 0;     
     }
 
@@ -69,4 +83,5 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         isHovering = false;       
         timer = 0;
     }
+
 }
