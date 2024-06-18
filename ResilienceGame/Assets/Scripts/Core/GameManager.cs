@@ -70,6 +70,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject startScreen;
     public GameObject tiles;
 
+    // game status text
+    public TextMeshProUGUI StatusText;
     // active player
     public TextMeshProUGUI activePlayerText;
     public Color activePlayerColor;
@@ -157,7 +159,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         actualPlayer.InitializeCards();
         actualPlayer.discardDropZone.SetActive(true);
         actualPlayer.handDropZone.SetActive(true);
-        actualPlayer.playerPlayedZone.SetActive(true);
+        actualPlayer.playerDropZone.SetActive(true);
     }
 
     // Update is called once per frame
@@ -245,21 +247,23 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // check for discard and if there's a discard draw again
                     if (numberDiscarded == MAX_DISCARDS)
                     {
-                        // maybe display a message 
-                        // that nothing else can be discarded?
-                        isDiscardAllowed=false;
-                        //Debug.Log("max discards reached and discard is turned off");
+                        EndPhase();
+                    }
+                    else
+                    {
+                        numberDiscarded += actualPlayer.HandleDiscards();
                     }
                 }
                 break;
             case GamePhase.Defense:
                 if (phaseJustChanged)
                 {
-                   
+                    
                 } else
                 {
-                  
+                    
                 }
+                actualPlayer.HandlePlayCard();
                 break;
             case GamePhase.Vulnerability:
                 break;
@@ -399,22 +403,11 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     }
 
-    public void HandleDiscard(int cardId)
+    public void DisplayGameStatus(string message)
     {
-        if (numberDiscarded < MAX_DISCARDS)
-        {
-            numberDiscarded++;
-            // need to remove the card from hand list
-            int index = actualPlayer.HandListIds.FindIndex(0, actualPlayer.HandListIds.Count, x => x == cardId);
-            if (index >= 0)
-            {
-                actualPlayer.HandList.RemoveAt(index);
-                actualPlayer.HandListIds.RemoveAt(index);
-                Debug.Log("Card discard removed from lists!");
-            }
-            
-        }
+        StatusText.text = message;
     }
+   
 
     // WORK needs to be redone
     //public void OnDrag(PointerEventData pointer)
@@ -549,7 +542,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     // Ends the phase.
     public void EndPhase()
     {
-        switch(mGamePhase)
+        switch (mGamePhase)
         {
             case GamePhase.DrawAndDiscard:
                 // make sure we have a full hand
@@ -557,9 +550,21 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // set the discard area to work if necessary
                 actualPlayer.discardDropZone.SetActive(false);
                 isDiscardAllowed = false;
+
+                // clear any remaining drops since we're ending the phase now
+                actualPlayer.ClearDropState();
+
                 Debug.Log("ending draw and discard game phase!");
-                // send a message with number of discards of the player???
-                // WORK
+
+                // send a message with number of discards of the player
+                Message msg;
+                List<int> tmpList = new List<int>(1);
+                tmpList.Add(numberDiscarded);
+                msg = new Message(CardMessageType.ShareDiscardNumber, tmpList);
+                AddMessage(msg);
+
+                break;
+            case GamePhase.Defense:
                 break;
             default:
                 break;

@@ -227,7 +227,27 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                 }
                 break;
-           
+            case CardMessageType.ShareDiscardNumber:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count,
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+
+                    if (!isServer)
+                    {                   
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT IS SHOWING THEIR DISCOUNT AMOUNT AS " + data.ToString());
+                    } else
+                    {
+                        // share it with everybody
+                        NetworkServer.SendToAll(msg);
+                    }
+                }
+                break;
             case CardMessageType.EndGame:
                 {
                     RGNetworkLongMessage msg = new RGNetworkLongMessage
@@ -425,7 +445,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 " " + playerNames[i]); 
                         }
                         // now start the next phase
-                        GameManager.instance.RealGameStart();
+                        manager.RealGameStart();
                     }
                     break;
                 //case CardMessageType.ShowCards:
@@ -445,6 +465,28 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 //    }
                 //    GameManager.instance.ShowOthersCards(cardIds);
                 //    break;
+                case CardMessageType.ShareDiscardNumber:
+                    {
+                        uint count = msg.count;
+
+                        Debug.Log("client received a player's discard amount!" + count);
+                        if (count == 1)
+                        {
+                            // turn the first element into an int
+                            int discardCount = BitConverter.ToInt32(msg.payload);
+                            int playerIndex = (int)msg.indexId;
+
+                            Debug.Log("setting player discard to " + discardCount);
+
+                            // share with other players
+                            //NetworkServer.SendToAll(msg);
+
+                            // let the game manager display the new info
+                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
+                                " discarded " + discardCount + " cards.");
+                        }
+                    }
+                    break;
                 case CardMessageType.EndGame:
                     if (msg.count == 1)
                     {
@@ -510,7 +552,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             if (CheckReadyToStart())
                             {
                                 Debug.Log("Ready to start!");
-                                GameManager.instance.RealGameStart();
+                                manager.RealGameStart();
                                 // get the turn taking flags ready to go again
                                 for (int i=0; i<playerTurnTakenFlags.Count; i++)
                                 {
@@ -518,9 +560,34 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 }
                             }
 
+                            // share with other players????
+                            // WORK
+
                             // let the game manager display the new info
                             GameManager.instance.DisplayOtherPlayerTypes(playerNames[playerIndex],
                                  playerTypes[playerIndex]);
+                        }
+                    }
+                    break;
+                case CardMessageType.ShareDiscardNumber:
+                    {
+                        uint count = msg.count;
+
+                        Debug.Log("server received a player's discard amount!" + count);
+                        if (count == 1)
+                        {
+                            // turn the first element into an int
+                            int discardCount = BitConverter.ToInt32(msg.payload);
+                            int playerIndex = (int)msg.indexId;
+                            
+                            Debug.Log("setting player discard to " + discardCount);
+
+                            // share with other players
+                            //NetworkServer.SendToAll(msg);
+
+                            // let the game manager display the new info
+                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] + 
+                                " discarded " + discardCount + " cards.");
                         }
                     }
                     break;
