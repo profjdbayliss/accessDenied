@@ -19,8 +19,8 @@ public class CardPlayer : MonoBehaviour
     public PlayerType playerType = PlayerType.Energy;
     public GameManager manager;
     public List<Card> cards;
-    public List<int> Facilities = new List<int>(10);
-    public List<int> Deck = new List<int>(52);
+    public List<int> FacilityIDs = new List<int>(10);
+    public List<int> DeckIDs = new List<int>(52);
     public List<int> CardCountList;
     public List<int> targetIDList;
     public List<GameObject> HandList;
@@ -29,7 +29,8 @@ public class CardPlayer : MonoBehaviour
     public List<int> DiscardIds = new List<int>(6);
     public List<GameObject> ActiveCardList;
     public List<int> activeCardIDs;
-    public List<int> activeFacilityIDs = new List<int>(8);
+    public List<int> ActiveFacilityIDs = new List<int>(8);
+    public List<GameObject> ActiveFacilities = new List<GameObject>(8);
     public int handSize;
     public int maxHandSize = 6;
     public GameObject cardPrefab;
@@ -78,11 +79,11 @@ public class CardPlayer : MonoBehaviour
 
         for (int i = 0; i < cards.Count; i++)
         {
-            if (cards[i].data.type != CardType.Station)
+            if (cards[i].data.cardType != CardType.Station)
             {
                 for (int j = 0; j < cards[i].data.numberInDeck; j++)
                 {
-                    Deck.Add(cards[i].data.cardID);
+                    DeckIDs.Add(cards[i].data.cardID);
                 }
 
             }
@@ -90,7 +91,7 @@ public class CardPlayer : MonoBehaviour
             {
                 for (int j = 0; j < cards[i].data.numberInDeck; j++)
                 {
-                    Facilities.Add(cards[i].data.cardID);
+                    FacilityIDs.Add(cards[i].data.cardID);
                 }
             }
 
@@ -102,9 +103,9 @@ public class CardPlayer : MonoBehaviour
         if (HandList.Count < maxHandSize)
         {
             int count = HandList.Count;
-            for (int i = 0; i < maxHandSize-count; i++)
+            for (int i = 0; i < maxHandSize - count; i++)
             {
-                DrawCard(true, 0, ref Deck, handDropZone, true);
+                DrawCard(true, 0, ref DeckIDs, handDropZone, true, ref HandList, ref HandListIds);
             }
         }
     }
@@ -112,28 +113,22 @@ public class CardPlayer : MonoBehaviour
     public virtual int DrawFacility(bool isRandom, int worth)
     {
         int id = -1;
-        if (Facilities.Count > 0)
+        if (FacilityIDs.Count > 0)
         {
             if (isRandom)
             {
-                id = DrawCard(true, 0, ref Facilities, playerDropZone, false);
-                if (id != -1)
-                {
-                    activeFacilityIDs.Add(id);
-                }
+                id = DrawCard(true, 0, ref FacilityIDs, playerDropZone, false,
+                    ref ActiveFacilities, ref ActiveFacilityIDs);
             } else
             {
                 // need to draw the 2 pt facility according to rules
                 // at the beginning!
-                for (int i=0; i<Facilities.Count; i++)
+                for (int i = 0; i < FacilityIDs.Count; i++)
                 {
-                    if (cards[Facilities[i]].data.worth == worth)
+                    if (cards[FacilityIDs[i]].data.worth == worth)
                     {
-                        id = DrawCard(false, i, ref Facilities, playerDropZone, false);
-                        if (id != -1)
-                        {
-                            activeFacilityIDs.Add(id);
-                        }
+                        id = DrawCard(false, i, ref FacilityIDs, playerDropZone, false,
+                            ref ActiveFacilities, ref ActiveFacilityIDs);
                         break;
                     }
                 }
@@ -144,7 +139,8 @@ public class CardPlayer : MonoBehaviour
     }
 
     public virtual int DrawCard(bool random, int cardId, ref List<int> deckToDrawFrom,
-        GameObject dropZone, bool allowSlippy)
+        GameObject dropZone, bool allowSlippy,
+        ref List<GameObject> activeDeckObjs, ref List<int> activeDeckIDs)
     {
         int rng = -1;
         if (random)
@@ -229,8 +225,8 @@ public class CardPlayer : MonoBehaviour
         handSize++;
         tempCardObj.transform.position = tempPos2;
         tempCardObj.SetActive(true);
-        HandList.Add(tempCardObj);
-        HandListIds.Add(tempCard.data.cardID);
+        activeDeckObjs.Add(tempCardObj);
+        activeDeckIDs.Add(tempCard.data.cardID);
 
         // remove this card so we don't draw it again
         deckToDrawFrom.RemoveAt(rng);
@@ -280,7 +276,7 @@ public class CardPlayer : MonoBehaviour
         return false;
     }
 
-    public virtual int HandlePlayCard()
+    public virtual int HandlePlayCard(GamePhase phase)
     {
         int playCount = 0;
         int playIndex = 0;
@@ -303,49 +299,49 @@ public class CardPlayer : MonoBehaviour
                        cardPosition.x < playedDropMax.x &&
                        cardPosition.x > playedDropMin.x)
                     {
-                        Debug.Log("card dropped in played zone");
-                        card.state = CardState.CardDrawn;
-                        //if (GameManager.instance.isDiscardAllowed)
-                        //{
-                        //    // remove from player lists
-                        //    int index = HandList.FindIndex(x => x.Equals(gameObjectCard));
-                        //    if (index >= 0)
-                        //    {
-                        //        discardIndex = index;
-                        //        Debug.Log("discard is allowed and will be done now");
-                        //        DiscardCards.Add(gameObjectCard);
-                        //        DiscardIds.Add(card.data.cardID);
+                        switch (phase)
+                        {
+                            case GamePhase.Defense:
+                                Debug.Log("card dropped in played zone");
+                                if (CheckHighlightedStations())
+                                {
+                                    Debug.Log("this card should be played for defense now.");
+                                    GameObject selected = GetHighlightedStation();
+                                    Transform parent = gameObjectCard.transform.parent;
+                                    gameObjectCard.transform.SetParent(null, true);
 
-                        //        // change parent and rescale
-                        //        card.state = CardState.CardDiscarded;
-                        //        gameObjectCard.GetComponentInParent<slippy>().enabled = false;
-                        //        gameObjectCard.GetComponentInParent<slippy>().ResetScale();
-                        //        gameObjectCard.transform.SetParent(discardDropZone.transform, false);
-                        //        card.cardZone = discardDropZone;
-                        //        discardCount++;
+                                    //RectTransform rect = gameObjectCard.GetComponent<RectTransform>();
+                                    //gameObjectCard.transform.localScale = new Vector2(1.0f, 1.0f);
+                                    //rect.position = selected.transform.position + new Vector3(0, 1, 0);
+                                    gameObjectCard.GetComponentInParent<slippy>().originalScale = new Vector2(1.0f, 1.0f);
+                                    gameObjectCard.GetComponentInParent<slippy>().ResetScale();
+                                    gameObjectCard.GetComponentInParent<HoverScale>().previousScale = new Vector2(1.0f, 1.0f);
+                                    gameObjectCard.transform.SetPositionAndRotation(selected.transform.position + 
+                                        new Vector3(0, 20, 0),
+                                        gameObject.transform.rotation);
+                                    //gameObjectCard.transform.SetParent(parent, true);
+                                    gameObjectCard.transform.SetParent(selected.transform, true);
+                                    //gameObjectCard.transform.SetParent(selected.transform, true);
+                                    card.state = CardState.CardInPlay;
+                                    gameObjectCard.GetComponentInParent<slippy>().enabled = false;
+                                    gameObjectCard.GetComponent<HoverScale>().Drop();
+                                    activeCardIDs.Add(card.data.cardID);
+                                    ActiveCardList.Add(gameObjectCard);
+                                    playCount = 1; 
+                                }
+                                else
+                                {
+                                    card.state = CardState.CardDrawn;
+                                    manager.DisplayGameStatus("Please select a single facility to receive this card's effect.");
+                                }
+                                break;
+                            default:
+                                // we're not in the right phase, so
+                                // reset the dropped state
+                                card.state = CardState.CardDrawn;
+                                break;
+                        }
 
-                        //        // only allow one discard per cycle
-                        //        // don't think it's possible for more than one anyway
-                        //        break;
-                        //    }
-                        //    else
-                        //    {
-                        //        Debug.Log("problem with discard: card index not found!");
-                        //        gameObjectCard.transform.SetParent(handDropZone.transform, false);
-                        //        card.state = CardState.CardDrawn;
-                        //        gameObjectCard.GetComponentInParent<slippy>().enabled = true;
-                        //        gameObjectCard.GetComponent<HoverScale>().Drop();
-                        //    }
-
-                        //}
-                        //else
-                        //{
-                        //    // we're not allowing this card to be discarded
-                        //    gameObjectCard.transform.SetParent(handDropZone.transform, false);
-                        //    card.state = CardState.CardDrawn;
-                        //    gameObjectCard.GetComponentInParent<slippy>().enabled = true;
-                        //    gameObjectCard.GetComponent<HoverScale>().Drop();
-                        //}
                     }
                     else
                     if (cardPosition.y < opponentDropMax.y &&
@@ -367,7 +363,14 @@ public class CardPlayer : MonoBehaviour
                     }
                 }
 
-
+                // index of where this card is in handlist
+                if (playCount > 0)
+                {
+                    break;
+                } else
+                {
+                    playIndex++;
+                }             
             }
         }
 
@@ -391,10 +394,30 @@ public class CardPlayer : MonoBehaviour
                 Card card = cardGameObject.GetComponent<Card>();
                 if (card.state == CardState.CardDrawnDropped)
                 {
-                  card.state = CardState.CardDrawn;
+                    card.state = CardState.CardDrawn;
                 }
             }
         }
+    }
+
+    public bool CheckHighlightedStations()
+    {
+        bool singleHighlighted = false;
+        int countHighlighted = 0;
+
+        foreach (GameObject gameObject in ActiveFacilities)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.OutlineImage.activeSelf)
+            {
+                countHighlighted++;
+            }
+        }
+
+        if (countHighlighted == 1)
+            singleHighlighted = true;
+
+        return singleHighlighted;
     }
 
     public int HandleDiscards()
@@ -408,9 +431,9 @@ public class CardPlayer : MonoBehaviour
             {
                 Card card = gameObjectCard.GetComponent<Card>();
                 if (card.state == CardState.CardDrawnDropped)
-                {               
+                {
                     Vector2 cardPosition = card.getDroppedPosition();
-                    //Debug.Log("card transform inside of player: " + cardPosition.x + ":" + cardPosition.y);
+                    Debug.Log("card transform inside of player: " + cardPosition.x + ":" + cardPosition.y);
                     Debug.Log("discard drop info in card is: " + discardDropMin + " " + discardDropMax);
 
                     // DO a AABB collision test to see if the card is on the card drop
@@ -450,7 +473,7 @@ public class CardPlayer : MonoBehaviour
                                 gameObjectCard.GetComponentInParent<slippy>().enabled = true;
                                 gameObjectCard.GetComponent<HoverScale>().Drop();
                             }
-                            
+
                         } else
                         {
                             // we're not allowing this card to be discarded
@@ -471,19 +494,52 @@ public class CardPlayer : MonoBehaviour
                         //Debug.Log("card reset position done");
                     }
                 }
-               
+
 
             }
         }
 
-        if (discardCount>0)
+        if (discardCount > 0)
         {
             // remove the discarded card
             HandList.RemoveAt(discardIndex);
             HandListIds.RemoveAt(discardIndex);
-           
+
         }
 
         return discardCount;
+    }
+
+    public GameObject GetHighlightedStation() {
+        GameObject station = null;
+
+        foreach (GameObject gameObject in ActiveFacilities)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.OutlineImage.activeSelf)
+            {
+                station = gameObject;
+                break;
+            }
+        }
+
+        return station;
+    }
+
+    public bool CheckForCardsOfType(CardType cardType, List<GameObject> listToCheck)
+    {
+        bool hasCardType = false;
+
+        foreach(GameObject gameObject in listToCheck)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.data.cardType == cardType)
+            {
+                hasCardType = true;
+                break;
+            }
+        }
+
+        return hasCardType;
     }
 }

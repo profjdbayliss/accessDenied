@@ -33,15 +33,16 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     {
         //maxScale = 3.0f;
         //minScale = 0.5f;
-        if(this.gameObject.GetComponentInParent<CardPlayer>() == null)
-        {
+        //if(this.gameObject.GetComponentInParent<CardPlayer>() == null)
+        //{
            
-                Debug.Log("GOT Slippy");
-                //resetScale = playerInput.actions["Reset Scale"];
+        //        Debug.Log("GOT Slippy");
+        //        //resetScale = playerInput.actions["Reset Scale"];
            
-        }
-        originalScale = this.gameObject.transform.localScale;
+        //}
+        originalScale = this.gameObject.transform.localScale * 0.2f;
         originalPosition = this.gameObject.transform.position;
+        ResetScale();
     }
 
     // Update is called once per frame

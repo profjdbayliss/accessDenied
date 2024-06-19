@@ -12,10 +12,10 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private bool isHovering = false; 
     private bool isScaled = false;
     private bool wasDropped = false;
-    private Vector2 previousScale = Vector2.zero;
+    public Vector2 previousScale = Vector2.zero;
     void Start()
     {
-        previousScale = this.gameObject.transform.localScale;
+        previousScale = this.gameObject.transform.localScale * 0.2f;
     }
     void Update()
     {
@@ -60,7 +60,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         targetObject.transform.localPosition = offset;
         
         isScaled = !isScaled;
-        Debug.Log("scaled card by " + scaleAmount);
+        //Debug.Log("scaled card by " + scaleAmount);
     }
     public void ResetScale()
     {

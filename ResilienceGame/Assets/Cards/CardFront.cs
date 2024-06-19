@@ -5,7 +5,7 @@ using UnityEngine;
 // Visual parts of the card
 public class CardFront : MonoBehaviour
 {
-    public CardType type;
+    public CardType cardType;
     public bool worthCircle;
     public bool costCircle;
     public Color titleColor;

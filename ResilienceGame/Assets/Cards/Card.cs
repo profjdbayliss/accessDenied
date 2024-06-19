@@ -17,33 +17,58 @@ public enum CardState
     CardDiscarded,
 };
 
-public class Card : MonoBehaviour, IDropHandler
+public class Card : MonoBehaviour, IPointerClickHandler
 {
     public CardData data;
     public CardFront front;
     public CardState state;
     public GameObject cardZone;
-    public GameObject discardDropZone;
     public GameObject originalParent;
     public Vector3 originalPosition;
     Vector2 mDroppedPosition;
+    GameManager mManager;
+    public GameObject OutlineImage;
 
     // Start is called before the first frame update
     void Start()
     {
         originalPosition = this.gameObject.transform.position;
+        mManager = GameManager.instance;
+        OutlineImage.SetActive(false);
     }
 
-    public void OnDrop(PointerEventData eventData)
+
+    public void OnPointerClick(PointerEventData eventData)
     {
-        if (this.state == CardState.CardDrawn) // Make sure that the card actually has a reference to the card drop location where it will be dropped and that it is currently in the players hand
+       
+        Debug.Log("click happened on card");
+        if (this.state == CardState.CardDrawn && data.cardType != CardType.Station)
         {
-            Debug.Log("card drop method run.");
-            state = CardState.CardDrawnDropped;     
+            // note that click consumes the release of most drag and release motions
+            Debug.Log("potentially card dropped.");
+            state = CardState.CardDrawnDropped;
             mDroppedPosition = new Vector2(this.transform.position.x, this.transform.position.y);
-
         }
+        else if (this.data.cardType == CardType.Station && mManager.CanStationsBeHighlighted())
+        {
+            // only station type cards can be highlighted and played on
+            // for this game
+            Debug.Log("right card type and phase for highlight");
+            if (OutlineImage.activeSelf)
+            {
+                // turn off activation
+                OutlineImage.SetActive(false);
+            }
+            else
+            {
+                OutlineImage.SetActive(true);
+            }
+        }
+    }
 
+    public bool OutlineActive()
+    {
+        return OutlineImage.activeSelf;
     }
 
     // we save the exact position of dropping so others can look at it

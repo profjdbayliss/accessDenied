@@ -66,6 +66,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public TextMeshProUGUI mPlayerDeckType;
     public TextMeshProUGUI mOpponentName;
     public TextMeshProUGUI mOpponentDeckType;
+    public GameObject mEndPhaseButton;
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject tiles;
@@ -256,14 +257,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
-                if (phaseJustChanged)
+                if (phaseJustChanged
+                    && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
-                    
-                } else
+                    // if player has no defense cards to play
+                    // then auto phase forward
+                    DisplayGameStatus(mPlayerName + " has no defense cards. Autocompleting the defense phase.");
+                    EndPhase();
+                } else 
                 {
-                    
-                }
-                actualPlayer.HandlePlayCard();
+                    actualPlayer.HandlePlayCard(GamePhase.Defense);
+                }   
                 break;
             case GamePhase.Vulnerability:
                 break;
@@ -574,11 +578,13 @@ public class GameManager : MonoBehaviour, IRGObservable
         {
             Debug.Log("ending the game phase in gamemanager!");
             HidePlayUI();
+            mEndPhaseButton.SetActive(false);
             AddMessage(new Message(CardMessageType.EndPhase));
             myTurn = false;
         }
     }
 
+   
     // Gets the next phase.
     public GamePhase GetNextPhase()
     {
@@ -646,6 +652,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             myTurn = true;
             mGamePhase = GetNextPhase();
             ShowPlayUI();
+            mEndPhaseButton.SetActive(true);
             Debug.Log("play ui shown");
         }
 
@@ -654,8 +661,9 @@ public class GameManager : MonoBehaviour, IRGObservable
     public void AddOpponentFacility(int id)
     {
        
-        opponentPlayer.DrawCard(false, id, ref opponentPlayer.Facilities, opponentPlayedZone, false);
-        foreach (GameObject card in opponentPlayer.HandList)
+        opponentPlayer.DrawCard(false, id, ref opponentPlayer.FacilityIDs, opponentPlayedZone, 
+            false, ref opponentPlayer.ActiveFacilities, ref opponentPlayer.ActiveFacilityIDs);
+        foreach (GameObject card in opponentPlayer.ActiveFacilities)
         {
             card.SetActive(true);
         }
@@ -665,6 +673,42 @@ public class GameManager : MonoBehaviour, IRGObservable
     public int GetTurn()
     {
         return turnTotal;
+    }
+
+    public bool CanStationsBeHighlighted()
+    {
+        bool canBe = false;
+        switch (mGamePhase)
+        {
+            case GamePhase.Start:
+                canBe = false;
+                break;
+            case GamePhase.DrawAndDiscard:
+                canBe = false;
+                break;
+            case GamePhase.Defense:
+                canBe = true;
+                break;
+            case GamePhase.Vulnerability:
+                canBe = true;
+                break;
+            case GamePhase.Mitigate:
+                canBe = true;
+                break;
+            case GamePhase.Attack:
+                canBe = false;
+                break;
+            case GamePhase.AddStation:
+                canBe = false;
+                break;
+            case GamePhase.End:
+                canBe = false;
+                break;
+            default:
+                break;
+        }
+
+        return canBe;
     }
 
     // Adds a message to the message queue for the network.

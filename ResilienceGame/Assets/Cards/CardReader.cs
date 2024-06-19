@@ -119,28 +119,28 @@ public class CardReader : MonoBehaviour
                         switch (type)
                         {
                             case "Defense":
-                                tempCard.data.type = CardType.Defense;
-                                tempCardFront.type = CardType.Defense;
+                                tempCard.data.cardType = CardType.Defense;
+                                tempCardFront.cardType = CardType.Defense;
                                 break;
                             case "Mitigation":
-                                tempCard.data.type = CardType.Mitigation;
-                                tempCardFront.type = CardType.Mitigation;
+                                tempCard.data.cardType = CardType.Mitigation;
+                                tempCardFront.cardType = CardType.Mitigation;
                                 break;
                             case "Vulnerability":
-                                tempCard.data.type = CardType.Vulnerability;
-                                tempCardFront.type = CardType.Vulnerability;
+                                tempCard.data.cardType = CardType.Vulnerability;
+                                tempCardFront.cardType = CardType.Vulnerability;
                                 break;
                             case "Station":
-                                tempCard.data.type = CardType.Station;
-                                tempCardFront.type = CardType.Station;
+                                tempCard.data.cardType = CardType.Station;
+                                tempCardFront.cardType = CardType.Station;
                                 break;
                             case "Instant":
-                                tempCard.data.type = CardType.Instant;
-                                tempCardFront.type = CardType.Instant;
+                                tempCard.data.cardType = CardType.Instant;
+                                tempCardFront.cardType = CardType.Instant;
                                 break;
                             case "Special":
-                                tempCard.data.type = CardType.Special;
-                                tempCardFront.type = CardType.Special;
+                                tempCard.data.cardType = CardType.Special;
+                                tempCardFront.cardType = CardType.Special;
                                 break;
                             default:
                                 break;
