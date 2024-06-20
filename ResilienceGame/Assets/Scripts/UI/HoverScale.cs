@@ -15,7 +15,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public Vector2 previousScale = Vector2.zero;
     void Start()
     {
-        previousScale = this.gameObject.transform.localScale * 0.2f;
+        previousScale = this.gameObject.transform.localScale;
     }
     void Update()
     {

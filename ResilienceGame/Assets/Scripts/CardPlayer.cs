@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 // Enum to track player type
 public enum PlayerType
@@ -38,6 +42,7 @@ public class CardPlayer : MonoBehaviour
     public GameObject handDropZone;
     public GameObject opponentDropZone;
     public GameObject playerDropZone;
+    public GameObject cardStackingCanvas;
 
     public bool redoCardRead = false;
     Vector2 discardDropMin;
@@ -46,7 +51,9 @@ public class CardPlayer : MonoBehaviour
     Vector2 playedDropMax;
     Vector2 opponentDropMin;
     Vector2 opponentDropMax;
-
+    int mUniqueIDCount = 0;
+    public readonly float STACK_SIZE = 175.0f;
+    public readonly float ORIGINAL_SCALE = 0.2f;
 
     public void Start()
     {
@@ -105,19 +112,19 @@ public class CardPlayer : MonoBehaviour
             int count = HandList.Count;
             for (int i = 0; i < maxHandSize - count; i++)
             {
-                DrawCard(true, 0, ref DeckIDs, handDropZone, true, ref HandList, ref HandListIds);
+                DrawCard(true, 0, -1, ref DeckIDs, handDropZone, true, ref HandList, ref HandListIds);
             }
         }
     }
 
-    public virtual int DrawFacility(bool isRandom, int worth)
+    public virtual Card DrawFacility(bool isRandom, int worth)
     {
-        int id = -1;
+        Card card = null;
         if (FacilityIDs.Count > 0)
         {
             if (isRandom)
             {
-                id = DrawCard(true, 0, ref FacilityIDs, playerDropZone, false,
+                card = DrawCard(true, 0, -1, ref FacilityIDs, playerDropZone, false,
                     ref ActiveFacilities, ref ActiveFacilityIDs);
             } else
             {
@@ -127,7 +134,7 @@ public class CardPlayer : MonoBehaviour
                 {
                     if (cards[FacilityIDs[i]].data.worth == worth)
                     {
-                        id = DrawCard(false, i, ref FacilityIDs, playerDropZone, false,
+                        card = DrawCard(false, i, -1, ref FacilityIDs, playerDropZone, false,
                             ref ActiveFacilities, ref ActiveFacilityIDs);
                         break;
                     }
@@ -135,10 +142,10 @@ public class CardPlayer : MonoBehaviour
             }
         }
 
-        return id;
+        return card;
     }
 
-    public virtual int DrawCard(bool random, int cardId, ref List<int> deckToDrawFrom,
+    public virtual Card DrawCard(bool random, int cardId, int uniqueId, ref List<int> deckToDrawFrom,
         GameObject dropZone, bool allowSlippy,
         ref List<GameObject> activeDeckObjs, ref List<int> activeDeckIDs)
     {
@@ -155,7 +162,7 @@ public class CardPlayer : MonoBehaviour
         if (deckToDrawFrom.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
         {
             Debug.Log("no cards drawn.");
-            return rng;
+            return null;
         }
 
         GameObject tempCardObj = Instantiate(cardPrefab);
@@ -163,6 +170,15 @@ public class CardPlayer : MonoBehaviour
         tempCard.cardZone = handDropZone;
         Card actualCard = cards[deckToDrawFrom[rng]];
         tempCard.data = actualCard.data;
+        if (uniqueId != -1)
+        {
+            tempCard.UniqueID = uniqueId;
+        } else
+        {
+            tempCard.UniqueID = mUniqueIDCount;
+            mUniqueIDCount++;
+        }
+        
         CardFront front = actualCard.GetComponent<CardFront>();
         tempCard.front = front;
         //tempCard.handDropZone = actualCard.handDropZone;
@@ -184,6 +200,7 @@ public class CardPlayer : MonoBehaviour
             else if (tempRaws[i].name == "Background")
             {
                 tempRaws[i].color = tempCard.front.titleColor;
+                Debug.Log("color for image is " + tempRaws[i].color);
             }
         }
 
@@ -230,7 +247,7 @@ public class CardPlayer : MonoBehaviour
 
         // remove this card so we don't draw it again
         deckToDrawFrom.RemoveAt(rng);
-        return rng;
+        return tempCard;
     }
 
     // Update is called once per frame
@@ -302,29 +319,12 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Defense:
-                                Debug.Log("card dropped in played zone");
                                 if (CheckHighlightedStations())
                                 {
                                     Debug.Log("this card should be played for defense now.");
                                     GameObject selected = GetHighlightedStation();
-                                    Transform parent = gameObjectCard.transform.parent;
-                                    gameObjectCard.transform.SetParent(null, true);
-
-                                    //RectTransform rect = gameObjectCard.GetComponent<RectTransform>();
-                                    //gameObjectCard.transform.localScale = new Vector2(1.0f, 1.0f);
-                                    //rect.position = selected.transform.position + new Vector3(0, 1, 0);
-                                    gameObjectCard.GetComponentInParent<slippy>().originalScale = new Vector2(1.0f, 1.0f);
-                                    gameObjectCard.GetComponentInParent<slippy>().ResetScale();
-                                    gameObjectCard.GetComponentInParent<HoverScale>().previousScale = new Vector2(1.0f, 1.0f);
-                                    gameObjectCard.transform.SetPositionAndRotation(selected.transform.position + 
-                                        new Vector3(0, 20, 0),
-                                        gameObject.transform.rotation);
-                                    //gameObjectCard.transform.SetParent(parent, true);
-                                    gameObjectCard.transform.SetParent(selected.transform, true);
-                                    //gameObjectCard.transform.SetParent(selected.transform, true);
+                                    StackCards(selected, gameObjectCard, GamePhase.Defense);
                                     card.state = CardState.CardInPlay;
-                                    gameObjectCard.GetComponentInParent<slippy>().enabled = false;
-                                    gameObjectCard.GetComponent<HoverScale>().Drop();
                                     activeCardIDs.Add(card.data.cardID);
                                     ActiveCardList.Add(gameObjectCard);
                                     playCount = 1; 
@@ -383,6 +383,102 @@ public class CardPlayer : MonoBehaviour
         }
 
         return playCount;
+    }
+
+    public void ChangeScaleAndPosition(Vector2 scale, Vector2 position, GameObject objToScale)
+    {
+        Transform parent = objToScale.transform.parent;
+        if (parent != null)
+        {
+            objToScale.transform.SetParent(null, true);
+            objToScale.GetComponentInParent<slippy>().originalScale = scale;
+            objToScale.GetComponentInParent<slippy>().originalPosition = new Vector3(position.x, position.y, 0.0f);
+            objToScale.GetComponentInParent<slippy>().ResetPosition();
+            objToScale.GetComponentInParent<slippy>().ResetScale();   
+            //objToScale.GetComponentInParent<HoverScale>().previousScale = scale;
+            objToScale.transform.SetParent(parent.transform, true);
+        } else
+        {
+            // if there's no parent then our scale is THE scale
+            objToScale.transform.localScale = new Vector3(scale.x, scale.y, 1.0f);
+            Debug.Log("this card has no parent!");
+        }
+    }
+
+    public void StackCards(GameObject stationObject, GameObject addedObject, GamePhase phase)
+    {
+        Card stationCard = stationObject.GetComponent<Card>();
+
+        // unhighlight the outline if it's turned on
+        stationCard.OutlineImage.SetActive(false);
+        GameObject tempCanvas;
+
+        if (stationCard.HasCanvas)
+        {
+            // at least one card is already played on this one!    
+            tempCanvas = stationCard.CanvasHolder;
+            // necessary?
+            //addedObject.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), addedObject);
+            addedObject.transform.SetParent(tempCanvas.transform, false);
+            
+            // set local offset for actual stacking
+            stationCard.stackNumber += 1;
+            addedObject.transform.localPosition = new Vector3(0.0f, stationCard.stackNumber * STACK_SIZE, 0.0f);
+            
+            if (phase == GamePhase.Defense)
+            {
+                // added cards go at the back
+                addedObject.transform.SetAsFirstSibling();
+            }
+            
+            addedObject.GetComponent<slippy>().enabled = false;
+            addedObject.GetComponent<HoverScale>().enabled = false;
+
+        }
+        else
+        {
+            // add a canvas component and change around the parents
+            tempCanvas = Instantiate(cardStackingCanvas);
+            // set defaults for canvas
+            tempCanvas.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            tempCanvas.transform.localScale = new Vector3(ORIGINAL_SCALE, ORIGINAL_SCALE, 1.0f);
+            
+            // turn slippy off - needs to be here???
+            addedObject.GetComponentInParent<slippy>().enabled = false;
+            stationObject.GetComponentInParent<slippy>().enabled = false;
+
+            // now reset scale on all the cards under the canvas!
+            // this is only necessary since they likely already have their own scale and we
+            // want the canvas to now scale them
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), stationObject);
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), addedObject);
+
+            // now add them to canvas
+            addedObject.transform.SetParent(tempCanvas.transform, false);
+            addedObject.transform.localPosition = new Vector3(0.0f, STACK_SIZE, 0.0f);
+            stationObject.transform.SetParent(tempCanvas.transform, false);
+            stationObject.transform.localPosition = new Vector3(0, 0, 0);
+            if (phase == GamePhase.Defense)
+            {
+                // station goes at the front
+                stationObject.transform.SetAsLastSibling();
+            }
+            
+            // make sure the station knows if has a canvas with children
+            stationCard.HasCanvas = true;
+            stationCard.CanvasHolder = tempCanvas;
+            stationCard.stackNumber += 1;
+
+            // turn hover off for the appropriate cards
+            addedObject.GetComponent<HoverScale>().enabled = false;
+            stationObject.GetComponent<HoverScale>().enabled = false;
+
+            // add the canvas to the played card holder
+            tempCanvas.transform.SetParent(playerDropZone.transform, false);
+            tempCanvas.SetActive(true);
+        }
+      
     }
 
     public void ClearDropState()

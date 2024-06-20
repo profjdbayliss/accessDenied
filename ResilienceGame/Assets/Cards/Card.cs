@@ -20,11 +20,16 @@ public enum CardState
 public class Card : MonoBehaviour, IPointerClickHandler
 {
     public CardData data;
+    // this card needs a unique id since multiples of the same card can be played
+    public int UniqueID; 
     public CardFront front;
     public CardState state;
     public GameObject cardZone;
     public GameObject originalParent;
     public Vector3 originalPosition;
+    public GameObject CanvasHolder;
+    public bool HasCanvas = false;
+    public int stackNumber = 0;
     Vector2 mDroppedPosition;
     GameManager mManager;
     public GameObject OutlineImage;
