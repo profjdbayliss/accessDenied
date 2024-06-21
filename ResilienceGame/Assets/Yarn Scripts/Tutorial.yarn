@@ -5,10 +5,8 @@ Text: Welcome
 ===
 title: DrawAndDiscard
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
 Text: Draw and Discard
+<<stop>>
 ===
 
 title: Defense

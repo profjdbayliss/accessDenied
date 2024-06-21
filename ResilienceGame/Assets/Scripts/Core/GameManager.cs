@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 using System.Linq;
+using Yarn.Unity;
 
 public class GameManager : MonoBehaviour, IRGObservable
 {
@@ -79,6 +80,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     // WORK
     public GameObject yarnSpinner;
+    private DialogueRunner runner;
 
     // end game info
     public GameObject endGameCanvas;
@@ -132,6 +134,9 @@ public class GameManager : MonoBehaviour, IRGObservable
         {
             Debug.Log("Energy deck reader is null.");
         }
+
+        // Set dialogue runner for tutorial
+        runner = yarnSpinner.GetComponent<DialogueRunner>();
 
     }
 
@@ -257,6 +262,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
+
+                runner.StartDialogue("Defense");
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
@@ -267,7 +274,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 } else 
                 {
                     actualPlayer.HandlePlayCard(GamePhase.Defense);
-                }   
+                }
                 break;
             case GamePhase.Vulnerability:
                 break;
