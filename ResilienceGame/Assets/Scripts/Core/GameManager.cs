@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 2;
+    public readonly int MAX_DISCARDS = 25;
     public int numberDiscarded = 0;
     public bool isDiscardAllowed = false;
 
@@ -262,7 +262,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     // if player has no defense cards to play
                     // then auto phase forward
-                    DisplayGameStatus(mPlayerName + " has no defense cards. Autocompleting the defense phase.");
+                    DisplayGameStatus(mPlayerName.text + " has no defense cards. Autocompleting the defense phase.");
                     EndPhase();
                 } else 
                 {
@@ -280,12 +280,13 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     // we only need one cycle for this particular
                     // phase as it's automated.
-                    int id = actualPlayer.DrawFacility(true, 0);
+                    Card card = actualPlayer.DrawFacility(true, 0);
                     // send message about what facility got drawn                 
-                    if (id != -1)
+                    if (card != null)
                     {
-                        List<int> facilityList = new List<int>(1);
-                        facilityList.Add(id);
+                        List<int> facilityList = new List<int>(2);
+                        facilityList.Add(card.UniqueID);
+                        facilityList.Add(card.data.cardID);
                         Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
                         AddMessage(facilityMessage);
                     }
@@ -354,20 +355,21 @@ public class GameManager : MonoBehaviour, IRGObservable
         gameStarted = true;
 
         // draw our first 2 pt facility
-       int id = actualPlayer.DrawFacility(false, 2);
+       Card card = actualPlayer.DrawFacility(false, 2);
         // send message about what facility got drawn
         List<int> facilityList = new List<int>(1);
-        if (id != -1)
+        if (card != null)
         {
-            facilityList.Add(id);
+            facilityList.Add(card.UniqueID);
+            facilityList.Add(card.data.cardID);
             Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
             AddMessage(facilityMessage);
         }
 
         // make sure to show all our cards
-        foreach (GameObject card in actualPlayer.HandList)
+        foreach (GameObject gameObjectCard in actualPlayer.HandList)
         {
-            card.SetActive(true);
+            gameObjectCard.SetActive(true);
         }
         // don't think this does anything right now
         //foreach (GameObject card in actualPlayer.ActiveCardList)
@@ -658,10 +660,10 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     }
 
-    public void AddOpponentFacility(int id)
+    public void AddOpponentFacility(int facilityId, int uniqueId)
     {
        
-        opponentPlayer.DrawCard(false, id, ref opponentPlayer.FacilityIDs, opponentPlayedZone, 
+        opponentPlayer.DrawCard(false, facilityId, uniqueId, ref opponentPlayer.FacilityIDs, opponentPlayedZone, 
             false, ref opponentPlayer.ActiveFacilities, ref opponentPlayer.ActiveFacilityIDs);
         foreach (GameObject card in opponentPlayer.ActiveFacilities)
         {

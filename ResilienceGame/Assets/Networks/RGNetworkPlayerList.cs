@@ -497,12 +497,26 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                     break;
                 case CardMessageType.SendPlayedFacility:
-                    if (msg.count == 1)
                     {
-                        int facilityId = BitConverter.ToInt32(msg.payload);
-                        manager.AddOpponentFacility(facilityId);
-                        Debug.Log("received facility message from opponent");
+                        int element = 0;
+                        if (msg.count == 2)
+                        {
+                            byte first = msg.payload.ElementAt(element);
+                            byte second = msg.payload.ElementAt(element + 1);
+                            byte third = msg.payload.ElementAt(element + 2);
+                            byte fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int uniqueId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
 
+                            manager.AddOpponentFacility(facilityId, uniqueId);
+                            Debug.Log("received facility message from opponent");
+
+                        }
                     }
                     break;
                 default:
@@ -617,13 +631,26 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                     break;
                 case CardMessageType.SendPlayedFacility:
-                    if (msg.count == 1)
                     {
-                        int facilityId = BitConverter.ToInt32(msg.payload);
-                        manager.AddOpponentFacility(facilityId);
-                        Debug.Log("received facility message from opponent");
-                        // WORK : for many player case would want server to resend this message
-                        // to everybody else.
+                        int element = 0;
+                        if (msg.count == 2)
+                        {
+                            byte first = msg.payload.ElementAt(element);
+                            byte second = msg.payload.ElementAt(element + 1);
+                            byte third = msg.payload.ElementAt(element + 2);
+                            byte fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int uniqueId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
+
+                            manager.AddOpponentFacility(facilityId, uniqueId);
+                            Debug.Log("received facility message from opponent");
+
+                        }
                     }
                     break;
                 default:

@@ -40,7 +40,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         //        //resetScale = playerInput.actions["Reset Scale"];
            
         //}
-        originalScale = this.gameObject.transform.localScale * 0.2f;
+        originalScale = this.gameObject.transform.localScale;
         originalPosition = this.gameObject.transform.position;
         ResetScale();
     }

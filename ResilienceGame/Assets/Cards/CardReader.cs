@@ -3,6 +3,7 @@ using UnityEngine;
 using System.IO;
 using System.Text;
 using System;
+using UnityEngine.UI;
 
 public class CardReader : MonoBehaviour
 {
@@ -170,9 +171,22 @@ public class CardReader : MonoBehaviour
 
                         // 4: set up the title color, which also 
                         // determines the card type in this game
+                        string[] htmlColorInfo = individualCSVObjects[4].Trim().Split("x");
+                        string htmlColor="";
+                        if (htmlColorInfo.Length == 2)
+                        {
+                            htmlColor = "#" + htmlColorInfo[1];
+                        }
                         Color titleColor;
-                        ColorUtility.TryParseHtmlString(individualCSVObjects[4], out titleColor);
-                        tempCardFront.titleColor = titleColor;
+                        bool success = ColorUtility.TryParseHtmlString(htmlColor, out titleColor);
+                        if (success)
+                        {
+                            tempCardFront.titleColor = titleColor;
+                        } else
+                        {
+                            Debug.Log("title color wasn't parsed " + individualCSVObjects[4].Trim());
+                        }
+                        
 
                         // 5: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
@@ -193,8 +207,9 @@ public class CardReader : MonoBehaviour
                         tempCardFront.img = tex3;
 
                         // 6: card background
-                        // WORK: I don't know if the background will change per card type yet. Maybe?
-
+                        // we're currently ignoring this as it's set inside
+                        // the unity editor
+                        
                         // 13: text description
                         // pick up any extra things with commas in them that got incorrectly separated
                         tempCardFront.description = individualCSVObjects[13];
