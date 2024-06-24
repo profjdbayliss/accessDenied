@@ -4,6 +4,7 @@ using Mirror;
 using System;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 // many messages actually have no arguments
 public struct RGNetworkShortMessage : NetworkMessage
@@ -248,6 +249,30 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                 }
                 break;
+            case CardMessageType.SendCardUpdates:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count,
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+                    Debug.Log("update observer called share updates");
+
+                    if (isServer)
+                    {
+                        // send to all
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT GAME PLAY UPDATES");
+                    }
+                    else
+                    {
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT SENT GAMEPLAY UPDATES");
+                    }
+                }
+                break;
             case CardMessageType.EndGame:
                 {
                     RGNetworkLongMessage msg = new RGNetworkLongMessage
@@ -487,6 +512,47 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         }
                     }
                     break;
+                case CardMessageType.SendCardUpdates:
+                    {
+                        int element = 0;
+                        List<Updates> updates = new List<Updates>(6);
+                        byte first = msg.payload.ElementAt(element);
+                        byte second = msg.payload.ElementAt(element + 1);
+                        byte third = msg.payload.ElementAt(element + 2);
+                        byte fourth = msg.payload.ElementAt(element + 3);
+                        element += 4;
+                        int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int whatToDo = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int cardId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            updates.Add(new Updates
+                            {
+                                WhatToDo=(AddOrRem)whatToDo,
+                                UniqueFacilityID=facilityId,
+                                CardID=cardId
+                            });
+                        }
+                        manager.AddOpponentUpdates(ref updates);
+                        Debug.Log("received update message from opponent");
+                    }
+                    break;
                 case CardMessageType.EndGame:
                     if (msg.count == 1)
                     {
@@ -621,6 +687,47 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 //    }
                 //    GameManager.instance.ShowOthersCards(cardIds);
                 //    break;
+                case CardMessageType.SendCardUpdates:
+                                        {
+                        int element = 0;
+                        List<Updates> updates = new List<Updates>(6);
+                        byte first = msg.payload.ElementAt(element);
+                        byte second = msg.payload.ElementAt(element + 1);
+                        byte third = msg.payload.ElementAt(element + 2);
+                        byte fourth = msg.payload.ElementAt(element + 3);
+                        element += 4;
+                        int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int whatToDo = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            first = msg.payload.ElementAt(element);
+                            second = msg.payload.ElementAt(element + 1);
+                            third = msg.payload.ElementAt(element + 2);
+                            fourth = msg.payload.ElementAt(element + 3);
+                            element += 4;
+                            int cardId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            updates.Add(new Updates
+                            {
+                                WhatToDo=(AddOrRem)whatToDo,
+                                UniqueFacilityID=facilityId,
+                                CardID=cardId
+                            });
+                        }
+                        manager.AddOpponentUpdates(ref updates);
+                        Debug.Log("received update message from opponent");
+                    }
+                    break;
                 case CardMessageType.EndGame:
                     if (msg.count == 1)
                     {

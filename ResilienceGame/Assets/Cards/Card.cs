@@ -33,6 +33,8 @@ public class Card : MonoBehaviour, IPointerClickHandler
     Vector2 mDroppedPosition;
     GameManager mManager;
     public GameObject OutlineImage;
+    public List<int> ModifyingCards = new List<int>(10);
+    List<ICardAction> mActionList = new List<ICardAction>(6);
 
     // Start is called before the first frame update
     void Start()
@@ -79,5 +81,24 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // we save the exact position of dropping so others can look at it
     public Vector2 getDroppedPosition() {
         return mDroppedPosition;
+    }
+
+
+    // Play all of a cards actions
+    public void Play(CardPlayer player, Card cardActedUpon)
+    {
+        foreach(ICardAction action in mActionList)
+        {
+            action.Played(player, cardActedUpon);
+        }
+    }
+
+    // Cancel this card
+    public void Cancel(CardPlayer player, Card cardActedUpon)
+    {
+        foreach (ICardAction action in mActionList)
+        {
+            action.Canceled(player, cardActedUpon);
+        }
     }
 }

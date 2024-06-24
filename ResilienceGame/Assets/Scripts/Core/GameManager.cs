@@ -551,26 +551,39 @@ public class GameManager : MonoBehaviour, IRGObservable
         switch (mGamePhase)
         {
             case GamePhase.DrawAndDiscard:
-                // make sure we have a full hand
-                actualPlayer.DrawCards();
-                // set the discard area to work if necessary
-                actualPlayer.discardDropZone.SetActive(false);
-                isDiscardAllowed = false;
+                {
+                    // make sure we have a full hand
+                    actualPlayer.DrawCards();
+                    // set the discard area to work if necessary
+                    actualPlayer.discardDropZone.SetActive(false);
+                    isDiscardAllowed = false;
 
-                // clear any remaining drops since we're ending the phase now
-                actualPlayer.ClearDropState();
+                    // clear any remaining drops since we're ending the phase now
+                    actualPlayer.ClearDropState();
 
-                Debug.Log("ending draw and discard game phase!");
+                    Debug.Log("ending draw and discard game phase!");
 
-                // send a message with number of discards of the player
-                Message msg;
-                List<int> tmpList = new List<int>(1);
-                tmpList.Add(numberDiscarded);
-                msg = new Message(CardMessageType.ShareDiscardNumber, tmpList);
-                AddMessage(msg);
-
+                    // send a message with number of discards of the player
+                    Message msg;
+                    List<int> tmpList = new List<int>(1);
+                    tmpList.Add(numberDiscarded);
+                    msg = new Message(CardMessageType.ShareDiscardNumber, tmpList);
+                    AddMessage(msg);
+                }
                 break;
             case GamePhase.Defense:
+                {
+                    // after defense phase the player can't set down cards
+                    // until mitigation phase
+                    actualPlayer.playerDropZone.SetActive(false);
+
+                    // send a message with defense cards played and where they were played
+                    Message msg;
+                    List<int> tmpList = new List<int>(4);
+                    actualPlayer.GetUpdatesInMessageFormat(ref tmpList);
+                    msg = new Message(CardMessageType.SendCardUpdates, tmpList);
+                    AddMessage(msg);
+                }
                 break;
             default:
                 break;
@@ -658,6 +671,11 @@ public class GameManager : MonoBehaviour, IRGObservable
             Debug.Log("play ui shown");
         }
 
+    }
+
+    public void AddOpponentUpdates(ref List<Updates> updates)
+    {
+        opponentPlayer.AddUpdates(ref updates);
     }
 
     public void AddOpponentFacility(int facilityId, int uniqueId)

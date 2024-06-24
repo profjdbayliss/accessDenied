@@ -5,7 +5,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
+using Image = UnityEngine.UI.Image;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -15,6 +15,19 @@ public enum PlayerType
     Water,
     Energy,
     Any
+};
+
+public enum AddOrRem
+{
+    Add,
+    Remove
+};
+
+public struct Updates
+{
+    public AddOrRem WhatToDo;
+    public int UniqueFacilityID;
+    public int CardID;
 };
 
 public class CardPlayer : MonoBehaviour
@@ -43,8 +56,9 @@ public class CardPlayer : MonoBehaviour
     public GameObject opponentDropZone;
     public GameObject playerDropZone;
     public GameObject cardStackingCanvas;
-
+    public readonly float ORIGINAL_SCALE = 0.2f;
     public bool redoCardRead = false;
+
     Vector2 discardDropMin;
     Vector2 discardDropMax;
     Vector2 playedDropMin;
@@ -52,8 +66,8 @@ public class CardPlayer : MonoBehaviour
     Vector2 opponentDropMin;
     Vector2 opponentDropMax;
     int mUniqueIDCount = 0;
-    public readonly float STACK_SIZE = 175.0f;
-    public readonly float ORIGINAL_SCALE = 0.2f;
+
+    List<Updates> mUpdatesThisPhase = new List<Updates>(6);
 
     public void Start()
     {
@@ -134,7 +148,7 @@ public class CardPlayer : MonoBehaviour
                 {
                     if (cards[FacilityIDs[i]].data.worth == worth)
                     {
-                        card = DrawCard(false, i, -1, ref FacilityIDs, playerDropZone, false,
+                        card = DrawCard(false, FacilityIDs[i], -1, ref FacilityIDs, playerDropZone, false,
                             ref ActiveFacilities, ref ActiveFacilityIDs);
                         break;
                     }
@@ -150,13 +164,35 @@ public class CardPlayer : MonoBehaviour
         ref List<GameObject> activeDeckObjs, ref List<int> activeDeckIDs)
     {
         int rng = -1;
+        Card actualCard;
+        
         if (random)
         {
             rng = UnityEngine.Random.Range(0, deckToDrawFrom.Count);
+            actualCard = cards[deckToDrawFrom[rng]];
         }
         else
         {
-            rng = cardId;
+            rng = -1;
+            // this assumes our id is in the deck somewhere
+            // we just don't know where
+            for (int i=0; i<deckToDrawFrom.Count; i++)
+            {
+                actualCard = cards[deckToDrawFrom[i]];
+                if (actualCard.data.cardID == cardId)
+                {
+                    Debug.Log("found card id " + cardId);
+                    // we found our card yay!
+                    rng = i;
+                    break;
+                }
+            }
+            if (rng == -1)
+            {
+                Debug.Log("Error: handed the card deck a card id that isn't in the deck! " + cardId);
+                rng = 0;
+            }
+            actualCard = cards[deckToDrawFrom[rng]];
         }
 
         if (deckToDrawFrom.Count <= 0) // Check to ensure the deck is actually built before trying to draw a card
@@ -168,11 +204,11 @@ public class CardPlayer : MonoBehaviour
         GameObject tempCardObj = Instantiate(cardPrefab);
         Card tempCard = tempCardObj.GetComponent<Card>();
         tempCard.cardZone = handDropZone;
-        Card actualCard = cards[deckToDrawFrom[rng]];
         tempCard.data = actualCard.data;
         if (uniqueId != -1)
         {
             tempCard.UniqueID = uniqueId;
+            Debug.Log("setting unique id for facility " + uniqueId);
         } else
         {
             tempCard.UniqueID = mUniqueIDCount;
@@ -200,20 +236,74 @@ public class CardPlayer : MonoBehaviour
             else if (tempRaws[i].name == "Background")
             {
                 tempRaws[i].color = tempCard.front.titleColor;
-                Debug.Log("color for image is " + tempRaws[i].color);
+            } 
+        }
+
+        Image[] tempImage = tempCardObj.GetComponentsInChildren<Image>();
+        for (int i = 0; i < tempRaws.Length; i++)
+        {
+          if (tempImage[i].name.Equals("LeftCardSlot"))
+            {
+                if (tempCard.front.worthCircle)
+                {
+                    // enable circle
+                    tempImage[i].enabled = true;
+                }
+                else
+                {
+                    tempImage[i].enabled = false;
+                }
+            }
+            else if (tempImage[i].name.Equals("RightCardSlot"))
+            {
+                if (tempCard.front.costCircle)
+                {
+                    // enable circle
+                    tempImage[i].enabled = true;
+                }
+                else
+                {
+                    tempImage[i].enabled = false;
+                }
             }
         }
 
         TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
         {
-            if (tempTexts[i].name == "Title Text")
+            if (tempTexts[i].name.Equals("Title Text"))
             {
                 tempTexts[i].text = tempCard.front.title;
             }
-            else if (tempTexts[i].name == "Description Text")
+            else if (tempTexts[i].name.Equals("Description Text"))
             {
                 tempTexts[i].text = tempCard.front.description;
+            } else if (tempTexts[i].name.Equals("LeftCardNumber") )
+            {
+                if (tempCard.front.worthCircle)
+                {
+                    // set the text number for worth
+                    tempTexts[i].enabled = true;
+                    tempTexts[i].text = tempCard.data.worth + "";
+                } else
+                {
+                    // turn off the text box
+                    tempTexts[i].enabled = false;
+                }
+                
+            } else if (tempTexts[i].name.Equals("RightCardNumber"))
+            {
+                if (tempCard.front.costCircle)
+                {
+                    // set the text number for cost
+                    tempTexts[i].enabled = true;
+                    tempTexts[i].text = tempCard.data.cost + "";
+                }
+                else
+                {
+                    // turn off the text box
+                    tempTexts[i].enabled = false;
+                }
             }
         }
         //TextMeshProUGUI[] tempInnerText = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
@@ -323,10 +413,21 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     Debug.Log("this card should be played for defense now.");
                                     GameObject selected = GetHighlightedStation();
-                                    StackCards(selected, gameObjectCard, GamePhase.Defense);
+                                    Card selectedCard = selected.GetComponent<Card>();
+                                    StackCards(selected, gameObjectCard, playerDropZone, GamePhase.Defense);
                                     card.state = CardState.CardInPlay;
-                                    activeCardIDs.Add(card.data.cardID);
+                                    activeCardIDs.Add(card.UniqueID);
                                     ActiveCardList.Add(gameObjectCard);
+                                    card.ModifyingCards.Add(card.UniqueID);
+                                    mUpdatesThisPhase.Add(new Updates
+                                    {
+                                        WhatToDo=AddOrRem.Add,
+                                        UniqueFacilityID=card.UniqueID,
+                                        CardID=card.data.cardID
+                                    });
+
+                                    // we should play the card's effects
+                                    card.Play(this, selectedCard);
                                     playCount = 1; 
                                 }
                                 else
@@ -385,27 +486,61 @@ public class CardPlayer : MonoBehaviour
         return playCount;
     }
 
-    public void ChangeScaleAndPosition(Vector2 scale, Vector2 position, GameObject objToScale)
+    public void ChangeScaleAndPosition(Vector2 scale, GameObject objToScale)
     {
         Transform parent = objToScale.transform.parent;
-        if (parent != null)
+        slippy parentSlippy = objToScale.GetComponentInParent<slippy>();
+        slippy areaSlippy = objToScale.GetComponent<slippy>();
+
+        if (parent != null && parentSlippy != null)
         {
             objToScale.transform.SetParent(null, true);
-            objToScale.GetComponentInParent<slippy>().originalScale = scale;
-            objToScale.GetComponentInParent<slippy>().originalPosition = new Vector3(position.x, position.y, 0.0f);
-            objToScale.GetComponentInParent<slippy>().ResetPosition();
-            objToScale.GetComponentInParent<slippy>().ResetScale();   
-            //objToScale.GetComponentInParent<HoverScale>().previousScale = scale;
-            objToScale.transform.SetParent(parent.transform, true);
-        } else
+
+            parentSlippy.originalScale = scale;
+            parentSlippy.originalPosition = new Vector3();
+            parentSlippy.ResetScale();
+
+            if (areaSlippy != null)
+            {
+                areaSlippy.originalScale = scale;
+                areaSlippy.originalPosition = new Vector3();
+                areaSlippy.ResetScale();
+            }
+
+            objToScale.transform.SetPositionAndRotation(new Vector3(), objToScale.transform.rotation);
+             
+            //objToScale.transform.SetParent(parent.transform, true);
+        } else if (parent != null)
+        {
+            objToScale.transform.SetParent(null, true);
+            objToScale.transform.localScale = scale;
+            objToScale.transform.SetPositionAndRotation(new Vector3(), objToScale.transform.rotation);
+
+            if (areaSlippy != null)
+            {
+                areaSlippy.originalScale = scale;
+                areaSlippy.originalPosition = new Vector3();
+                areaSlippy.ResetScale();
+            }
+            //objToScale.transform.SetParent(parent.transform, true);
+        }
+        else
         {
             // if there's no parent then our scale is THE scale
             objToScale.transform.localScale = new Vector3(scale.x, scale.y, 1.0f);
+            objToScale.transform.SetPositionAndRotation(new Vector3(), objToScale.transform.rotation);
+            
+            if (areaSlippy != null)
+            {
+                areaSlippy.originalScale = scale;
+                areaSlippy.originalPosition = new Vector3();
+                areaSlippy.ResetScale();
+            }
             Debug.Log("this card has no parent!");
         }
     }
 
-    public void StackCards(GameObject stationObject, GameObject addedObject, GamePhase phase)
+    public void StackCards(GameObject stationObject, GameObject addedObject, GameObject dropZone, GamePhase phase)
     {
         Card stationCard = stationObject.GetComponent<Card>();
 
@@ -419,12 +554,12 @@ public class CardPlayer : MonoBehaviour
             tempCanvas = stationCard.CanvasHolder;
             // necessary?
             //addedObject.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
-            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), addedObject);
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), addedObject);
             addedObject.transform.SetParent(tempCanvas.transform, false);
             
             // set local offset for actual stacking
             stationCard.stackNumber += 1;
-            addedObject.transform.localPosition = new Vector3(0.0f, stationCard.stackNumber * STACK_SIZE, 0.0f);
+            //addedObject.transform.localPosition = new Vector3(0.0f, stationCard.stackNumber * STACK_SIZE, 0.0f);
             
             if (phase == GamePhase.Defense)
             {
@@ -441,24 +576,36 @@ public class CardPlayer : MonoBehaviour
             // add a canvas component and change around the parents
             tempCanvas = Instantiate(cardStackingCanvas);
             // set defaults for canvas
-            tempCanvas.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            Transform parent = tempCanvas.transform.parent;
+            if (parent != null)
+            {
+                tempCanvas.transform.SetParent(null, false);
+            }
+            tempCanvas.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
             tempCanvas.transform.localScale = new Vector3(ORIGINAL_SCALE, ORIGINAL_SCALE, 1.0f);
             
             // turn slippy off - needs to be here???
-            addedObject.GetComponentInParent<slippy>().enabled = false;
-            stationObject.GetComponentInParent<slippy>().enabled = false;
+            if (addedObject.GetComponentInParent<slippy>() != null)
+            {
+                addedObject.GetComponentInParent<slippy>().enabled = false;
+            } 
+             if (stationObject.GetComponentInParent<slippy>() != null)
+            {
+                stationObject.GetComponentInParent<slippy>().enabled = false;
+            }
 
             // now reset scale on all the cards under the canvas!
             // this is only necessary since they likely already have their own scale and we
             // want the canvas to now scale them
-            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), stationObject);
-            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f), addedObject);
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), stationObject);
+            ChangeScaleAndPosition(new Vector2(1.0f, 1.0f), addedObject);
 
             // now add them to canvas
             addedObject.transform.SetParent(tempCanvas.transform, false);
-            addedObject.transform.localPosition = new Vector3(0.0f, STACK_SIZE, 0.0f);
+            addedObject.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+            //addedObject.transform.localPosition = new Vector3(0.0f, STACK_SIZE, 0.0f);
             stationObject.transform.SetParent(tempCanvas.transform, false);
-            stationObject.transform.localPosition = new Vector3(0, 0, 0);
+            //stationObject.transform.localPosition = new Vector3(0, 0, 0);
             if (phase == GamePhase.Defense)
             {
                 // station goes at the front
@@ -475,7 +622,7 @@ public class CardPlayer : MonoBehaviour
             stationObject.GetComponent<HoverScale>().enabled = false;
 
             // add the canvas to the played card holder
-            tempCanvas.transform.SetParent(playerDropZone.transform, false);
+            tempCanvas.transform.SetParent(dropZone.transform, false);
             tempCanvas.SetActive(true);
         }
       
@@ -637,5 +784,74 @@ public class CardPlayer : MonoBehaviour
         }
 
         return hasCardType;
+    }
+
+    public void AddUpdates(ref List<Updates> updates)
+    {
+        foreach(Updates update in updates)
+        {
+            GameObject facility;
+            int index = -1;
+
+            // find unique facility in facilities list
+            for(int i=0; i<ActiveFacilities.Count; i++)
+            {
+                facility = ActiveFacilities[i];
+                Card card = facility.GetComponent<Card>();
+                Debug.Log("facility unique id is: " + card.UniqueID);
+                if (card.UniqueID == update.UniqueFacilityID)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            // if we found the right facility
+            if (index != -1)
+            {
+                // create card to be displayed
+                Card card = DrawCard(false, update.CardID, -1, ref DeckIDs, opponentDropZone, false, ref ActiveCardList, ref activeCardIDs);
+                GameObject cardGameObject = ActiveCardList[ActiveCardList.Count - 1];
+                cardGameObject.SetActive(false);
+
+                // add card to its displayed cards
+                StackCards(ActiveFacilities[index], cardGameObject, opponentDropZone, GamePhase.Defense);
+                card.state = CardState.CardInPlay;
+                cardGameObject.SetActive(true);
+            }
+            else
+            {
+                Debug.Log("in update method a facility index search returned -1 for facility " + update.UniqueFacilityID);
+                // due to a bug this means the facility id is 0
+                facility = ActiveFacilities[0];
+                Card card = facility.GetComponent<Card>();
+                card.UniqueID = update.UniqueFacilityID;
+                Card newCard = DrawCard(false, update.CardID, -1, ref DeckIDs, opponentDropZone, true, ref ActiveCardList, ref activeCardIDs);
+                GameObject cardGameObject = ActiveCardList[0];
+                Debug.Log("card added has id " + newCard.data.cardID + " when the update says it should have " + update.CardID);
+                cardGameObject.SetActive(false);
+
+                // add card to its displayed cards
+                StackCards(facility, cardGameObject, opponentDropZone, GamePhase.Defense);
+                card.state = CardState.CardInPlay;
+                cardGameObject.SetActive(true);
+            }
+
+        }
+    }
+
+    public void GetUpdatesInMessageFormat(ref List<int> playsForMessage)
+    {
+        playsForMessage.Add(mUpdatesThisPhase.Count);
+        foreach(Updates update in mUpdatesThisPhase)
+        {
+            playsForMessage.Add((int)update.WhatToDo);
+            playsForMessage.Add(update.UniqueFacilityID);
+            playsForMessage.Add(update.CardID);
+        }
+
+        // we've given the updates away, so let's make sure to 
+        // clear the list
+        mUpdatesThisPhase.Clear();
     }
 }

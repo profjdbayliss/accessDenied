@@ -13,8 +13,9 @@ public enum CardMessageType
     IncrementTurn,
     SharePlayerType,
     ShareDiscardNumber,
-    EndGame,
+    SendCardUpdates,  
     SendPlayedFacility,
+    EndGame,
     None
 }
 

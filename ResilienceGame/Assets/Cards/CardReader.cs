@@ -115,8 +115,9 @@ public class CardReader : MonoBehaviour
                         tempCard.data.cardID = i-1;
 
                         // 1: which type of card is this?
+                        // NOTE: here is where we add appropriate card actions
+                        // WORK: just add appropriate action to the actions list
                         string type = individualCSVObjects[1].Trim();
-                        //Debug.Log("card name is : " + individualCSVObjects[3] + " with type " + type);
                         switch (type)
                         {
                             case "Defense":
@@ -171,6 +172,10 @@ public class CardReader : MonoBehaviour
 
                         // 4: set up the title color, which also 
                         // determines the card type in this game
+                        // NOTE: the format required by the physical card game program
+                        // is a bit different than Unity's format, which requires the 
+                        // # sign rather than just straight hex code.
+                        // so we change it appropriately
                         string[] htmlColorInfo = individualCSVObjects[4].Trim().Split("x");
                         string htmlColor="";
                         if (htmlColorInfo.Length == 2)
