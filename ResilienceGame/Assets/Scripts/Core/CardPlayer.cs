@@ -240,7 +240,7 @@ public class CardPlayer : MonoBehaviour
         }
 
         Image[] tempImage = tempCardObj.GetComponentsInChildren<Image>();
-        for (int i = 0; i < tempRaws.Length; i++)
+        for (int i = 0; i < tempImage.Length; i++)
         {
           if (tempImage[i].name.Equals("LeftCardSlot"))
             {

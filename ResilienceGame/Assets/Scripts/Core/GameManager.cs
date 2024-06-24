@@ -263,7 +263,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Defense:
 
-                runner.StartDialogue("Defense");
+                //runner.StartDialogue("Defense");
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
@@ -580,10 +580,6 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Defense:
                 {
-                    // after defense phase the player can't set down cards
-                    // until mitigation phase
-                    actualPlayer.playerDropZone.SetActive(false);
-
                     // send a message with defense cards played and where they were played
                     Message msg;
                     List<int> tmpList = new List<int>(4);
