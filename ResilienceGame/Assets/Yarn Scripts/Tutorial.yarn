@@ -1,0 +1,50 @@
+﻿title: Tutorial
+---
+Text: Welcome
+<<declare $skip = false>>
+===
+title: DrawAndDiscard
+---
+Text: Draw and Discard
+<<stop>>
+===
+
+title: Defense
+---
+<<if $skip>>
+    <<stop>>
+<<endif>>
+Text: Defense
+===
+
+title: Vulnerability
+---
+<<if $skip>>
+    <<stop>>
+<<endif>>
+Text: Vulnerability
+===
+
+title: Mitigate
+---
+<<if $skip>>
+    <<stop>>
+<<endif>>
+Text: Mitigate
+===
+
+title: Attack
+---
+<<if $skip>>
+    <<stop>>
+<<endif>>
+Text: Attack
+===
+
+title: AddStation
+---
+<<if $skip>>
+    <<stop>>
+<<endif>>
+Text: Add Station
+===
