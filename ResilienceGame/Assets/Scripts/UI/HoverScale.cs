@@ -8,6 +8,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public GameObject targetObject;
     public float delay = 0.5f; 
     public float maxHeightOffset = 100;
+    public bool SlippyOff = false;
     private float timer = 0; 
     private bool isHovering = false; 
     private bool isScaled = false;
@@ -19,13 +20,29 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         previousScale = this.gameObject.transform.localScale;
     }
+
     void Update()
     {
+
+        if (SlippyOff)
+        {
+            if (isHovering && !isScaled)
+            {
+               
+                ScaleCard(2.0f);
+            }
+            else if (isScaled && !isHovering)
+            {
+                ResetScale();
+            }
+        }
+        else
         // always scale a dragged card to make it easier to get to where you're going
-        if (mPointerDown)
+        if (mPointerDown && !SlippyOff)
         {
             if (!isScaled) ScaleCard(.5f);
         } 
+      
         else
         if (isHovering && !mPointerDown)
         {
@@ -81,6 +98,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         wasDropped = true;
     }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         isHovering = true; 

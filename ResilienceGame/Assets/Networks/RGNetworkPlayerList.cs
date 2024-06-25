@@ -273,6 +273,30 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                 }
                 break;
+            case CardMessageType.NoCardPlayed:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count,
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+                    Debug.Log("update observer called share updates");
+
+                    if (isServer)
+                    {
+                        // send to all
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT NO CARD PLAYED UPDATE");
+                    }
+                    else
+                    {
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT SENT NO CARD PLAYED UPDATE");
+                    }
+                }
+                break;
             case CardMessageType.EndGame:
                 {
                     RGNetworkLongMessage msg = new RGNetworkLongMessage
@@ -522,6 +546,12 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         byte fourth = msg.payload.ElementAt(element + 3);
                         element += 4;
                         int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
+                        first = msg.payload.ElementAt(element);
+                        second = msg.payload.ElementAt(element + 1);
+                        third = msg.payload.ElementAt(element + 2);
+                        fourth = msg.payload.ElementAt(element + 3);
+                        element += 4;
+                        GamePhase gamePhase =(GamePhase) (first | (second << 8) | (third << 16) | (fourth << 24));
                         for (int i = 0; i < numberOfUpdates; i++)
                         {
                             first = msg.payload.ElementAt(element);
@@ -548,9 +578,33 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 UniqueFacilityID=facilityId,
                                 CardID=cardId
                             });
+                            Debug.Log("client received update message from opponent containing : " + facilityId + " and cardid " + cardId );
                         }
-                        manager.AddOpponentUpdates(ref updates);
-                        Debug.Log("received update message from opponent");
+                        manager.AddOpponentUpdates(ref updates, gamePhase);
+                        
+                    }
+                    break;
+                case CardMessageType.NoCardPlayed:
+                    {
+                        uint count = msg.count;
+
+                        Debug.Log("client received a no cards played by opponent");
+                        if (count == 1)
+                        {
+                            // turn the first element into an int
+                            GamePhase phase =(GamePhase) BitConverter.ToInt32(msg.payload);
+                            int playerIndex = (int)msg.indexId;
+
+                            Debug.Log("no cards played during phase" + phase);
+
+                            // share with other players
+                            // WORK: for when multiple players exist
+                            //NetworkServer.SendToAll(msg);
+
+                            // let the game manager display the new info
+                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
+                                " played no cards during game phase " + phase);
+                        }
                     }
                     break;
                 case CardMessageType.EndGame:
@@ -697,6 +751,13 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         byte fourth = msg.payload.ElementAt(element + 3);
                         element += 4;
                         int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
+                        first = msg.payload.ElementAt(element);
+                        second = msg.payload.ElementAt(element + 1);
+                        third = msg.payload.ElementAt(element + 2);
+                        fourth = msg.payload.ElementAt(element + 3);
+                        element += 4;
+                        GamePhase gamePhase = (GamePhase)(first | (second << 8) | (third << 16) | (fourth << 24));
+
                         for (int i = 0; i < numberOfUpdates; i++)
                         {
                             first = msg.payload.ElementAt(element);
@@ -723,9 +784,34 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 UniqueFacilityID=facilityId,
                                 CardID=cardId
                             });
+                            Debug.Log("server received update message from opponent containing : " + facilityId + " and cardid " + cardId);
+
                         }
-                        manager.AddOpponentUpdates(ref updates);
+                        manager.AddOpponentUpdates(ref updates, gamePhase);
                         Debug.Log("received update message from opponent");
+                    }
+                    break;
+                case CardMessageType.NoCardPlayed:
+                    {
+                        uint count = msg.count;
+
+                        Debug.Log("server received a no cards played by opponent");
+                        if (count == 1)
+                        {
+                            // turn the first element into an int
+                            GamePhase phase = (GamePhase)BitConverter.ToInt32(msg.payload);
+                            int playerIndex = (int)msg.indexId;
+
+                            Debug.Log("no cards played during phase" + phase);
+
+                            // share with other players
+                            // WORK: for when multiple players exist
+                            //NetworkServer.SendToAll(msg);
+
+                            // let the game manager display the new info
+                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
+                                " played no cards during game phase " + phase);
+                        }
                     }
                     break;
                 case CardMessageType.EndGame:

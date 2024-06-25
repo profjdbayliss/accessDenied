@@ -15,6 +15,7 @@ public enum CardMessageType
     ShareDiscardNumber,
     SendCardUpdates,  
     SendPlayedFacility,
+    NoCardPlayed,
     EndGame,
     None
 }

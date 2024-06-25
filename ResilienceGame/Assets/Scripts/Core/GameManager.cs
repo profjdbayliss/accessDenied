@@ -277,8 +277,32 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Vulnerability:
+                if (phaseJustChanged
+                    && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
+                {
+                    // if player has no defense cards to play
+                    // then auto phase forward
+                    DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Autocompleting the vulnerability phase.");
+                    EndPhase();
+                }
+                else
+                {
+                    actualPlayer.HandlePlayCard(GamePhase.Vulnerability);
+                }
                 break;
             case GamePhase.Mitigate:
+                if (phaseJustChanged
+                    && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
+                {
+                    // if player has no defense cards to play
+                    // then auto phase forward
+                    DisplayGameStatus(mPlayerName.text + " has no Mitigation cards. Autocompleting the mitigation phase.");
+                    EndPhase();
+                }
+                else
+                {
+                    actualPlayer.HandlePlayCard(GamePhase.Mitigate);
+                }
                 break;
             case GamePhase.Attack:
                 break;
@@ -425,29 +449,6 @@ public class GameManager : MonoBehaviour, IRGObservable
     }
    
 
-    // WORK needs to be redone
-    //public void OnDrag(PointerEventData pointer)
-    //{
-    //    if (tiles.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
-    //    {
-    //        // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
-    //        Vector2 tempVec2 = default(Vector2);
-    //        RectTransform target = tiles.gameObject.GetComponent<RectTransform>();
-    //        Vector2 tempPos = target.transform.localPosition;
-
-    //        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position - pointer.delta, pointer.pressEventCamera, out tempVec2) == true) // Check the older position of the element and see if it was previously
-    //        {
-    //            Vector2 tempNewVec = default(Vector2); // Create a new Vec2 to track the current position of the object
-    //            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position, pointer.pressEventCamera, out tempNewVec) == true)
-    //            {
-    //                tempPos.x += tempNewVec.x - tempVec2.x;
-    //                tempPos.y = tiles.transform.localPosition.y;
-    //                tiles.transform.localPosition = tempPos;
-    //            }
-    //        }
-    //    }
-    //}
-
     // WORK rewrite for this card game
     public void ShowEndGameCanvas(int gameState)
     {
@@ -583,12 +584,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Defense:
                 {
-                    // send a message with defense cards played and where they were played
-                    Message msg;
-                    List<int> tmpList = new List<int>(4);
-                    actualPlayer.GetUpdatesInMessageFormat(ref tmpList);
-                    msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-                    AddMessage(msg);
+                    SendUpdatesToOpponent(mGamePhase);
+                }
+                break;
+            case GamePhase.Vulnerability:
+                {
+                    SendUpdatesToOpponent(mGamePhase);
+                }
+                break;
+            case GamePhase.Mitigate:
+                {
+                    SendUpdatesToOpponent(mGamePhase);
                 }
                 break;
             default:
@@ -605,7 +611,43 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
     }
 
-   
+    public void SendUpdatesToOpponent(GamePhase phase)
+    {
+        // send a message with defense cards played and where they were played
+        Message msg;
+        List<int> tmpList = new List<int>(4);
+        actualPlayer.GetUpdatesInMessageFormat(ref tmpList, phase);
+        if (tmpList.Count > 0)
+        {
+            msg = new Message(CardMessageType.SendCardUpdates, tmpList);
+        }
+        else
+        {
+            tmpList.Count();
+            tmpList.Add((int)phase);
+            msg = new Message(CardMessageType.NoCardPlayed, tmpList);
+        }
+
+        AddMessage(msg);
+    }
+
+    public bool CheckOpponentHighlightedStations()
+    {
+        return opponentPlayer.CheckHighlightedStations();
+    }
+
+    public GameObject GetOpponentHighlightedStation()
+    {
+        GameObject returnValue = null;
+
+        if (CheckOpponentHighlightedStations())
+        {
+            returnValue = opponentPlayer.GetHighlightedStation();
+        }
+
+        return returnValue;
+    }
+
     // Gets the next phase.
     public GamePhase GetNextPhase()
     {
@@ -679,9 +721,32 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     }
 
-    public void AddOpponentUpdates(ref List<Updates> updates)
+    public void AddOpponentUpdates(ref List<Updates> updates, GamePhase phase)
     {
-        opponentPlayer.AddUpdates(ref updates);
+        DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
+        switch (phase)
+        {
+            case GamePhase.Defense:
+                opponentPlayer.AddUpdates(ref updates, phase);
+                break;
+            case GamePhase.Vulnerability:
+                // This phase is more painful since it's an opponent card on top of a player facility
+                foreach(Updates update in updates)
+                {
+                    // draw opponent card to place on player facility
+                    // create card to be displayed
+                    Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCardList, ref opponentPlayer.activeCardIDs);
+                    GameObject cardGameObject = opponentPlayer.ActiveCardList[opponentPlayer.ActiveCardList.Count - 1];
+                    actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase);
+                }
+                break;
+            case GamePhase.Mitigate:
+                opponentPlayer.AddUpdates(ref updates, phase);
+                break;
+            default:
+                break;
+        }
+        
     }
 
     public void AddOpponentFacility(int facilityId, int uniqueId)
