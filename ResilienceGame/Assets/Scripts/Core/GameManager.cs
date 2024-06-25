@@ -364,15 +364,18 @@ public class GameManager : MonoBehaviour, IRGObservable
         // draw our first 2 pt facility
        Card card = actualPlayer.DrawFacility(false, 2);
         // send message about what facility got drawn
-        List<int> facilityList = new List<int>(1);
+        List<int> facilityList = new List<int>(2);
         if (card != null)
         {
             facilityList.Add(card.UniqueID);
             facilityList.Add(card.data.cardID);
             Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
             AddMessage(facilityMessage);
+        } else
+        {
+            Debug.Log("problem in drawing first facility as it's null!");
         }
-
+     
         // make sure to show all our cards
         foreach (GameObject gameObjectCard in actualPlayer.HandList)
         {

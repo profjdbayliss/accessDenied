@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using static UnityEngine.GraphicsBuffer;
 
 public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
 {
@@ -10,9 +12,7 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
 
     public Camera cam;
 
-    public GameObject map;
-
-    public GameObject tiles;
+    public GameObject DraggableObject;
 
     public float maxScale;
 
@@ -28,20 +28,16 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
 
     public PlayerInput playerInput;
 
+    private Vector2 mOffsetPos;
+
     // Start is called before the first frame update
     void Start()
     {
-        //maxScale = 3.0f;
-        //minScale = 0.5f;
-        //if(this.gameObject.GetComponentInParent<CardPlayer>() == null)
-        //{
-           
-        //        Debug.Log("GOT Slippy");
-        //        //resetScale = playerInput.actions["Reset Scale"];
-           
-        //}
         originalScale = this.gameObject.transform.localScale;
         originalPosition = this.gameObject.transform.position;
+        // initial offset is always zero
+        mOffsetPos = new Vector2();
+      
         ResetScale();
     }
 
@@ -54,83 +50,77 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         }
 
         //forces a cap in case anything gets too large or small accidentally 
-        if(map.transform.localScale.x > maxScale)
+        if(DraggableObject.transform.localScale.x > maxScale)
         {
             //Debug.Log("greater than max scale!");
-            Vector2 tempScale = map.transform.localScale;
+            Vector2 tempScale = DraggableObject.transform.localScale;
             tempScale.x = maxScale;
             tempScale.y = maxScale;
-            map.transform.localScale = tempScale;
+            DraggableObject.transform.localScale = tempScale;
         }
-        else if (map.transform.localScale.x < minScale)
+        else if (DraggableObject.transform.localScale.x < minScale)
         {
-            Vector2 tempScale = map.transform.localScale;
+            Vector2 tempScale = DraggableObject.transform.localScale;
             tempScale.x = minScale;
             tempScale.y = minScale;
-            map.transform.localScale = tempScale;
+            DraggableObject.transform.localScale = tempScale;
         }
 
     }
+
     public void OnScroll(PointerEventData pointer)
     {
         Debug.Log("onscroll is being called");
         if (pointer.scrollDelta.y > 0.0f) // Zoom in
         {
-            if ((map.transform.localScale.x + 0.05f) <= maxScale) // Only zoom in when the zoom is less than the max, we allow the zoom in
+            if ((DraggableObject.transform.localScale.x + 0.05f) <= maxScale) // Only zoom in when the zoom is less than the max, we allow the zoom in
             {
-                Vector2 tempScale = map.transform.localScale;
+                Vector2 tempScale = DraggableObject.transform.localScale;
                 tempScale.x += 0.05f;
                 tempScale.y += 0.05f;
-                map.transform.localScale = tempScale;
+                DraggableObject.transform.localScale = tempScale;
             }
             else
             {
-                Vector2 tempScale = map.transform.localScale;
+                Vector2 tempScale = DraggableObject.transform.localScale;
                 tempScale.x = maxScale;
                 tempScale.y = maxScale;
-                map.transform.localScale = tempScale;
+                DraggableObject.transform.localScale = tempScale;
             }
         }
         else
         {
-            if ((map.transform.localScale.x - 0.05f) >= minScale) // Only zoom out when the zoom is more than the minimum.
+            if ((DraggableObject.transform.localScale.x - 0.05f) >= minScale) // Only zoom out when the zoom is more than the minimum.
             {
-                Vector2 tempScale = map.transform.localScale;
+                Vector2 tempScale = DraggableObject.transform.localScale;
                 tempScale.x -= 0.05f;
                 tempScale.y -= 0.05f;
-                map.transform.localScale = tempScale;
+                DraggableObject.transform.localScale = tempScale;
             }
             else
             {
-                Vector2 tempScale = map.transform.localScale;
+                Vector2 tempScale = DraggableObject.transform.localScale;
                 tempScale.x = minScale;
                 tempScale.y = minScale;
-                map.transform.localScale = tempScale;
+                DraggableObject.transform.localScale = tempScale;
             }
         }
     }
 
     public void OnDrag(PointerEventData pointer)
     {
-        if (map.gameObject.activeSelf) // Check to see if the gameobject this is attached to is active in the scene
+        if (DraggableObject.gameObject.activeSelf)
         {
-            //Debug.Log("ondrag is being called");
             UpdatePosition();
-            // Create a vector2 to hold the previous position of the element and also set our target of what we want to actually drag.
-            Vector2 tempVec2 = default(Vector2);
-            RectTransform target = map.gameObject.GetComponent<RectTransform>();
-            Vector2 tempPos = target.transform.localPosition;
+            RectTransform target = DraggableObject.gameObject.GetComponent<RectTransform>();
+            Vector2 localPos = target.transform.localPosition;          
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position - pointer.delta, pointer.pressEventCamera, out tempVec2) == true) // Check the older position of the element and see if it was previously
+            // check to see where we're dragging
+            Vector2 tempNewVec = default(Vector2);
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position, pointer.pressEventCamera, out tempNewVec))
             {
-                Vector2 tempNewVec = default(Vector2); // Create a new Vec2 to track the current position of the object
-                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(target, pointer.position, pointer.pressEventCamera, out tempNewVec) == true)
-                {
-                    tempPos.x += tempNewVec.x - tempVec2.x;
-                    tempPos.y += tempNewVec.y - tempVec2.y;
-                    map.transform.localPosition = tempPos;
-                    
-                }
+                DraggableObject.transform.localPosition = new Vector2(localPos.x + tempNewVec.x,
+                    localPos.y + tempNewVec.y );
             }
         }
     }
@@ -142,7 +132,6 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
     public void UpdateScale()
     {
         originalPosition = this.gameObject.transform.localScale;
-
     }
 
     public void ResetScale()
@@ -151,16 +140,14 @@ public class slippy : MonoBehaviour, IDragHandler, IScrollHandler
         this.gameObject.transform.SetParent(null,true);
         this.gameObject.transform.localScale = originalScale;
         this.gameObject.transform.SetParent(parent, true);
-        Debug.Log("resetting scale on" +this.gameObject.name + "to " + originalScale);
     }
 
     public void ResetPosition()
     {
-        //map.gameObject.GetComponent<HoverScale>().ResetPosition(this.gameObject.transform.position);
         Transform parent = this.gameObject.transform.parent;
         this.gameObject.transform.SetParent(null, true);
         this.gameObject.transform.SetPositionAndRotation(new Vector3(),gameObject.transform.rotation);
         this.gameObject.transform.SetParent(parent, true);
-        Debug.Log("resetting position on " + this.gameObject.name + "to " + originalPosition);
     }
+
 }

@@ -20559,8 +20559,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCanvas: {fileID: 1994761812}
   cam: {fileID: 1515608158}
-  map: {fileID: 4414296152829722398}
-  tiles: {fileID: 0}
+  DraggableObject: {fileID: 4414296152829722398}
   maxScale: 3
   minScale: 0.15
   originalScale: {x: 0.2, y: 0.2}

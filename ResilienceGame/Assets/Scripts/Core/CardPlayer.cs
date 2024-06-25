@@ -156,6 +156,13 @@ public class CardPlayer : MonoBehaviour
             }
         }
 
+        // always turn slippy off for facilities as we can't move them
+        slippy theSlippy = card.GetComponent<slippy>();
+        if (theSlippy != null)
+        {
+            theSlippy.enabled = false;
+        }
+
         return card;
     }
 
@@ -318,7 +325,7 @@ public class CardPlayer : MonoBehaviour
         //    //tempCard.duration = cardReader.CardDuration[Deck[rng]];
         //    //tempCard.cost = cardReader.CardCost[Deck[rng]];
         //    //tempCard.teamID = cardReader.CardTeam[Deck[rng]];
-        tempCardObj.GetComponent<slippy>().map = tempCardObj;
+        tempCardObj.GetComponent<slippy>().DraggableObject = tempCardObj;
         if (!allowSlippy)
         {
             slippy tempSlippy = tempCardObj.GetComponent<slippy>();
@@ -798,7 +805,7 @@ public class CardPlayer : MonoBehaviour
             {
                 facility = ActiveFacilities[i];
                 Card card = facility.GetComponent<Card>();
-                Debug.Log("facility unique id is: " + card.UniqueID);
+                Debug.Log("card id is: " + update.CardID + " and facility id : " + update.UniqueFacilityID);
                 if (card.UniqueID == update.UniqueFacilityID)
                 {
                     index = i;
@@ -810,9 +817,10 @@ public class CardPlayer : MonoBehaviour
             if (index != -1)
             {
                 // create card to be displayed
-                Card card = DrawCard(false, update.CardID, -1, ref DeckIDs, opponentDropZone, false, ref ActiveCardList, ref activeCardIDs);
+                Card card = DrawCard(false, update.CardID, -1, ref DeckIDs, opponentDropZone, true, ref ActiveCardList, ref activeCardIDs);
                 GameObject cardGameObject = ActiveCardList[ActiveCardList.Count - 1];
                 cardGameObject.SetActive(false);
+                Debug.Log("index in updating facilities is not equal to zero for card: " + card.front.title);
 
                 // add card to its displayed cards
                 StackCards(ActiveFacilities[index], cardGameObject, opponentDropZone, GamePhase.Defense);
