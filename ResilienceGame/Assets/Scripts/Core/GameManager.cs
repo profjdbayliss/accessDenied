@@ -78,16 +78,9 @@ public class GameManager : MonoBehaviour, IRGObservable
     public TextMeshProUGUI activePlayerText;
     public Color activePlayerColor;
 
-<<<<<<< .merge_file_yAQlNy
     // WORK
     public GameObject yarnSpinner;
     private DialogueRunner runner;
-=======
-    // Tutorial 
-    public GameObject yarnSpinner;
-    private DialogueRunner runner;
-    private bool skip;
->>>>>>> .merge_file_X87tG2
 
     // end game info
     public GameObject endGameCanvas;
@@ -235,11 +228,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             phaseJustChanged = true;
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
-<<<<<<< .merge_file_yAQlNy
-=======
-
-            SkipTutorial();
->>>>>>> .merge_file_X87tG2
         }
 
         switch (phase)
@@ -251,11 +239,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged)
                 {
-<<<<<<< .merge_file_yAQlNy
-=======
-                    //runner.StartDialogue("DrawAndDiscard");
-
->>>>>>> .merge_file_X87tG2
                     isDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards();
@@ -279,14 +262,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
-<<<<<<< .merge_file_yAQlNy
 
                 //runner.StartDialogue("Defense");
-=======
-                if (phaseJustChanged) { //runner.StartDialogue("Defense");
-                                        }
-
->>>>>>> .merge_file_X87tG2
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
@@ -300,12 +277,6 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Vulnerability:
-<<<<<<< .merge_file_yAQlNy
-=======
-                if (phaseJustChanged) { //runner.StartDialogue("Vulnerability");
-                                        }
-
->>>>>>> .merge_file_X87tG2
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
                 {
@@ -320,12 +291,6 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Mitigate:
-<<<<<<< .merge_file_yAQlNy
-=======
-                if (phaseJustChanged) { //runner.StartDialogue("Mitigate");
-                                        }
-
->>>>>>> .merge_file_X87tG2
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
                 {
@@ -340,21 +305,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Attack:
-<<<<<<< .merge_file_yAQlNy
-=======
-                if (phaseJustChanged) { /*runner.StartDialogue("Attack");*/ }
-
->>>>>>> .merge_file_X87tG2
                 break;
             case GamePhase.AddStation:
                 if (phaseJustChanged)
                 {
-<<<<<<< .merge_file_yAQlNy
-=======
-                    //runner.StartDialogue("AddStation");
-                    skip = true;
-
->>>>>>> .merge_file_X87tG2
                     // we only need one cycle for this particular
                     // phase as it's automated.
                     Card card = actualPlayer.DrawFacility(true, 0);
@@ -400,10 +354,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         //Debug.Log("set active player to be: " + playerType);
         //activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
         ///activePlayerText.color = activePlayerColor;
-<<<<<<< .merge_file_yAQlNy
         //yarnSpinner.SetActive(true);
-=======
->>>>>>> .merge_file_X87tG2
 
         // tell everybody else of this player's type
         if (!isServer)
@@ -666,21 +617,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         Message msg;
         List<int> tmpList = new List<int>(4);
         actualPlayer.GetUpdatesInMessageFormat(ref tmpList, phase);
-<<<<<<< .merge_file_yAQlNy
         msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-=======
-        if (tmpList.Count > 0)
-        {
-            msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-        }
-        else
-        {
-            tmpList.Count();
-            tmpList.Add((int)phase);
-            msg = new Message(CardMessageType.NoCardPlayed, tmpList);
-        }
-
->>>>>>> .merge_file_X87tG2
         AddMessage(msg);
     }
 
@@ -776,7 +713,6 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     public void AddOpponentUpdates(ref List<Updates> updates, GamePhase phase)
     {
-<<<<<<< .merge_file_yAQlNy
         if (updates.Count == 0)
         {
             DisplayGameStatus("Opponent did not play any cards during their turn in phase " + phase);
@@ -785,9 +721,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
         }
         
-=======
-        DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
->>>>>>> .merge_file_X87tG2
         switch (phase)
         {
             case GamePhase.Defense:
@@ -800,21 +733,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // draw opponent card to place on player facility
                     // create card to be displayed
                     Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCardList, ref opponentPlayer.activeCardIDs);
-<<<<<<< .merge_file_yAQlNy
                     Debug.Log("opponent card with id : " + update.CardID + " should be in active opponent list.");
                     Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCardList.Count);
-=======
->>>>>>> .merge_file_X87tG2
                     GameObject cardGameObject = opponentPlayer.ActiveCardList[opponentPlayer.ActiveCardList.Count - 1];
                     actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase);
                 }
                 break;
             case GamePhase.Mitigate:
-<<<<<<< .merge_file_yAQlNy
                 actualPlayer.AddUpdates(ref updates, phase);
-=======
-                opponentPlayer.AddUpdates(ref updates, phase);
->>>>>>> .merge_file_X87tG2
                 break;
             default:
                 break;
@@ -833,7 +759,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
     }
 
-<<<<<<< .merge_file_yAQlNy
     public GameObject GetOpponentActiveCardObject(int cardId)
     {
         GameObject cardObject = null;
@@ -871,8 +796,6 @@ public class GameManager : MonoBehaviour, IRGObservable
        
     }
 
-=======
->>>>>>> .merge_file_X87tG2
     // Gets which turn it is.
     public int GetTurn()
     {
@@ -954,14 +877,4 @@ public class GameManager : MonoBehaviour, IRGObservable
             }
         }
     }
-<<<<<<< .merge_file_yAQlNy
-=======
-
-    private void SkipTutorial()
-    {
-        if (!yarnSpinner.activeInHierarchy) { return; }
-
-        if(skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard) { yarnSpinner.SetActive(false); }
-    }
->>>>>>> .merge_file_X87tG2
 }
