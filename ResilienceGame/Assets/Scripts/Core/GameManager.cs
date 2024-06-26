@@ -78,9 +78,10 @@ public class GameManager : MonoBehaviour, IRGObservable
     public TextMeshProUGUI activePlayerText;
     public Color activePlayerColor;
 
-    // WORK
+    // Tutorial 
     public GameObject yarnSpinner;
     private DialogueRunner runner;
+    private bool skip;
 
     // end game info
     public GameObject endGameCanvas;
@@ -228,6 +229,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             phaseJustChanged = true;
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
+
+            SkipTutorial();
         }
 
         switch (phase)
@@ -239,6 +242,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged)
                 {
+                    //runner.StartDialogue("DrawAndDiscard");
+
                     isDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards();
@@ -262,8 +267,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
+                if (phaseJustChanged) { //runner.StartDialogue("Defense");
+                                        }
 
-                //runner.StartDialogue("Defense");
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
@@ -277,6 +283,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Vulnerability:
+                if (phaseJustChanged) { //runner.StartDialogue("Vulnerability");
+                                        }
+
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
                 {
@@ -291,6 +300,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Mitigate:
+                if (phaseJustChanged) { //runner.StartDialogue("Mitigate");
+                                        }
+
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
                 {
@@ -305,10 +317,15 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Attack:
+                if (phaseJustChanged) { /*runner.StartDialogue("Attack");*/ }
+
                 break;
             case GamePhase.AddStation:
                 if (phaseJustChanged)
                 {
+                    //runner.StartDialogue("AddStation");
+                    skip = true;
+
                     // we only need one cycle for this particular
                     // phase as it's automated.
                     Card card = actualPlayer.DrawFacility(true, 0);
@@ -354,7 +371,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         //Debug.Log("set active player to be: " + playerType);
         //activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
         ///activePlayerText.color = activePlayerColor;
-        //yarnSpinner.SetActive(true);
 
         // tell everybody else of this player's type
         if (!isServer)
@@ -840,5 +856,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
             }
         }
+    }
+
+    private void SkipTutorial()
+    {
+        if (!yarnSpinner.activeInHierarchy) { return; }
+
+        if(skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard) { yarnSpinner.SetActive(false); }
     }
 }

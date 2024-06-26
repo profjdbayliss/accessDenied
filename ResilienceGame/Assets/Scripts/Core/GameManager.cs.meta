@@ -3,7 +3,33 @@ guid: c8f6d54f3722f524290f07c6e2695f5e
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - energyDeckReader: {instanceID: 0}
+  - waterDeckReader: {instanceID: 0}
+  - playerDeckList: {instanceID: 0}
+  - energyPlayer: {instanceID: 0}
+  - waterPlayer: {instanceID: 0}
+  - actualPlayer: {instanceID: 0}
+  - opponentPlayer: {instanceID: 0}
+  - opponentPlayedZone: {instanceID: 0}
+  - mTurnText: {instanceID: 0}
+  - mPhaseText: {instanceID: 0}
+  - mPlayerName: {instanceID: 0}
+  - mPlayerDeckType: {instanceID: 0}
+  - mOpponentName: {instanceID: 0}
+  - mOpponentDeckType: {instanceID: 0}
+  - mEndPhaseButton: {instanceID: 0}
+  - gameCanvas: {instanceID: 0}
+  - startScreen: {instanceID: 0}
+  - tiles: {instanceID: 0}
+  - StatusText: {instanceID: 0}
+  - activePlayerText: {instanceID: 0}
+  - yarnSpinner: {instanceID: 0}
+  - tutorial: {fileID: 7545569452688597077, guid: 870775111d376b949bc1383fb79fa71e, type: 3}
+  - endGameCanvas: {instanceID: 0}
+  - endGameText: {instanceID: 0}
+  - cam: {instanceID: 0}
+  - titlee: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
