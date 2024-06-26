@@ -82,6 +82,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject yarnSpinner;
     private DialogueRunner runner;
 
+
     // end game info
     public GameObject endGameCanvas;
     public TMP_Text endGameText;
