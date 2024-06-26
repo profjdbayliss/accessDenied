@@ -617,17 +617,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         Message msg;
         List<int> tmpList = new List<int>(4);
         actualPlayer.GetUpdatesInMessageFormat(ref tmpList, phase);
-        if (tmpList.Count > 0)
-        {
-            msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-        }
-        else
-        {
-            tmpList.Count();
-            tmpList.Add((int)phase);
-            msg = new Message(CardMessageType.NoCardPlayed, tmpList);
-        }
-
+        msg = new Message(CardMessageType.SendCardUpdates, tmpList);
         AddMessage(msg);
     }
 
@@ -723,7 +713,14 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     public void AddOpponentUpdates(ref List<Updates> updates, GamePhase phase)
     {
-        DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
+        if (updates.Count == 0)
+        {
+            DisplayGameStatus("Opponent did not play any cards during their turn in phase " + phase);
+        } else
+        {
+            DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
+        }
+        
         switch (phase)
         {
             case GamePhase.Defense:
@@ -736,12 +733,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // draw opponent card to place on player facility
                     // create card to be displayed
                     Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCardList, ref opponentPlayer.activeCardIDs);
+                    Debug.Log("opponent card with id : " + update.CardID + " should be in active opponent list.");
+                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCardList.Count);
                     GameObject cardGameObject = opponentPlayer.ActiveCardList[opponentPlayer.ActiveCardList.Count - 1];
                     actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase);
                 }
                 break;
             case GamePhase.Mitigate:
-                opponentPlayer.AddUpdates(ref updates, phase);
+                actualPlayer.AddUpdates(ref updates, phase);
                 break;
             default:
                 break;
@@ -758,6 +757,43 @@ public class GameManager : MonoBehaviour, IRGObservable
         {
             card.SetActive(true);
         }
+    }
+
+    public GameObject GetOpponentActiveCardObject(int cardId)
+    {
+        GameObject cardObject = null;
+        foreach(GameObject cardGameObject in opponentPlayer.ActiveCardList)
+        {
+            Card card = cardGameObject.GetComponent<Card>();
+            Debug.Log("get opponent card list card under consideration with id : " + card.data.cardID + " with searched for card being " + cardId);
+            if (card.data.cardID == cardId)
+            {
+                cardObject = cardGameObject;
+                break;
+            }
+        }
+
+        return cardObject;
+    }
+
+    public void DiscardOpponentActiveCard(int uniqueFacilityID, int cardID, bool sendAsMessage)
+    {
+        if (sendAsMessage)
+        {
+            opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardID, true);
+
+            // send a message with defense cards played and where they were played
+            Message msg;
+            List<int> tmpList = new List<int>(4);
+            opponentPlayer.GetUpdatesInMessageFormat(ref tmpList, mGamePhase);
+            msg = new Message(CardMessageType.SendCardUpdates, tmpList);
+            AddMessage(msg);
+        }
+        else
+        {
+            opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardID, false);
+        }
+       
     }
 
     // Gets which turn it is.

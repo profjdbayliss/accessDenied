@@ -273,30 +273,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     }
                 }
                 break;
-            case CardMessageType.NoCardPlayed:
-                {
-                    RGNetworkLongMessage msg = new RGNetworkLongMessage
-                    {
-                        indexId = (uint)localPlayerID,
-                        type = (uint)data.Type,
-                        count = (uint)data.arguments.Count,
-                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
-                    };
-                    Debug.Log("update observer called share updates");
-
-                    if (isServer)
-                    {
-                        // send to all
-                        NetworkServer.SendToAll(msg);
-                        Debug.Log("SERVER SENT NO CARD PLAYED UPDATE");
-                    }
-                    else
-                    {
-                        NetworkClient.Send(msg);
-                        Debug.Log("CLIENT SENT NO CARD PLAYED UPDATE");
-                    }
-                }
-                break;
             case CardMessageType.EndGame:
                 {
                     RGNetworkLongMessage msg = new RGNetworkLongMessage
@@ -584,29 +560,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         
                     }
                     break;
-                case CardMessageType.NoCardPlayed:
-                    {
-                        uint count = msg.count;
-
-                        Debug.Log("client received a no cards played by opponent");
-                        if (count == 1)
-                        {
-                            // turn the first element into an int
-                            GamePhase phase =(GamePhase) BitConverter.ToInt32(msg.payload);
-                            int playerIndex = (int)msg.indexId;
-
-                            Debug.Log("no cards played during phase" + phase);
-
-                            // share with other players
-                            // WORK: for when multiple players exist
-                            //NetworkServer.SendToAll(msg);
-
-                            // let the game manager display the new info
-                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
-                                " played no cards during game phase " + phase);
-                        }
-                    }
-                    break;
                 case CardMessageType.EndGame:
                     if (msg.count == 1)
                     {
@@ -789,29 +742,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         }
                         manager.AddOpponentUpdates(ref updates, gamePhase);
                         Debug.Log("received update message from opponent");
-                    }
-                    break;
-                case CardMessageType.NoCardPlayed:
-                    {
-                        uint count = msg.count;
-
-                        Debug.Log("server received a no cards played by opponent");
-                        if (count == 1)
-                        {
-                            // turn the first element into an int
-                            GamePhase phase = (GamePhase)BitConverter.ToInt32(msg.payload);
-                            int playerIndex = (int)msg.indexId;
-
-                            Debug.Log("no cards played during phase" + phase);
-
-                            // share with other players
-                            // WORK: for when multiple players exist
-                            //NetworkServer.SendToAll(msg);
-
-                            // let the game manager display the new info
-                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
-                                " played no cards during game phase " + phase);
-                        }
                     }
                     break;
                 case CardMessageType.EndGame:

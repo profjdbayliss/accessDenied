@@ -99,7 +99,8 @@ public class CardReader : MonoBehaviour
                     // 10: the category of the card if there is one
                     // 11: column
                     // 12: row
-                    // 13:  text description
+                    // 13: mitigates
+                    // 14+:  text description
 
                     // 0: if there's one or more cards to be inserted into the deck
                     int numberOfCards = int.Parse(individualCSVObjects[0].Trim());
@@ -214,10 +215,20 @@ public class CardReader : MonoBehaviour
                         // 6: card background
                         // we're currently ignoring this as it's set inside
                         // the unity editor
-                        
-                        // 13: text description
+
+                        // 13: mitigation list
+                        string[] mitigations = individualCSVObjects[13].Trim().Split(";");
+                        foreach(string mitigation in mitigations)
+                        {
+                            if(!mitigation.Equals(""))
+                            {
+                                tempCard.MitigatesWhatCards.Add(mitigation);
+                            }       
+                        }
+
+                        // 14: text description
                         // pick up any extra things with commas in them that got incorrectly separated
-                        tempCardFront.description = individualCSVObjects[13];
+                        tempCardFront.description = individualCSVObjects[14];
 
                         if (individualCSVObjects.Length > 14)
                         {
@@ -264,7 +275,7 @@ public class CardReader : MonoBehaviour
                         }
 
                         // 10: the category of the card if there is one
-                        // WORK
+                        // WORK - not in simpler version of initial game
 
                         // now add one copy of this card for every instance in the card game
                         tempCard.data.numberInDeck = numberOfCards;
@@ -279,6 +290,7 @@ public class CardReader : MonoBehaviour
             // Close at the end
             reader.Close();
             stream.Close();
+
         }
 
         return cards;

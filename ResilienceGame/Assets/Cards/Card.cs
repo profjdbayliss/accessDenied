@@ -30,11 +30,16 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public GameObject CanvasHolder;
     public bool HasCanvas = false;
     public int stackNumber = 0;
-    Vector2 mDroppedPosition;
-    GameManager mManager;
     public GameObject OutlineImage;
+    public int DefenseHealth = 0;
     public List<int> ModifyingCards = new List<int>(10);
-    List<ICardAction> mActionList = new List<ICardAction>(6);
+    public List<int> AttackingCards = new List<int>(10);
+    // NOTE: this is a string currently because mitigations are for 
+    // cards from the other player's deck.
+    public List<string> MitigatesWhatCards = new List<string>(10);
+    Vector2 mDroppedPosition;
+    GameManager mManager; 
+    public List<ICardAction> ActionList = new List<ICardAction>(6);
 
     // Start is called before the first frame update
     void Start()
@@ -87,18 +92,32 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // Play all of a cards actions
     public void Play(CardPlayer player, Card cardActedUpon)
     {
-        foreach(ICardAction action in mActionList)
+        foreach(ICardAction action in ActionList)
         {
-            action.Played(player, cardActedUpon);
+            action.Played(player, cardActedUpon, this);
         }
     }
 
     // Cancel this card
     public void Cancel(CardPlayer player, Card cardActedUpon)
     {
-        foreach (ICardAction action in mActionList)
+        foreach (ICardAction action in ActionList)
         {
-            action.Canceled(player, cardActedUpon);
+            action.Canceled(player, cardActedUpon, this);
         }
+    }
+
+    public bool CanMitigate(string attackName)
+    {
+        bool canMitigate = false;
+
+        foreach(string mitigation in MitigatesWhatCards)
+        {
+            if (attackName.Equals(mitigation)) {
+                canMitigate = true;
+                break;
+            }
+        }
+        return canMitigate;
     }
 }

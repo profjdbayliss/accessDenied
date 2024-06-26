@@ -20753,6 +20753,7 @@ MonoBehaviour:
   HasCanvas: 0
   stackNumber: 0
   OutlineImage: {fileID: 6945917863268426752}
+  DefenseHealth: 0
   ModifyingCards: 
 --- !u!222 &8846991115935471386
 CanvasRenderer:
