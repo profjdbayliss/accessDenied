@@ -14,7 +14,14 @@ public enum CardState
     CardDrawn,
     CardDrawnDropped,
     CardInPlay,
+    CardNeedsToBeDiscarded,
     CardDiscarded,
+};
+
+public struct CardIDInfo
+{
+    public int UniqueID;
+    public int CardID;
 };
 
 public class Card : MonoBehaviour, IPointerClickHandler
@@ -33,7 +40,8 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public GameObject OutlineImage;
     public int DefenseHealth = 0;
     public List<int> ModifyingCards = new List<int>(10);
-    public List<int> AttackingCards = new List<int>(10);
+    public List<CardIDInfo> AttackingCards = new List<CardIDInfo>(10);
+    
     // NOTE: this is a string currently because mitigations are for 
     // cards from the other player's deck.
     public List<string> MitigatesWhatCards = new List<string>(10);

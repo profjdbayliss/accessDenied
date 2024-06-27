@@ -554,7 +554,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 UniqueFacilityID=facilityId,
                                 CardID=cardId
                             });
-                            Debug.Log("client received update message from opponent containing : " + facilityId + " and cardid " + cardId );
+                            Debug.Log("client received update message from opponent containing : " + facilityId + " and cardid " + cardId + "for game phase " + gamePhase);
                         }
                         manager.AddOpponentUpdates(ref updates, gamePhase);
                         
@@ -737,11 +737,11 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 UniqueFacilityID=facilityId,
                                 CardID=cardId
                             });
-                            Debug.Log("server received update message from opponent containing : " + facilityId + " and cardid " + cardId);
+                            Debug.Log(whatToDo + " server received update message from opponent containing : " + facilityId + " and cardid " + cardId);
 
                         }
                         manager.AddOpponentUpdates(ref updates, gamePhase);
-                        Debug.Log("received update message from opponent");
+                        Debug.Log("received update message from opponent of size " + numberOfUpdates);
                     }
                     break;
                 case CardMessageType.EndGame:
