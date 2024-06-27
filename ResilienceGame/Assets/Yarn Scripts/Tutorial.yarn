@@ -5,7 +5,8 @@ Text: Welcome
 ===
 title: DrawAndDiscard
 ---
-Text: Draw and Discard
+Text: Every round starts with six cards per player unless it’s the end of the game where somebody has run out of cards.
+Text: You can discard one or two cards into your discard pile. Once a card is discarded draw a new card from the deck.
 <<stop>>
 ===
 
@@ -14,7 +15,7 @@ title: Defense
 <<if $skip>>
     <<stop>>
 <<endif>>
-Text: Defense
+Text: Lay down up to 1 card that gives defense to a facility (+1 are most common). This phase may be skipped if nobody has any cards to play. Defense and station cards have a blue title background.
 ===
 
 title: Vulnerability
@@ -22,7 +23,7 @@ title: Vulnerability
 <<if $skip>>
     <<stop>>
 <<endif>>
-Text: Vulnerability
+Text: Spend the number of points in facilities you own (not impacted by current “health” of facility, which is only used to subtract facilities from the game and calculate the end score) to let other players know the vulnerabilities you’ve discovered on their stations.
 ===
 
 title: Mitigate
@@ -30,7 +31,7 @@ title: Mitigate
 <<if $skip>>
     <<stop>>
 <<endif>>
-Text: Mitigate
+Text: Remove vulnerabilities from your stations by countering them with mitigation cards from your hand. Mitigation cards have a yellow title background. Countered vulnerabilities go into the discard player of whomever played the cards. Mitigation cards go into your discard pile.
 ===
 
 title: Attack
@@ -38,7 +39,9 @@ title: Attack
 <<if $skip>>
     <<stop>>
 <<endif>>
-Text: Attack
+Text: For the vulnerability cards that cannot be countered, roll a d20 to see if the vulnerability is attacked. Anything >10 is assumed to be a successful attack.
+Text: For successful attacks, take off the points lost for that facility AND discard the vulnerability into the player’s discard pile for whomever played the card. Note: once a facility is <= 0 points it’s removed from play and those points are lost permanently. To indicate points taken off where the facility points remain >0 use a token (coins work) to indicate a facility has lost points.
+Text: All vulnerabilities (including lateral movement) are left until either mitigated or the vulnerability is exploited. Lateral movement goes away when it is either mitigated OR used to do a lateral movement of any successful exploit once. Lateral movement cards should be resolved in the order they were played.
 ===
 
 title: AddStation
@@ -46,5 +49,5 @@ title: AddStation
 <<if $skip>>
     <<stop>>
 <<endif>>
-Text: Add Station
+Text: Draw a new station from the facility card pile every turn until the facility card pile is empty. Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. Players are allowed to place facilities in whatever order they prefer.
 ===
