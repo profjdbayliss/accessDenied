@@ -81,7 +81,9 @@ public class GameManager : MonoBehaviour, IRGObservable
     // Tutorial 
     public GameObject yarnSpinner;
     private DialogueRunner runner;
+    private GameObject background;
     private bool skip;
+    private bool skipClicked;
 
 
     // end game info
@@ -139,6 +141,8 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         // Set dialogue runner for tutorial
         runner = yarnSpinner.GetComponent<DialogueRunner>();
+        background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+        Debug.Log(background);
 
     }
 
@@ -268,7 +272,11 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
-                if (phaseJustChanged && !skip) { runner.StartDialogue("Defense"); }
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Defense"); 
+                    background.SetActive(true);
+                }
 
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
@@ -283,7 +291,11 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Vulnerability:
-                if (phaseJustChanged && !skip) { runner.StartDialogue("Vulnerability"); }
+                if (phaseJustChanged && !skip) 
+                {
+                    runner.StartDialogue("Vulnerability");
+                    background.SetActive(true);
+                }
 
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
@@ -299,7 +311,11 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Mitigate:
-                if (phaseJustChanged && !skip) { runner.StartDialogue("Mitigate"); }
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Mitigate");
+                    background.SetActive(true);
+                }
 
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
@@ -315,12 +331,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Attack:
-                if (phaseJustChanged && !skip) { runner.StartDialogue("Attack"); }
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Attack");
+                    background.SetActive(true);
+                }
                 break;
             case GamePhase.AddStation:
                 if (phaseJustChanged && !skip)
                 {
                     runner.StartDialogue("AddStation");
+                    background.SetActive(true);
                     skip = true;
                 }
 
@@ -900,10 +921,19 @@ public class GameManager : MonoBehaviour, IRGObservable
     {
         if (!yarnSpinner.activeInHierarchy) { return; }
 
-        if (skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+            || skipClicked)
         {
+            skip = true;
             runner.Stop();
             yarnSpinner.SetActive(false);
+            background.SetActive(false);
         }
+    }
+    
+    public void SkipClick()
+    {
+        skipClicked = true;
+        SkipTutorial();
     }
 }
