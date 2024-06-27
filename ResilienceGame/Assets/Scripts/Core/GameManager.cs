@@ -78,9 +78,12 @@ public class GameManager : MonoBehaviour, IRGObservable
     public TextMeshProUGUI activePlayerText;
     public Color activePlayerColor;
 
-    // WORK
+    // Tutorial 
     public GameObject yarnSpinner;
     private DialogueRunner runner;
+    private GameObject background;
+    private bool skip;
+    private bool skipClicked;
 
 
     // end game info
@@ -138,6 +141,8 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         // Set dialogue runner for tutorial
         runner = yarnSpinner.GetComponent<DialogueRunner>();
+        background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+        Debug.Log(background);
 
     }
 
@@ -229,6 +234,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             phaseJustChanged = true;
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
+            SkipTutorial();
         }
 
         switch (phase)
@@ -240,6 +246,9 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged)
                 {
+                    //Starts in editor
+                    //runner.StartDialogue("DrawAndDiscard");
+
                     isDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards();
@@ -263,8 +272,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Defense:
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Defense"); 
+                    background.SetActive(true);
+                }
 
-                //runner.StartDialogue("Defense");
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
                 {
@@ -278,6 +291,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Vulnerability:
+                if (phaseJustChanged && !skip) 
+                {
+                    runner.StartDialogue("Vulnerability");
+                    background.SetActive(true);
+                }
+
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
                 {
@@ -292,6 +311,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Mitigate:
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Mitigate");
+                    background.SetActive(true);
+                }
+
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
                 {
@@ -306,6 +331,11 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Attack:
+                if (phaseJustChanged && !skip) 
+                { 
+                    runner.StartDialogue("Attack");
+                    background.SetActive(true);
+                }
                 if (phaseJustChanged)
                 {
                     actualPlayer.HandleAttackPhase();
@@ -314,8 +344,16 @@ public class GameManager : MonoBehaviour, IRGObservable
                 EndPhase();
                 break;
             case GamePhase.AddStation:
+                if (phaseJustChanged && !skip)
+                {
+                    runner.StartDialogue("AddStation");
+                    background.SetActive(true);
+                    skip = true;
+                }
+
                 if (phaseJustChanged)
                 {
+
                     // we only need one cycle for this particular
                     // phase as it's automated.
                     Card card = actualPlayer.DrawFacility(true, 0);
@@ -930,5 +968,25 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
             }
         }
+    }
+    //Sets dialogue to inactive
+    private void SkipTutorial()
+    {
+        if (!yarnSpinner.activeInHierarchy) { return; }
+
+        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+            || skipClicked)
+        {
+            skip = true;
+            runner.Stop();
+            yarnSpinner.SetActive(false);
+            background.SetActive(false);
+        }
+    }
+    
+    public void SkipClick()
+    {
+        skipClicked = true;
+        SkipTutorial();
     }
 }
