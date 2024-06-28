@@ -1,53 +1,45 @@
 ﻿title: Tutorial
 ---
 Text: Welcome
-<<declare $skip = false>>
 ===
+
 title: DrawAndDiscard
 ---
 Text: Every round starts with six cards per player unless it’s the end of the game where somebody has run out of cards.
-Text: You can discard one or two cards into your discard pile. Once a card is discarded draw a new card from the deck.
+Text: You can discard 1 or 2 cards into your discard pile. Once a card is discarded draw a new card from the deck.
 <<stop>>
 ===
 
 title: Defense
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
-Text: Lay down up to 1 card that gives defense to a facility (+1 are most common). This phase may be skipped if nobody has any cards to play. Defense and station cards have a blue title background.
+Text: You can place up to 1 defense card on each facility per round. Both defense and station cards have a blue background.
+Text: If neither player has any defense cards to play, this phase will be skipped.
 ===
 
 title: Vulnerability
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
-Text: Spend the number of points in facilities you own (not impacted by current “health” of facility, which is only used to subtract facilities from the game and calculate the end score) to let other players know the vulnerabilities you’ve discovered on their stations.
+Text: Spend your points to let other players know the vulnerabilities you’ve discovered on their stations.
+Text: Any players without vulnerabilities to play must wait for all other players to play their vulnerabilities before going into the Mitigation phase.
+Text: More than one vulnerability can be played on a station, however, only 1 of any type can be placed. Vulnerability cards have a red background.
+Text: Instant negative cards should be played in this phase to allow for instant counters. Note: instant cards ARE NOT spread by the Lateral Movement card.
+Text: Waiting for the mitigation phase to counter ALL vulnerabilities except for instant cards means that you will be able to choose which cards to counter.
 ===
 
 title: Mitigate
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
-Text: Remove vulnerabilities from your stations by countering them with mitigation cards from your hand. Mitigation cards have a yellow title background. Countered vulnerabilities go into the discard player of whomever played the cards. Mitigation cards go into your discard pile.
+Text: Remove vulnerabilities from your stations by countering them with mitigation cards from your hand. Mitigation cards have a yellow background. 
+Text: Countered vulnerabilities go into the discard player of whomever played the cards. Mitigation cards go into your discard pile.
 ===
 
 title: Attack
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
-Text: For the vulnerability cards that cannot be countered, roll a d20 to see if the vulnerability is attacked. Anything >10 is assumed to be a successful attack.
-Text: For successful attacks, take off the points lost for that facility AND discard the vulnerability into the player’s discard pile for whomever played the card. Note: once a facility is <= 0 points it’s removed from play and those points are lost permanently. To indicate points taken off where the facility points remain >0 use a token (coins work) to indicate a facility has lost points.
-Text: All vulnerabilities (including lateral movement) are left until either mitigated or the vulnerability is exploited. Lateral movement goes away when it is either mitigated OR used to do a lateral movement of any successful exploit once. Lateral movement cards should be resolved in the order they were played.
+Text: For each vulnerability cards that cannot be countered, there is a 50/50 chance of it being used to attack that facility.
+Text: For successful attacks, points are lost for that facility AND vulnerability card is discarded. 
+Text: Once a facility lost all points it’s removed from play and those points are lost permanently. 
 ===
 
 title: AddStation
 ---
-<<if $skip>>
-    <<stop>>
-<<endif>>
-Text: Draw a new station from the facility card pile every turn until the facility card pile is empty. Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. Players are allowed to place facilities in whatever order they prefer.
+Text: Draw a new station from the facility card pile every round until the facility card pile is empty. 
+Text: Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. 
 ===
