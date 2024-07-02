@@ -989,4 +989,18 @@ public class GameManager : MonoBehaviour, IRGObservable
         skipClicked = true;
         SkipTutorial();
     }
+
+    public void ViewTutorial()
+    {
+        if (yarnSpinner.activeInHierarchy) { return; }
+
+        runner.Stop();
+
+        yarnSpinner.SetActive(true);
+        background.SetActive(true);
+        skipClicked = false;
+        skip = false;
+        Debug.Log(mGamePhase.ToString());
+        runner.StartDialogue(mGamePhase.ToString());
+    }
 }
