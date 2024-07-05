@@ -31,6 +31,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public int UniqueID; 
     public CardFront front;
     public CardState state;
+    public string DeckName;
     public GameObject cardZone;
     public GameObject originalParent;
     public Vector3 originalPosition;
@@ -52,8 +53,9 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("start on card.cs run");
         originalPosition = this.gameObject.transform.position;
-        mManager = GameManager.instance;
+        mManager = GameObject.FindObjectOfType<GameManager>();
         OutlineImage.SetActive(false);
     }
 
@@ -98,20 +100,20 @@ public class Card : MonoBehaviour, IPointerClickHandler
 
 
     // Play all of a cards actions
-    public void Play(CardPlayer player, Card cardActedUpon)
+    public void Play(CardPlayer player, CardPlayer opponent, Card cardActedUpon)
     {
         foreach(ICardAction action in ActionList)
         {
-            action.Played(player, cardActedUpon, this);
+            action.Played(player, opponent, cardActedUpon, this);
         }
     }
 
     // Cancel this card
-    public void Cancel(CardPlayer player, Card cardActedUpon)
+    public void Cancel(CardPlayer player, CardPlayer opponent, Card cardActedUpon)
     {
         foreach (ICardAction action in ActionList)
         {
-            action.Canceled(player, cardActedUpon, this);
+            action.Canceled(player, opponent, cardActedUpon, this);
         }
     }
 

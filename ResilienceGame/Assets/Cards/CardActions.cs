@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class ActionAddDefenseWorthToStation : ICardAction
 {
-    public void Played(CardPlayer player, Card cardActedUpon, Card card)
+    public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played.");
         cardActedUpon.DefenseHealth += card.data.worth;
@@ -19,7 +19,7 @@ public class ActionAddDefenseWorthToStation : ICardAction
             }         
         }
     }
-    public void Canceled(CardPlayer player, Card cardActedUpon, Card card)
+    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         cardActedUpon.DefenseHealth -= card.data.worth;
       
@@ -42,7 +42,7 @@ public class ActionAddDefenseWorthToStation : ICardAction
 
 public class ActionMitigateCard : ICardAction
 {
-    public void Played(CardPlayer player, Card cardActedUpon, Card card)
+    public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played to mitigate a card on the selected station.");
         bool canMitigate = false;
@@ -54,7 +54,7 @@ public class ActionMitigateCard : ICardAction
        foreach (CardIDInfo attackingCardInfo in cardActedUpon.AttackingCards)
         {
             Debug.Log("checking for attack card " + attackingCardInfo.CardID);
-            GameObject tmpCardObject = GameManager.instance.GetOpponentActiveCardObject(attackingCardInfo);
+            GameObject tmpCardObject = opponent.GetActiveCardObject(attackingCardInfo);
             if (tmpCardObject != null)
             {
                 Debug.Log("opponent card object obtained!");
@@ -80,24 +80,20 @@ public class ActionMitigateCard : ICardAction
         {
             // get the right card from the station to clear it from the station
             // and send it to opponent's discard pile
-            GameManager.instance.DiscardOpponentActiveCard(cardActedUpon.UniqueID, 
-                new CardIDInfo {
-                    CardID = opponentCard.data.cardID,
-                    UniqueID = opponentCard.UniqueID,
-                    }, true);
+            opponentCard.state = CardState.CardNeedsToBeDiscarded;
+            //GameManager.instance.DiscardOpponentActiveCard(cardActedUpon.UniqueID, 
+            //    new CardIDInfo {
+            //        CardID = opponentCard.data.cardID,
+            //        UniqueID = opponentCard.UniqueID,
+            //        }, true);
 
             // put our card in the discard pile as well
-            player.DiscardSingleActiveCard(cardActedUpon.UniqueID, 
-                new CardIDInfo
-                {
-                    CardID = card.data.cardID,
-                    UniqueID = card.UniqueID
-                }, false);
+            card.state = CardState.CardNeedsToBeDiscarded;
 
         }
 
     }
-    public void Canceled(CardPlayer player, Card cardActedUpon, Card card)
+    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
        // we never cancel mitigations
        // if we had to we'd have to cache the info for the card in this class
@@ -106,7 +102,7 @@ public class ActionMitigateCard : ICardAction
 
 public class ActionImpactFacilityWorth : ICardAction
 {
-    public void Played(CardPlayer player, Card cardActedUpon, Card card)
+    public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played to attack the selected station.");
         cardActedUpon.DefenseHealth += card.data.worth;
@@ -122,7 +118,7 @@ public class ActionImpactFacilityWorth : ICardAction
         }
     }
 
-    public void Canceled(CardPlayer player, Card cardActedUpon, Card card)
+    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " attack undone.");
         cardActedUpon.DefenseHealth -= card.data.worth;      

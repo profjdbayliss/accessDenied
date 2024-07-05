@@ -4,7 +4,7 @@ using Mirror;
 using System;
 using System.Linq;
 using System.Text;
-using System.Xml;
+using UnityEngine.InputSystem.Utilities;
 
 // many messages actually have no arguments
 public struct RGNetworkShortMessage : NetworkMessage
@@ -43,10 +43,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     {
         instance = this;
         DontDestroyOnLoad(this);
-        SetupHandlers();
-        manager = FindObjectOfType<GameManager>();
+        SetupHandlers();   
     }
 
+    public void Start()
+    {
+        manager = GameObject.FindObjectOfType<GameManager>();
+        Debug.Log("start run on RGNetworkPlayerList.cs");
+    }
     public void AddPlayer(int id, string name)
     {
         if (isServer)
@@ -69,7 +73,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             if (CheckReadyToStart())
             {
                 Debug.Log("Ready to start server is last!!");
-                GameManager.instance.RealGameStart();
+                manager.RealGameStart();
                 // get the turn taking flags ready to go again
                 for (int i = 0; i < playerTurnTakenFlags.Count; i++)
                 {
@@ -109,6 +113,17 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         playerTypes.RemoveAt(id);
         playerNetworkReadyFlags.RemoveAt(id);
         playerTurnTakenFlags.RemoveAt(id);
+    }
+
+    public int GetIntFromByteArray(int indexStart, ArraySegment<byte> payload)
+    {
+        int returnValue = 0;
+        byte first = payload.ElementAt(indexStart);
+        byte second = payload.ElementAt(indexStart + 1);
+        byte third = payload.ElementAt(indexStart + 2);
+        byte fourth = payload.ElementAt(indexStart + 3);
+        returnValue = first | (second << 8) | (third << 16) | (fourth << 24);
+        return returnValue;
     }
 
     public void UpdateObserver(Message data)
@@ -446,19 +461,11 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             playerIDs.Add(i);
 
                             // then get player type
-                            byte first = msg.payload.ElementAt(element);
-                            byte second = msg.payload.ElementAt(element + 1);
-                            byte third = msg.payload.ElementAt(element + 2);
-                            byte fourth = msg.payload.ElementAt(element + 3);
-                            int actualInt = first | (second << 8) | (third << 16) | (fourth << 24);
+                            int actualInt = GetIntFromByteArray(element, msg.payload);
                             playerTypes.Add((PlayerType)actualInt);
                             // get length of player name
                             element += 4;
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
-                            actualInt = first | (second << 8) | (third << 16) | (fourth << 24);
+                            actualInt = GetIntFromByteArray(element, msg.payload);
 
                             // get player name
                             element += 4;
@@ -473,23 +480,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         manager.RealGameStart();
                     }
                     break;
-                //case CardMessageType.ShowCards:
-                //    uint count = msg.count;
-                //    Debug.Log("client received a list of an opponents cards! " + count);
-
-                //    List<int> cardIds = new List<int>((int)count);
-                //    for (int i = 0; i < count * 4; i += 4)
-                //    {
-                //        byte first = msg.payload.ElementAt(i);
-                //        byte second = msg.payload.ElementAt(i + 1);
-                //        byte third = msg.payload.ElementAt(i + 2);
-                //        byte fourth = msg.payload.ElementAt(i + 3);
-                //        int actualInt = first | (second << 8) | (third << 16) | (fourth << 24);
-                //        cardIds.Add(actualInt);
-                //        Debug.Log(" :: " + actualInt + " :: ");
-                //    }
-                //    GameManager.instance.ShowOthersCards(cardIds);
-                //    break;
                 case CardMessageType.ShareDiscardNumber:
                     {
                         uint count = msg.count;
@@ -516,38 +506,19 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     {
                         int element = 0;
                         List<Updates> updates = new List<Updates>(6);
-                        byte first = msg.payload.ElementAt(element);
-                        byte second = msg.payload.ElementAt(element + 1);
-                        byte third = msg.payload.ElementAt(element + 2);
-                        byte fourth = msg.payload.ElementAt(element + 3);
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        element += 4; 
+                        GamePhase gamePhase =(GamePhase)GetIntFromByteArray(element, msg.payload);
                         element += 4;
-                        int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
-                        first = msg.payload.ElementAt(element);
-                        second = msg.payload.ElementAt(element + 1);
-                        third = msg.payload.ElementAt(element + 2);
-                        fourth = msg.payload.ElementAt(element + 3);
-                        element += 4;
-                        GamePhase gamePhase =(GamePhase) (first | (second << 8) | (third << 16) | (fourth << 24));
                         for (int i = 0; i < numberOfUpdates; i++)
                         {
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int whatToDo = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int whatToDo = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int cardId = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int cardId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            
                             updates.Add(new Updates
                             {
                                 WhatToDo=(AddOrRem)whatToDo,
@@ -556,7 +527,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             });
                             Debug.Log("client received update message from opponent containing : " + facilityId + " and cardid " + cardId + "for game phase " + gamePhase);
                         }
-                        manager.AddOpponentUpdates(ref updates, gamePhase);
+                        manager.AddUpdatesFromOpponent(ref updates, gamePhase);
                         
                     }
                     break;
@@ -574,20 +545,12 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         int element = 0;
                         if (msg.count == 2)
                         {
-                            byte first = msg.payload.ElementAt(element);
-                            byte second = msg.payload.ElementAt(element + 1);
-                            byte third = msg.payload.ElementAt(element + 2);
-                            byte fourth = msg.payload.ElementAt(element + 3);
-                            element += 4;
-                            int uniqueId = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
-                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
+                            int uniqueId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;             
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
 
                             manager.AddOpponentFacility(facilityId, uniqueId);
-                            Debug.Log("received facility message from opponent");
+                            Debug.Log("received facility message from opponent with unique id " + uniqueId + " and card facility id " + facilityId);
 
                         }
                     }
@@ -646,13 +609,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                     playerTurnTakenFlags[i] = false;
                                 }
                             }
-
-                            // share with other players????
-                            // WORK
-
-                            // let the game manager display the new info
-                            GameManager.instance.DisplayOtherPlayerTypes(playerNames[playerIndex],
-                                 playerTypes[playerIndex]);
                         }
                     }
                     break;
@@ -678,69 +634,33 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         }
                     }
                     break;
-                //case CardMessageType.ShowCards:  
-                //    uint count = msg.count;
-                //    Debug.Log("server received a list of an opponents cards!" + count);
-                //    List<int> cardIds = new List<int>((int)count);
-                //    for (int i = 0; i < count * 4; i += 4)
-                //    {
-                //        byte first = msg.payload.ElementAt(i);
-                //        byte second = msg.payload.ElementAt(i + 1);
-                //        byte third = msg.payload.ElementAt(i + 2);
-                //        byte fourth = msg.payload.ElementAt(i + 3);
-                //        int actualInt = first | (second << 8) | (third << 16) | (fourth << 24);
-                //        cardIds.Add(actualInt);
-                //        Debug.Log(" :: " + actualInt + " :: ");
-                //    }
-                //    GameManager.instance.ShowOthersCards(cardIds);
-                //    break;
                 case CardMessageType.SendCardUpdates:
-                                        {
+                    {
                         int element = 0;
                         List<Updates> updates = new List<Updates>(6);
-                        byte first = msg.payload.ElementAt(element);
-                        byte second = msg.payload.ElementAt(element + 1);
-                        byte third = msg.payload.ElementAt(element + 2);
-                        byte fourth = msg.payload.ElementAt(element + 3);
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
                         element += 4;
-                        int numberOfUpdates = first | (second << 8) | (third << 16) | (fourth << 24);
-                        first = msg.payload.ElementAt(element);
-                        second = msg.payload.ElementAt(element + 1);
-                        third = msg.payload.ElementAt(element + 2);
-                        fourth = msg.payload.ElementAt(element + 3);
+                        GamePhase gamePhase = (GamePhase)GetIntFromByteArray(element, msg.payload);
                         element += 4;
-                        GamePhase gamePhase = (GamePhase)(first | (second << 8) | (third << 16) | (fourth << 24));
 
                         for (int i = 0; i < numberOfUpdates; i++)
                         {
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int whatToDo = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int whatToDo = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
+                            int cardId = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int cardId = first | (second << 8) | (third << 16) | (fourth << 24);
                             updates.Add(new Updates
                             {
-                                WhatToDo=(AddOrRem)whatToDo,
-                                UniqueFacilityID=facilityId,
-                                CardID=cardId
+                                WhatToDo = (AddOrRem)whatToDo,
+                                UniqueFacilityID = facilityId,
+                                CardID = cardId
                             });
                             Debug.Log(whatToDo + " server received update message from opponent containing : " + facilityId + " and cardid " + cardId);
 
                         }
-                        manager.AddOpponentUpdates(ref updates, gamePhase);
+                        manager.AddUpdatesFromOpponent(ref updates, gamePhase);
                         Debug.Log("received update message from opponent of size " + numberOfUpdates);
                     }
                     break;
@@ -758,20 +678,12 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         int element = 0;
                         if (msg.count == 2)
                         {
-                            byte first = msg.payload.ElementAt(element);
-                            byte second = msg.payload.ElementAt(element + 1);
-                            byte third = msg.payload.ElementAt(element + 2);
-                            byte fourth = msg.payload.ElementAt(element + 3);
+                            int uniqueId = GetIntFromByteArray(element, msg.payload);
                             element += 4;
-                            int uniqueId = first | (second << 8) | (third << 16) | (fourth << 24);
-                            first = msg.payload.ElementAt(element);
-                            second = msg.payload.ElementAt(element + 1);
-                            third = msg.payload.ElementAt(element + 2);
-                            fourth = msg.payload.ElementAt(element + 3);
-                            int facilityId = first | (second << 8) | (third << 16) | (fourth << 24);
-
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
                             manager.AddOpponentFacility(facilityId, uniqueId);
-                            Debug.Log("received facility message from opponent");
+                            Debug.Log("received facility message from opponent with unique id " + uniqueId + " and card facility id " + facilityId);
 
                         }
                     }

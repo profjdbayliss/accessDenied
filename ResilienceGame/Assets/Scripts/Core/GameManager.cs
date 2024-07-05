@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using Mirror;
 using System.Linq;
 using Yarn.Unity;
+using System.Xml;
 
 public class GameManager : MonoBehaviour, IRGObservable
 {
@@ -99,50 +100,62 @@ public class GameManager : MonoBehaviour, IRGObservable
     // static instance for this class
     public static GameManager instance;
 
+    static bool hasStartedAlready = false;
+
+
     public void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
+        instance = this;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        startScreen.SetActive(true);
-
-        // read water deck
-        CardReader reader = waterDeckReader.GetComponent<CardReader>();
-        if (reader != null)
+        Debug.Log("start run on GameManager");
+        if (!hasStartedAlready)
         {
-            waterCards = reader.CSVRead(mCreateWaterAtlas);
-            waterPlayer.cards = waterCards;
-            waterPlayer.playerType = PlayerType.Water;
-        }
-        else
-        {
-            Debug.Log("Water deck reader is null.");
-        }
+            startScreen.SetActive(true);
 
-        // read energy deck
-        reader = energyDeckReader.GetComponent<CardReader>();
-        if (reader != null)
-        {
-            energyCards = reader.CSVRead(mCreateEnergyAtlas);
-            energyPlayer.cards = energyCards;
-            energyPlayer.playerType = PlayerType.Energy;
+            // read water deck
+            CardReader reader = waterDeckReader.GetComponent<CardReader>();
+            if (reader != null)
+            {
+                waterCards = reader.CSVRead(mCreateWaterAtlas);
+                CardPlayer.AddCards(waterCards);
+                waterPlayer.playerType = PlayerType.Water;
+                waterPlayer.DeckName = "water";
+                Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
+            }
+            else
+            {
+                Debug.Log("Water deck reader is null.");
+            }
 
-        }
-        else
-        {
-            Debug.Log("Energy deck reader is null.");
-        }
+            // read energy deck
+            reader = energyDeckReader.GetComponent<CardReader>();
+            if (reader != null)
+            {
+                energyCards = reader.CSVRead(mCreateEnergyAtlas);
+                CardPlayer.AddCards(energyCards);
+                energyPlayer.playerType = PlayerType.Energy;
+                energyPlayer.DeckName = "power";
+                Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
 
-        // Set dialogue runner for tutorial
-        runner = yarnSpinner.GetComponent<DialogueRunner>();
-        background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
-        Debug.Log(background);
+            }
+            else
+            {
+                Debug.Log("Energy deck reader is null.");
+            }
+
+            // Set dialogue runner for tutorial
+            runner = yarnSpinner.GetComponent<DialogueRunner>();
+            background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+            Debug.Log(background);
+            hasStartedAlready = true;
+        } else
+        {
+            Debug.Log("start is being run multiple times!");
+        }
 
     }
 
@@ -156,14 +169,14 @@ public class GameManager : MonoBehaviour, IRGObservable
         if (playerType==PlayerType.Energy)
         {
             actualPlayer = energyPlayer;
-            actualPlayer.cards = energyCards;
             actualPlayer.playerType = PlayerType.Energy;
+            actualPlayer.DeckName = "power";
         }
         else if (playerType==PlayerType.Water)
         {
             actualPlayer = waterPlayer;
-            actualPlayer.cards = waterCards;
             actualPlayer.playerType = PlayerType.Water;
+            actualPlayer.DeckName = "water";
         }
 
         // Initialize the deck info and set various
@@ -267,7 +280,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                     }
                     else
                     {
-                        numberDiscarded += actualPlayer.HandleDiscards();
+                        if (isDiscardAllowed)
+                        {
+                            numberDiscarded += actualPlayer.HandleDiscard(actualPlayer.HandCards, actualPlayer.handDropZone, -1, false);
+                        }
                     }
                 }
                 break;
@@ -279,7 +295,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
 
                 if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandList))
+                    && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandCards))
                 {
                     // if player has no defense cards to play
                     // then auto phase forward
@@ -287,7 +303,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     EndPhase();
                 } else 
                 {
-                    actualPlayer.HandlePlayCard(GamePhase.Defense);
+                    actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
                 }
                 break;
             case GamePhase.Vulnerability:
@@ -298,7 +314,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
 
                 if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandList))
+                    && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
                 {
                     // if player has no defense cards to play
                     // then auto phase forward
@@ -307,7 +323,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 else
                 {
-                    actualPlayer.HandlePlayCard(GamePhase.Vulnerability);
+                    actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
                 }
                 break;
             case GamePhase.Mitigate:
@@ -318,7 +334,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
 
                 if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandList))
+                    && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
                 {
                     // if player has no defense cards to play
                     // then auto phase forward
@@ -327,7 +343,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 else
                 {
-                    actualPlayer.HandlePlayCard(GamePhase.Mitigate);
+                    actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
                 }
                 break;
             case GamePhase.Attack:
@@ -338,7 +354,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 if (phaseJustChanged)
                 {
-                    actualPlayer.HandleAttackPhase();
+                    actualPlayer.HandleAttackPhase(opponentPlayer);
                     opponentPlayer.DiscardAllInactiveCards();
                 }  
                 EndPhase();
@@ -360,11 +376,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // send message about what facility got drawn                 
                     if (card != null)
                     {
-                        List<int> facilityList = new List<int>(2);
-                        facilityList.Add(card.UniqueID);
-                        facilityList.Add(card.data.cardID);
-                        Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
-                        AddMessage(facilityMessage);
+                        AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
                     }
                     EndPhase();
                     // network will end this phase when messages are sent
@@ -395,12 +407,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         mPlayerName.text = RGNetworkPlayerList.instance.localPlayerName;
         mPlayerDeckType.text = "" + playerType;
        
-        //activePlayerText.text = playerType + " Player";
-        //Debug.Log("set active player to be: " + playerType);
-        //activePlayerColor = new Color(0.0f, 0.4209991f, 1.0f, 1.0f);
-        ///activePlayerText.color = activePlayerColor;
-        //yarnSpinner.SetActive(true);
-
         // tell everybody else of this player's type
         if (!isServer)
         {
@@ -425,36 +431,23 @@ public class GameManager : MonoBehaviour, IRGObservable
             AddMessage(msg);
         }
 
-        // in this game people go in parallel to each other
-        // per phase
-        myTurn = true;
-        gameStarted = true;
-
+       
         // draw our first 2 pt facility
        Card card = actualPlayer.DrawFacility(false, 2);
         // send message about what facility got drawn
-        List<int> facilityList = new List<int>(2);
         if (card != null)
-        {
-            facilityList.Add(card.UniqueID);
-            facilityList.Add(card.data.cardID);
-            Message facilityMessage = new Message(CardMessageType.SendPlayedFacility, facilityList);
-            AddMessage(facilityMessage);
+        {     
+            AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
         } else
         {
             Debug.Log("problem in drawing first facility as it's null!");
         }
      
         // make sure to show all our cards
-        foreach (GameObject gameObjectCard in actualPlayer.HandList)
+        foreach (GameObject gameObjectCard in actualPlayer.HandCards.Values)
         {
             gameObjectCard.SetActive(true);
         }
-        // don't think this does anything right now
-        //foreach (GameObject card in actualPlayer.ActiveCardList)
-        //{
-        //    card.SetActive(true);
-        //}
 
         // set up the opponent name text
         if (RGNetworkPlayerList.instance.playerIDs.Count > 0)
@@ -475,26 +468,34 @@ public class GameManager : MonoBehaviour, IRGObservable
             if (opponentType == PlayerType.Energy)
             {
                 opponentPlayer = energyPlayer;
+                opponentPlayer.DeckName = "power";
             }
             else
             {
                 opponentPlayer = waterPlayer;
+                opponentPlayer.DeckName = "water";
             }
             opponentPlayer.InitializeCards();
         }
+
+        // in this game people go in parallel to each other
+        // per phase
+        myTurn = true;
+        gameStarted = true;
 
         // go on to the next phase
         mGamePhase = GamePhase.DrawAndDiscard;
 
     }
 
+    // display info about the game's status on the screen
     public void DisplayGameStatus(string message)
     {
         StatusText.text = message;
     }
    
 
-    // WORK rewrite for this card game
+    // WORK: rewrite for this card game
     public void ShowEndGameCanvas(int gameState)
     {
         endGameCanvas.SetActive(true);
@@ -508,7 +509,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
     }
 
-    // WORK there is no menu?????
+    // WORK: there is no menu?????
     public void BackToMenu()
     {
 
@@ -560,14 +561,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             Debug.Log("player type set to be " + playerType);
         }
         
-    }
-
-    // WORK Displays opponent info - need to put on GUI
-
-    public void DisplayOtherPlayerTypes( string playerName, PlayerType type)
-    {
-        // need to do something with a view here...
-        Debug.Log("The player " + playerName + " joined with type " + type);
     }
 
     // WORK rewrite in terms of win conditions
@@ -629,24 +622,27 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Defense:
                 {
-                    SendUpdatesToOpponent(mGamePhase);
+                    SendUpdatesToOpponent(mGamePhase, actualPlayer);
+                    actualPlayer.ResetDefenseNumber();
                 }
                 break;
             case GamePhase.Vulnerability:
                 {
-                    // we need to reset vulnerability costs to be used for next turn
+                    // we need to reset vulnerability costs to be used for next turn               
+                    SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     actualPlayer.ResetVulnerabilityCost();
-                    SendUpdatesToOpponent(mGamePhase);
                 }
                 break;
             case GamePhase.Mitigate:
                 {
-                    SendUpdatesToOpponent(mGamePhase);
+                    SendUpdatesToOpponent(mGamePhase, actualPlayer);
+                    SendUpdatesToOpponent(mGamePhase, opponentPlayer);
                 }
                 break;
             case GamePhase.Attack:
                 {
-                    SendUpdatesToOpponent(mGamePhase);
+                    SendUpdatesToOpponent(mGamePhase, actualPlayer);
+                    SendUpdatesToOpponent(mGamePhase, opponentPlayer);
                 }
                 break;
             default:
@@ -656,39 +652,129 @@ public class GameManager : MonoBehaviour, IRGObservable
         if (myTurn)
         {
             Debug.Log("ending the game phase in gamemanager!");
-            HidePlayUI();
+            //HidePlayUI();
             mEndPhaseButton.SetActive(false);
             AddMessage(new Message(CardMessageType.EndPhase));
             myTurn = false;
         }
     }
 
-    public void SendUpdatesToOpponent(GamePhase phase)
+    public void SendUpdatesToOpponent(GamePhase phase, CardPlayer player)
     {
         // send a message with defense cards played and where they were played
         Message msg;
         List<int> tmpList = new List<int>(4);
-        actualPlayer.GetUpdatesInMessageFormat(ref tmpList, phase);
+        player.GetUpdatesInMessageFormat(ref tmpList, phase);
         msg = new Message(CardMessageType.SendCardUpdates, tmpList);
         AddMessage(msg);
     }
 
-    public bool CheckOpponentHighlightedStations()
+    public void AddUpdatesFromOpponent(ref List<Updates> updates, GamePhase phase)
     {
-        return opponentPlayer.CheckHighlightedStations();
-    }
-
-    public GameObject GetOpponentHighlightedStation()
-    {
-        GameObject returnValue = null;
-
-        if (CheckOpponentHighlightedStations())
+        if (updates.Count == 0)
         {
-            returnValue = opponentPlayer.GetHighlightedStation();
+            DisplayGameStatus("Opponent did not play any cards during their turn in phase " + phase);
+        }
+        else
+        {
+            DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
         }
 
-        return returnValue;
+        switch (phase)
+        {
+            case GamePhase.Defense:
+                opponentPlayer.AddUpdates(ref updates, phase, actualPlayer);
+                break;
+            case GamePhase.Vulnerability:
+                // This phase is more painful since it's an opponent card on top of a player facility
+                foreach (Updates update in updates)
+                {
+                    // draw opponent card to place on player facility
+                    // create card to be displayed
+                    Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCards);
+                    Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
+                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                    GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
+                    actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
+                }
+                break;
+            case GamePhase.Mitigate:
+                // mitigation is also an opponent card on a player facility
+                // note: it's not enough to just have the card id - need to also 
+                // know which facility it's connected to
+                foreach (Updates update in updates)
+                {
+                    // draw opponent card to place on player facility
+                    // create card to be displayed
+                    Debug.Log("phase mitigate opponent card with id : " + update.CardID + " should be in active opponent list.");
+                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                    opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, false);
+                }
+                break;
+            case GamePhase.Attack:
+                foreach (Updates update in updates)
+                {
+                    bool getRidOfFacility = false;
+                    // first get card type for each update
+                    foreach(GameObject facility in opponentPlayer.ActiveFacilities.Values)
+                    {
+                        Card facilityCard = facility.GetComponent<Card>();
+                        if (facilityCard.data.cardID == update.CardID)
+                        {
+                            getRidOfFacility = true;
+                            break;
+                        }
+                    }
+                    if (getRidOfFacility)
+                    {
+                        Debug.Log("should be getting rid of facility");
+                        opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, true);
+                    }
+                    else
+                    {
+                        // this card is owned by the player
+                        // NOTE: if facility died then this won't actually do anything except tell
+                        // us the facility isn't there in a debug message
+                        opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, false);
+                    }
+
+                    Debug.Log("phase attack needs to change card with id : " + update.CardID + " should be in active opponent list.");
+                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                    Debug.Log("player active list size is : " + actualPlayer.ActiveCards.Count);
+
+                }
+                break;
+            default:
+                break;
+        }
+
     }
+
+    public void AddOpponentFacility(int facilityId, int uniqueId)
+    {
+        opponentPlayer.DrawCard(false, facilityId, uniqueId, ref opponentPlayer.FacilityIDs, opponentPlayedZone,
+            false, ref opponentPlayer.ActiveFacilities);
+    }
+
+    //public void DiscardOpponentActiveCard(int uniqueFacilityID, CardIDInfo cardInfo, bool sendAsMessage)
+    //{
+    //    if (sendAsMessage)
+    //    {
+    //        opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, true);
+
+    //        // send a message with defense cards played and where they were played
+    //        Message msg;
+    //        List<int> tmpList = new List<int>(4);
+    //        opponentPlayer.GetUpdatesInMessageFormat(ref tmpList, mGamePhase);
+    //        msg = new Message(CardMessageType.SendCardUpdates, tmpList);
+    //        AddMessage(msg);
+    //    }
+    //    else
+    //    {
+    //        opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, false);
+    //    }
+
+    //}
 
     // Gets the next phase.
     public GamePhase GetNextPhase()
@@ -745,147 +831,26 @@ public class GameManager : MonoBehaviour, IRGObservable
     {
         if (!myTurn)
         {
-            foreach (GameObject card in actualPlayer.HandList)
-            {
-                card.SetActive(true);
-            }
-            foreach (GameObject card in actualPlayer.ActiveCardList)
-            {
-                card.SetActive(true);
-            }
+            //foreach (GameObject card in actualPlayer.HandCards.Values)
+            //{
+            //    card.SetActive(true);
+            //    Card trueCard = card.GetComponent<Card>();
+            //    Debug.Log("setting hand card visible: " + trueCard.front.title + " with id " + trueCard.UniqueID);
+            //}
+            //foreach (GameObject card in actualPlayer.ActiveCards.Values)
+            //{
+            //    card.SetActive(true);
+            //    Card trueCard = card.GetComponent<Card>();
+            //    Debug.Log("setting active card visible: " + trueCard.front.title + " with id " + trueCard.UniqueID);
+            //}
 
             myTurn = true;
             mGamePhase = GetNextPhase();
-            ShowPlayUI();
+            //ShowPlayUI();
             mEndPhaseButton.SetActive(true);
             Debug.Log("play ui shown");
         }
 
-    }
-
-    public void AddOpponentUpdates(ref List<Updates> updates, GamePhase phase)
-    {
-        if (updates.Count == 0)
-        {
-            DisplayGameStatus("Opponent did not play any cards during their turn in phase " + phase);
-        } else
-        {
-            DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
-        }
-        
-        switch (phase)
-        {
-            case GamePhase.Defense:
-                opponentPlayer.AddUpdates(ref updates, phase);
-                break;
-            case GamePhase.Vulnerability:
-                // This phase is more painful since it's an opponent card on top of a player facility
-                foreach(Updates update in updates)
-                {
-                    // draw opponent card to place on player facility
-                    // create card to be displayed
-                    Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCardList, ref opponentPlayer.activeCardIDs);
-                    Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCardList.Count);
-                    GameObject cardGameObject = opponentPlayer.ActiveCardList[opponentPlayer.ActiveCardList.Count - 1];                   
-                    actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase);
-                }
-                break;
-            case GamePhase.Mitigate:
-                // mitigation is also an opponent card on a player facility
-                // note: it's not enough to just have the card id - need to also 
-                // know which facility it's connected to
-                foreach (Updates update in updates)
-                {
-                    // draw opponent card to place on player facility
-                    // create card to be displayed
-                    Debug.Log("phase mitigate opponent card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCardList.Count);
-                    opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase);
-                }
-                break;
-            case GamePhase.Attack:
-                foreach (Updates update in updates)
-                {
-                    bool getRidOfFacility = false;
-                    // first get card type for each update
-                    for (int i=0; i<opponentPlayer.ActiveFacilityIDs.Count; i++)
-                    {
-                        Card facilityCard = opponentPlayer.ActiveFacilities[i].GetComponent<Card>();
-                        if (facilityCard.data.cardID == update.CardID)
-                        {
-                            getRidOfFacility = true;
-                            break;
-                        }
-                    }
-                    if (getRidOfFacility)
-                    {
-                        Debug.Log("should be getting rid of facility");
-                        opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase);
-                    } else
-                    {
-                        // this card is owned by the player
-                        opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase);
-                    }
-                   
-                    Debug.Log("phase attack needs to change card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCardList.Count);
-                    Debug.Log("player active list size is : " + actualPlayer.ActiveCardList.Count);
-                    
-                }
-                break;
-            default:
-                break;
-        }
-        
-    }
-
-    public void AddOpponentFacility(int facilityId, int uniqueId)
-    {
-       
-        opponentPlayer.DrawCard(false, facilityId, uniqueId, ref opponentPlayer.FacilityIDs, opponentPlayedZone, 
-            false, ref opponentPlayer.ActiveFacilities, ref opponentPlayer.ActiveFacilityIDs);
-        foreach (GameObject card in opponentPlayer.ActiveFacilities)
-        {
-            card.SetActive(true);
-        }
-    }
-
-    public GameObject GetOpponentActiveCardObject(CardIDInfo cardIdInfo)
-    {
-        GameObject cardObject = null;
-        foreach(GameObject cardGameObject in opponentPlayer.ActiveCardList)
-        {
-            Card card = cardGameObject.GetComponent<Card>();
-            Debug.Log("get opponent card list card under consideration with id : " + card.data.cardID + " with searched for card being " + cardIdInfo.CardID);
-            if (card.data.cardID == cardIdInfo.CardID && cardIdInfo.UniqueID == card.UniqueID)
-            {
-                cardObject = cardGameObject;
-                break;
-            }
-        }
-
-        return cardObject;
-    }
-
-    public void DiscardOpponentActiveCard(int uniqueFacilityID, CardIDInfo cardInfo, bool sendAsMessage)
-    {
-        if (sendAsMessage)
-        {
-            opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, true);
-
-            // send a message with defense cards played and where they were played
-            Message msg;
-            List<int> tmpList = new List<int>(4);
-            opponentPlayer.GetUpdatesInMessageFormat(ref tmpList, mGamePhase);
-            msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-            AddMessage(msg);
-        }
-        else
-        {
-            opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, false);
-        }
-       
     }
 
     // Gets which turn it is.

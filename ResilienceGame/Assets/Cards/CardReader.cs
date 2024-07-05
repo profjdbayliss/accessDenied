@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 public class CardReader : MonoBehaviour
 {
+    // deck name to use for the deck
+    public string DeckName;
+
     // filename - directory path is assumed to be Application.streamingAssetsPath
     // extension is assumed to be csv
     public string cardFileName;
@@ -19,7 +22,11 @@ public class CardReader : MonoBehaviour
 
     // card prefab that all cards are made from
     public GameObject cardPrefab;
-    
+
+    // the card id is static specifically so we no longer have to worry about
+    // conflicting card id's for different deck files.
+    private static int sCardID = 0;
+
     public List<Card> CSVRead(bool createAtlas)
     {
         List<Card> cards = new List<Card>(50);
@@ -112,8 +119,10 @@ public class CardReader : MonoBehaviour
 
                         // Get a reference to the Card component on the card gameobject.
                         Card tempCard = tempCardObj.GetComponent<Card>();
+                        tempCard.DeckName = DeckName;
                         CardFront tempCardFront = tempCard.GetComponent<CardFront>();
-                        tempCard.data.cardID = i-1;
+                        tempCard.data.cardID = sCardID;
+                        sCardID++;
 
                         // 1: which type of card is this?
                         // NOTE: here is where we add appropriate card actions
