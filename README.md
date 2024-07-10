@@ -34,13 +34,23 @@ In real life winning means nobody gets attacked successfully, but in the game wh
   - **Starting cards for each player**:
     - Each player has a discard pile for cards from their own deck. The discard pile starts out empty.
     - Place one 2pt facility face up in front of yourself.
-    - Decide on how each player’s facilities will be connected when they are drawn over time from the facilities deck. Examples for the 8 facilities of a facility deck appear below. Both players should know each other’s connection diagrams, so draw it somewhere so both players can see.
 
 <p align="center">
 <img src="./images/stationConnections1.png" alt="One way stations may be connected." width="250">    <img src="./images/stationConnections2.png" alt="A second way stations may be connected." width="250">
 </p>
 
   - Attackers are simulated by a d20 die roll. To get an online die look up the words: d20 roll.
+
+## Ending the Game and Scoring
+
+Scores are tallied at the end of the turn where either of the following occurs:
+	- One player runs out of cards
+	- One player loses their last facility
+	
+Score is tallied with the following:
+	- Remaining points in all facilities minus their negated points
+	- All defensive points already played on facilities (cards in the hand are worth nothing)
+	- +1 for every facility that has the number of connections that are at a minimum the original point value of the facility
 
 ## Game Phases
 
@@ -70,6 +80,8 @@ Spend the number of points in facilities you own (not impacted by current “hea
 - All vulnerabilities (including lateral movement) are left until either mitigated or the vulnerability is exploited. Lateral movement goes away when it is either mitigated OR used to do a lateral movement of any successful  exploit once. Lateral movement cards should be resolved in the order they were played.
 
 **Facility phase**: Draw a new station from the facility card pile every turn until the facility card pile is empty. Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. Players are allowed to place facilities in whatever order they prefer.
+
+**Connection phase**: Decide how to connect the new facility to your grid and note that the optimal number of connections at the end of the game (to score further points) is minimally the original point value of the facility. For example, a 2 point facility would need at minimum 2 connections for it to be worth a point at the end of the game. Facilities taken off the board lose their connection line and new connections may be forged with older facilities as a facility is played. Once a facility is set down and connected, it cannot be moved or reconnected in the future as only new connections may be formed when new facilities are laid down.
 
 **Repeat from step 1** until one player runs out of cards OR one player loses all their facilities. Score is tallied from the points facilities remaining in play minus their subtracted points plus their defensive bonuses.
 

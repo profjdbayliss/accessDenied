@@ -37,8 +37,14 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     // var's for game rules
     public readonly int MAX_DISCARDS = 25;
-    public int numberDiscarded = 0;
-    public bool isDiscardAllowed = false;
+    public readonly int MAX_DEFENSE = 1;
+    int mNumberDiscarded = 0;
+    int mNumberDefense = 0;
+    bool mIsDiscardAllowed = false;
+    bool mIsDefenseAllowed = false;
+    bool mAllowVulnerabilitiesPlayed = false;
+    bool mAllowMitigationPlayed = false;
+    bool mAllowConnections = false;
 
     // has everything been set?
     bool isInit = false;
@@ -257,32 +263,35 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // handled with specialty code outside of this
                 break;
             case GamePhase.DrawAndDiscard:
-                if (phaseJustChanged)
+                if (phaseJustChanged && !skip)
                 {
-                    //Starts in editor
-                    //runner.StartDialogue("DrawAndDiscard");
+                    runner.StartDialogue("DrawAndDiscard");
+                    background.SetActive(true);
+                }
 
-                    isDiscardAllowed = true;
+                if (phaseJustChanged)
+                {                   
+                    mIsDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
                     actualPlayer.discardDropZone.SetActive(true);
-                    numberDiscarded = 0;
+                    mNumberDiscarded = 0;
                 } else
                 {
                     // draw cards if necessary
                     actualPlayer.DrawCards();
 
                     // check for discard and if there's a discard draw again
-                    if (numberDiscarded == MAX_DISCARDS)
+                    if (mNumberDiscarded == MAX_DISCARDS)
                     {
-                        EndPhase();
+                        DisplayGameStatus(mPlayerName.text + " has reached the maximum discard number. Please hit end phase to continue.");
                     }
                     else
                     {
-                        if (isDiscardAllowed)
+                        if (mIsDiscardAllowed)
                         {
-                            numberDiscarded += actualPlayer.HandleDiscard(actualPlayer.HandCards, actualPlayer.handDropZone, -1, false);
+                            mNumberDiscarded += actualPlayer.HandlePlayCard(GamePhase.DrawAndDiscard, opponentPlayer);
                         }
                     }
                 }
@@ -294,16 +303,32 @@ public class GameManager : MonoBehaviour, IRGObservable
                     background.SetActive(true);
                 }
 
-                if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandCards))
+                if (phaseJustChanged)
                 {
+                    mIsDefenseAllowed = true;
+                }
+
+                if (!mIsDefenseAllowed)
+                {
+                    // do nothing - most common case
+                } 
+                else
+                if (mNumberDefense >= MAX_DEFENSE)
+                {
+                    mIsDefenseAllowed = false;
+                    DisplayGameStatus(mPlayerName.text + " has played the maximum number of defense cards. Please hit end phase to continue.");
+                }
+                else
+                if (!actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandCards))
+                {
+                    mIsDefenseAllowed = false;
                     // if player has no defense cards to play
-                    // then auto phase forward
-                    DisplayGameStatus(mPlayerName.text + " has no defense cards. Autocompleting the defense phase.");
-                    EndPhase();
-                } else 
-                {
-                    actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
+                    // then let them know.
+                    DisplayGameStatus(mPlayerName.text + " has no defense cards. Please hit end phase to continue.");
+                }
+                else  if (mIsDefenseAllowed)
+                { 
+                    mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
                 }
                 break;
             case GamePhase.Vulnerability:
@@ -313,18 +338,33 @@ public class GameManager : MonoBehaviour, IRGObservable
                     background.SetActive(true);
                 }
 
+                if (!phaseJustChanged)
+                {
+                    if (!mAllowVulnerabilitiesPlayed)
+                    {
+                        // do nothing - most common scenario
+                    } 
+                    else
+                    if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                    {
+                        mAllowVulnerabilitiesPlayed = false;
+                        DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
+                    } else
+                    {
+                        actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                    }         
+                }
+                else
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
                 {
-                    // if player has no defense cards to play
-                    // then auto phase forward
-                    DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Autocompleting the vulnerability phase.");
-                    EndPhase();
-                }
-                else
+                    mAllowVulnerabilitiesPlayed = false;
+                    DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");   
+                } else if (phaseJustChanged)
                 {
-                    actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                    mAllowVulnerabilitiesPlayed = true;
                 }
+              
                 break;
             case GamePhase.Mitigate:
                 if (phaseJustChanged && !skip) 
@@ -333,18 +373,26 @@ public class GameManager : MonoBehaviour, IRGObservable
                     background.SetActive(true);
                 }
 
+                if (!phaseJustChanged)
+                {
+                    if (mAllowMitigationPlayed)
+                    {
+                        actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                    }
+                }
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
                 {
-                    // if player has no defense cards to play
-                    // then auto phase forward
-                    DisplayGameStatus(mPlayerName.text + " has no Mitigation cards. Autocompleting the mitigation phase.");
-                    EndPhase();
+                    mAllowMitigationPlayed = false;
+                    // if player has no cards to play
+                    // let them know
+                    DisplayGameStatus(mPlayerName.text + " has no Mitigation cards. Please push End Phase to continue.");
                 }
-                else
+                else if (phaseJustChanged)
                 {
-                    actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                    mAllowMitigationPlayed = true;
                 }
+                
                 break;
             case GamePhase.Attack:
                 if (phaseJustChanged && !skip) 
@@ -352,12 +400,13 @@ public class GameManager : MonoBehaviour, IRGObservable
                     runner.StartDialogue("Attack");
                     background.SetActive(true);
                 }
+
                 if (phaseJustChanged)
                 {
                     actualPlayer.HandleAttackPhase(opponentPlayer);
-                    opponentPlayer.DiscardAllInactiveCards();
+                    opponentPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, -1);
                 }  
-                EndPhase();
+                
                 break;
             case GamePhase.AddStation:
                 if (phaseJustChanged && !skip)
@@ -368,8 +417,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
 
                 if (phaseJustChanged)
-                {
-
+                { 
                     // we only need one cycle for this particular
                     // phase as it's automated.
                     Card card = actualPlayer.DrawFacility(true, 0);
@@ -377,10 +425,20 @@ public class GameManager : MonoBehaviour, IRGObservable
                     if (card != null)
                     {
                         AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
+                        DisplayGameStatus("Both players drew a station card. Please push End Phase to continue.");
                     }
-                    EndPhase();
-                    // network will end this phase when messages are sent
+
                 }
+                break;
+            case GamePhase.AddConnections:
+                if (phaseJustChanged)
+                {
+                    mAllowConnections = true;
+                } else if (mAllowConnections)
+                {
+                    DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
+                    mAllowConnections = false;
+                }          
                 break;
             case GamePhase.End:
                 // end of game phase
@@ -605,7 +663,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
                     actualPlayer.discardDropZone.SetActive(false);
-                    isDiscardAllowed = false;
+                    mIsDiscardAllowed = false;
 
                     // clear any remaining drops since we're ending the phase now
                     actualPlayer.ClearDropState();
@@ -615,7 +673,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // send a message with number of discards of the player
                     Message msg;
                     List<int> tmpList = new List<int>(1);
-                    tmpList.Add(numberDiscarded);
+                    tmpList.Add(mNumberDiscarded);
                     msg = new Message(CardMessageType.ShareDiscardNumber, tmpList);
                     AddMessage(msg);
                 }
@@ -623,11 +681,15 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Defense:
                 {
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
-                    actualPlayer.ResetDefenseNumber();
+                    // reset the defense var's for the next turn
+                    mIsDefenseAllowed = false;
+                    mNumberDefense = 0;
                 }
                 break;
             case GamePhase.Vulnerability:
                 {
+                    // reset vulnerability allowance
+                    mAllowVulnerabilitiesPlayed = false;
                     // we need to reset vulnerability costs to be used for next turn               
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     actualPlayer.ResetVulnerabilityCost();
@@ -635,6 +697,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Mitigate:
                 {
+                    mAllowMitigationPlayed = false;
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     SendUpdatesToOpponent(mGamePhase, opponentPlayer);
                 }
@@ -644,6 +707,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     SendUpdatesToOpponent(mGamePhase, opponentPlayer);
                 }
+                break;
+
+            case GamePhase.AddConnections:
                 break;
             default:
                 break;
@@ -756,26 +822,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             false, ref opponentPlayer.ActiveFacilities);
     }
 
-    //public void DiscardOpponentActiveCard(int uniqueFacilityID, CardIDInfo cardInfo, bool sendAsMessage)
-    //{
-    //    if (sendAsMessage)
-    //    {
-    //        opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, true);
-
-    //        // send a message with defense cards played and where they were played
-    //        Message msg;
-    //        List<int> tmpList = new List<int>(4);
-    //        opponentPlayer.GetUpdatesInMessageFormat(ref tmpList, mGamePhase);
-    //        msg = new Message(CardMessageType.SendCardUpdates, tmpList);
-    //        AddMessage(msg);
-    //    }
-    //    else
-    //    {
-    //        opponentPlayer.DiscardSingleActiveCard(uniqueFacilityID, cardInfo, false);
-    //    }
-
-    //}
-
     // Gets the next phase.
     public GamePhase GetNextPhase()
     {
@@ -802,6 +848,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 nextPhase = GamePhase.AddStation;
                 break;
             case GamePhase.AddStation:
+                nextPhase = GamePhase.AddConnections;
+                break;
+            case GamePhase.AddConnections:
                 nextPhase = GamePhase.DrawAndDiscard;
                 break;
             case GamePhase.End:

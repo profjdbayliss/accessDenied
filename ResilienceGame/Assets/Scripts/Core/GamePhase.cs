@@ -8,5 +8,6 @@ public enum GamePhase
     Mitigate,
     Attack,
     AddStation,
+    AddConnections,
     End
 };

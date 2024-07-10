@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.PlayerLoop.PreUpdate;
 using Image = UnityEngine.UI.Image;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
@@ -27,6 +29,12 @@ public struct Updates
     public int CardID;
 };
 
+public enum DiscardFromWhere
+{
+    Hand,
+    MyPlayZone,
+    MyFacility
+};
 
 public class CardPlayer : MonoBehaviour
 {
@@ -49,7 +57,6 @@ public class CardPlayer : MonoBehaviour
     public GameObject playerDropZone;
     public GameObject cardStackingCanvas;
     public readonly float ORIGINAL_SCALE = 0.2f;
-    public bool redoCardRead = false;
     public string DeckName="";
 
     Vector2 discardDropMin;
@@ -63,8 +70,6 @@ public class CardPlayer : MonoBehaviour
     static int sUniqueIDCount = 0;
     int mTotalFacilityValue = 0;
     int mValueSpentOnVulnerabilities = 0;
-    int mNumberDefensePhase = 0;
-    public const int MAX_DEFENSE_CARDS_PER_TURN = 1;
 
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
 
@@ -382,16 +387,10 @@ public class CardPlayer : MonoBehaviour
         mValueSpentOnVulnerabilities = 0;
     }
 
-    public void ResetDefenseNumber()
-    {
-        mNumberDefensePhase = 0;
-    }
-
     public void HandleAttackPhase(CardPlayer opponent)
     {
-        List<int> indicesToRemove = new List<int>(8);
-        int index = 0;
-
+        List<int> facilitiesToRemove = new List<int>(8);
+        
         // for all active facilities
         foreach (GameObject facilityGameObject in ActiveFacilities.Values)
         {
@@ -440,54 +439,36 @@ public class CardPlayer : MonoBehaviour
                 foreach(CardIDInfo cardInfo in facilityCard.AttackingCards)
                 {
                     GameObject cardObject = opponent.GetActiveCardObject(cardInfo);
-                    Card cardToDispose = cardObject.GetComponent<Card>();
-                    Debug.Log("handling all attack cards on defunct facility : this one's id is " + cardToDispose.UniqueID);
-                    cardToDispose.state = CardState.CardNeedsToBeDiscarded;
-                    opponent.HandleDiscard(opponent.ActiveCards, opponent.opponentDropZone, facilityCard.UniqueID, true);
-                    //manager.DiscardOpponentActiveCard(facilityCard.UniqueID, cardInfo, true);
+                    if (cardObject != null)
+                    {
+                        Card cardToDispose = cardObject.GetComponent<Card>();
+                        Debug.Log("handling all attack cards on defunct facility : this one's id is " + cardToDispose.UniqueID);
+                        cardToDispose.state = CardState.CardNeedsToBeDiscarded;
+
+                    } else
+                    {
+                        Debug.Log("attack card with id " + cardInfo.CardID + " wasn't found in the pile of cards on a defunct facility.");
+                    }
+                    //opponent.HandleDiscard(opponent.ActiveCards, opponent.opponentDropZone, facilityCard.UniqueID, true);
                 }
+                // let's discard all the cards on the facility in question
+                opponent.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
                 facilityCard.AttackingCards.Clear();
                 facilityCard.state = CardState.CardNeedsToBeDiscarded;
+                
                 mUpdatesThisPhase.Add(new Updates
                 {
                     WhatToDo = AddOrRem.Remove,
                     UniqueFacilityID = facilityCard.UniqueID,
                     CardID = facilityCard.data.cardID
                 });
-                indicesToRemove.Add(facilityCard.UniqueID);
+
             } 
 
-            index++;
-
         }
 
-        // now we can discard all the facility cards no longer active
-        // start at the back of the list and then remove towards the front
-        for (int i = indicesToRemove.Count-1; i>=0; i--)
-        {
-            Debug.Log("removing facility at key: " + indicesToRemove[i]);
-            GameObject facilityObject = ActiveFacilities[indicesToRemove[i]];
-            //Discards.Add(indicesToRemove[i], facilityObject);
-            Card facilityCard = ActiveFacilities[indicesToRemove[i]].GetComponent<Card>();
-            facilityCard.state = CardState.CardNeedsToBeDiscarded;
-            HandleDiscard(ActiveFacilities, playerDropZone, facilityCard.UniqueID, false);
-            //facilityCard.state = CardState.CardDiscarded;
-
-            //// change parent and rescale
-            //facilityObject.GetComponentInParent<slippy>().enabled = false;
-            //facilityObject.GetComponentInParent<slippy>().ResetScale();
-            //facilityObject.transform.SetParent(discardDropZone.transform, false);
-            //facilityObject.transform.localPosition = new Vector3();
-
-            //// for the future might want to stack cards in the discard zone
-            //facilityObject.SetActive(false);
-            //facilityCard.cardZone = discardDropZone;
-            //ActiveFacilities.Remove(indicesToRemove[i]);
-            
-            // should send the opponent this important info!
-            // WORK!!!!!!
-        }
-
+        // now discard all facilities annihilated
+        DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, -1);
 
     }
 
@@ -505,11 +486,28 @@ public class CardPlayer : MonoBehaviour
         return cardObject;
     }
 
-    public void DiscardAllInactiveCards()
+    public void DiscardAllInactiveCards(DiscardFromWhere where, bool addUpdate, int uniqueFacilityID)
     {
         List<int> inactives = new List<int>(10);
+        Dictionary<int, GameObject> discardFromArea;
+       
+        switch (where)
+        {
+            case DiscardFromWhere.Hand:
+                discardFromArea = HandCards;
+                break;
+            case DiscardFromWhere.MyPlayZone:
+                discardFromArea = ActiveCards;
+                break;
+            case DiscardFromWhere.MyFacility:
+                discardFromArea = ActiveFacilities;
+                break;
+            default:
+                discardFromArea = HandCards;
+                break;
+        }
 
-        foreach(GameObject activeCardObject in ActiveCards.Values)
+        foreach (GameObject activeCardObject in discardFromArea.Values)
         {
             //GameObject activeCardObject = ActiveCardList[i];
             Card card = activeCardObject.GetComponent<Card>();
@@ -535,22 +533,39 @@ public class CardPlayer : MonoBehaviour
                 // for the future might want to stack cards in the discard zone
                 Debug.Log("setting card to discard zone: " + card.UniqueID + " with name " + card.front.title);
                 activeCardObject.SetActive(false);
-                card.cardZone = discardDropZone;           
+                card.cardZone = discardDropZone;
+                if (addUpdate)
+                {
+                    Debug.Log("adding update for opponent to get");
+                    mUpdatesThisPhase.Add(new Updates
+                    {
+                        WhatToDo = AddOrRem.Remove,
+                        UniqueFacilityID = uniqueFacilityID,
+                        CardID = card.data.cardID
+                    });
+                }
             }
         }
         foreach (int key in inactives)
         {
             Debug.Log("key being discarded is " + key);
-            if (!ActiveCards.Remove(key))
+            if (!discardFromArea.Remove(key))
             {
-                Debug.Log("problem with removing key from actives : " + key);
-            }
-            if (HandCards.Remove(key))
-            {
-                Debug.Log("card was in the hand rather than active list: " + key);
+                Debug.Log("card not removed where it supposedly was from: " + key);
             }
         }
     }
+
+    public int GetAmountSpentOnVulnerabilities()
+    {
+        return mValueSpentOnVulnerabilities;
+    }
+
+    public int GetTotalFacilityValue()
+    {
+        return mTotalFacilityValue;
+    }
+
     public virtual int HandlePlayCard(GamePhase phase, CardPlayer opponentPlayer)
     {
         int playCount = 0;
@@ -566,8 +581,22 @@ public class CardPlayer : MonoBehaviour
                     Debug.Log("card dropped in cardhandle");
                     // card has been dropped somewhere - where?
                     Vector2 cardPosition = card.getDroppedPosition();
-                   
+
+                    // DO a AABB collision test to see if the card is on the discard drop
+                    if (phase == GamePhase.DrawAndDiscard && (cardPosition.y < discardDropMax.y &&
+                       cardPosition.y > discardDropMin.y &&
+                       cardPosition.x < discardDropMax.x &&
+                       cardPosition.x > discardDropMin.x))
+                    {
+                        Debug.Log("card dropped in discard zone or needs to be discarded" + card.UniqueID);
+
+                        // change parent and rescale
+                        card.state = CardState.CardNeedsToBeDiscarded;
+                        playCount = 1;
+                    }
+                    else
                     // DO a AABB collision test to see if the card is on the player's drop
+
                     if (cardPosition.y < playedDropMax.y &&
                        cardPosition.y > playedDropMin.y &&
                        cardPosition.x < playedDropMax.x &&
@@ -577,7 +606,7 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Defense:
-                                if (mNumberDefensePhase<MAX_DEFENSE_CARDS_PER_TURN &&  card.data.cardType==CardType.Defense && CheckHighlightedStations())
+                                if (card.data.cardType==CardType.Defense && CheckHighlightedStations())
                                 {
                                     GameObject selected = GetHighlightedStation();
                                     Card selectedCard = selected.GetComponent<Card>();
@@ -598,7 +627,6 @@ public class CardPlayer : MonoBehaviour
                                     playCount = 1;
                                     selectedCard.OutlineImage.SetActive(false);
                                     playKey = card.UniqueID;
-                                    mNumberDefensePhase++;
                                 }
                                 else
                                 {
@@ -620,8 +648,10 @@ public class CardPlayer : MonoBehaviour
 
                                     if (card.state == CardState.CardNeedsToBeDiscarded)
                                     {
-                                        HandleDiscard(ActiveCards, playerDropZone, selectedCard.UniqueID, false);
-                                        opponentPlayer.HandleDiscard(opponentPlayer.ActiveCards, playerDropZone, selectedCard.UniqueID, true);
+                                        //HandleDiscard(ActiveCards, playerDropZone, selectedCard.UniqueID, false);
+                                        //opponentPlayer.HandleDiscard(opponentPlayer.ActiveCards, playerDropZone, selectedCard.UniqueID, true);
+                                        DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, selectedCard.UniqueID);
+                                        opponentPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, selectedCard.UniqueID);
                                         playCount = 1;
                                         playKey = card.UniqueID;
                                         selectedCard.OutlineImage.SetActive(false);
@@ -658,33 +688,43 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Vulnerability:
-                                if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() && 
-                                    ((mValueSpentOnVulnerabilities+card.data.cost) <= mTotalFacilityValue))
+                                if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
+                                    ((mValueSpentOnVulnerabilities + card.data.cost) <= mTotalFacilityValue))
                                 {
                                     GameObject selected = opponentPlayer.GetHighlightedStation();
                                     Card selectedCard = selected.GetComponent<Card>();
-                                    StackCards(selected, gameObjectCard, opponentDropZone, GamePhase.Vulnerability);
-                                    card.state = CardState.CardInPlay;
-                                    ActiveCards.Add(card.UniqueID, gameObjectCard);
-                                  
-                                    selectedCard.AttackingCards.Add(new CardIDInfo
+                                    if (!DuplicateCardPlayed(selectedCard, card))
                                     {
-                                        CardID = card.data.cardID,
-                                        UniqueID = card.UniqueID
-                                    });
-                                    mUpdatesThisPhase.Add(new Updates
-                                    {
-                                        WhatToDo = AddOrRem.Add,
-                                        UniqueFacilityID = selectedCard.UniqueID,
-                                        CardID = card.data.cardID
-                                    });
+                                        StackCards(selected, gameObjectCard, opponentDropZone, GamePhase.Vulnerability);
+                                        card.state = CardState.CardInPlay;
+                                        ActiveCards.Add(card.UniqueID, gameObjectCard);
 
-                                    // we don't play vuln effects until the attack phase
-                                    playCount = 1;
-                                    playKey = card.UniqueID;
-                                    selectedCard.OutlineImage.SetActive(false);
-                                    mValueSpentOnVulnerabilities += card.data.cost;
-                                    Debug.Log("amount spent on vuln is " + mValueSpentOnVulnerabilities + " with total facility worth of " + mTotalFacilityValue);
+                                        selectedCard.AttackingCards.Add(new CardIDInfo
+                                        {
+                                            CardID = card.data.cardID,
+                                            UniqueID = card.UniqueID
+                                        });
+                                        mUpdatesThisPhase.Add(new Updates
+                                        {
+                                            WhatToDo = AddOrRem.Add,
+                                            UniqueFacilityID = selectedCard.UniqueID,
+                                            CardID = card.data.cardID
+                                        });
+
+                                        // we don't play vuln effects until the attack phase
+                                        playCount = 1;
+                                        playKey = card.UniqueID;
+                                        selectedCard.OutlineImage.SetActive(false);
+                                        mValueSpentOnVulnerabilities += card.data.cost;
+                                        Debug.Log("Amount spent on vuln is " + mValueSpentOnVulnerabilities + " with total facility worth of " + mTotalFacilityValue);
+
+                                    }
+                                    else
+                                    {
+                                        card.state = CardState.CardDrawn;
+                                        manager.DisplayGameStatus("Can't play multiples of the same card on a station.");
+
+                                    }
                                 }
                                 else
                                 {
@@ -720,14 +760,37 @@ public class CardPlayer : MonoBehaviour
 
         if (playCount > 0)
         {
-            // remove the discarded card
-            if (!HandCards.Remove(playKey))
+            if (phase == GamePhase.DrawAndDiscard)
             {
-                Debug.Log("didn't find a key to remove! " + playKey);
-            }
+                // we're not discarding a facility or sharing what we're discarding with the opponent
+                DiscardAllInactiveCards(DiscardFromWhere.Hand, false, -1);
+            } else
+            {
+                // remove the discarded card
+                if (!HandCards.Remove(playKey))
+                {
+                    Debug.Log("didn't find a key to remove! " + playKey);
+                }
+            }      
         }
 
         return playCount;
+    }
+
+    public bool DuplicateCardPlayed(Card facilityCard, Card cardToPlay)
+    {
+        bool duplicateCardFound = false;
+
+        foreach(CardIDInfo cardInfo in facilityCard.AttackingCards)
+        {
+            if (cardInfo.CardID == cardToPlay.data.cardID)
+            {
+                duplicateCardFound = true;
+                break;
+            }
+        }
+
+        return duplicateCardFound;
     }
 
     public void ChangeScaleAndPosition(Vector2 scale, GameObject objToScale)
@@ -926,83 +989,6 @@ public class CardPlayer : MonoBehaviour
         return singleHighlighted;
     }
 
-    public int HandleDiscard(Dictionary<int, GameObject> discardFromArea, GameObject previousParent, int uniqueFacilityID, bool addUpdate)
-    {
-        int discardCount = 0;
-        int discardIndex = 0;
-
-        if (discardFromArea.Count != 0)
-        {
-            foreach (GameObject gameObjectCard in discardFromArea.Values)
-            {
-                Card card = gameObjectCard.GetComponent<Card>();
-                if (card.state == CardState.CardDrawnDropped || card.state == CardState.CardNeedsToBeDiscarded)
-                {
-                    Vector2 cardPosition = card.getDroppedPosition();
-
-                    // DO a AABB collision test to see if the card is on the card drop
-                    if (card.state == CardState.CardNeedsToBeDiscarded ||
-                        (cardPosition.y < discardDropMax.y &&
-                       cardPosition.y > discardDropMin.y &&
-                       cardPosition.x < discardDropMax.x &&
-                       cardPosition.x > discardDropMin.x))
-                    {
-                        Debug.Log("card dropped in discard zone or needs to be discarded" + card.UniqueID);
-
-                        discardIndex = card.UniqueID;
-                        //Debug.Log("discard is allowed and will be done now");
-                        Discards.Add(card.UniqueID, gameObjectCard);
-
-                        // change parent and rescale
-                        card.state = CardState.CardDiscarded;
-                        gameObjectCard.GetComponentInParent<slippy>().enabled = false;
-                        gameObjectCard.GetComponentInParent<slippy>().ResetScale();
-                        gameObjectCard.transform.SetParent(discardDropZone.transform, false);
-                        gameObjectCard.transform.localPosition = new Vector3();
-
-                        // for the future might want to stack cards in the discard zone
-                        // WORK
-                        gameObjectCard.SetActive(false);
-                        card.cardZone = discardDropZone;
-                        discardCount++;
-                        if (addUpdate)
-                        {
-                            Debug.Log("adding update for opponent to get");
-                            mUpdatesThisPhase.Add(new Updates
-                            {
-                                WhatToDo = AddOrRem.Remove,
-                                UniqueFacilityID = uniqueFacilityID,
-                                CardID = card.data.cardID
-                            });
-                        }
-                        // only allow one discard per cycle
-                        // don't think it's possible for more than one anyway
-                        break;
-
-                    }
-                    else
-                    {
-                        //Debug.Log("card not dropped in card drop zone");
-                        // If it fails, parent it back to the hand location and then set its state to be in hand and make it grabbable again
-                        gameObjectCard.transform.SetParent(previousParent.transform, false);
-                        card.state = CardState.CardDrawn;
-                        gameObjectCard.GetComponentInParent<slippy>().enabled = true;
-                        gameObjectCard.GetComponent<HoverScale>().Drop();
-                        //Debug.Log("card reset position done");
-                    }
-                }
-            }
-        }
-
-        if (discardCount > 0)
-        {
-            // remove the discarded card
-            discardFromArea.Remove(discardIndex);
-        }
-
-        return discardCount;
-    }
-
     public GameObject GetHighlightedStation() {
         GameObject station = null;
 
@@ -1019,58 +1005,6 @@ public class CardPlayer : MonoBehaviour
         return station;
     }
 
-    //public void DiscardSingleActiveCard(int uniqueFacilityID, CardIDInfo cardID, bool addUpdate)
-    //{
-    //    if (ActiveCards.ContainsKey(cardID.UniqueID))
-    //    {
-    //        Debug.Log("discard is found and should be set inactive : " + cardID.UniqueID);
-    //        GameObject gameObjectCard = ActiveCards[cardID.UniqueID];
-    //        Card card = gameObjectCard.GetComponent<Card>();
-    //        card.state = CardState.CardDiscarded;
-    //        gameObjectCard.GetComponentInParent<slippy>().enabled = false;
-    //        gameObjectCard.GetComponentInParent<slippy>().ResetScale();
-    //        gameObjectCard.transform.SetParent(discardDropZone.transform, false);
-    //        gameObjectCard.transform.localPosition = new Vector3();
-    //        gameObjectCard.SetActive(false);
-    //        card.cardZone = discardDropZone;
-
-    //        Discards.Add(card.UniqueID, gameObjectCard);
-    //        if (addUpdate)
-    //        {
-    //            mUpdatesThisPhase.Add(new Updates
-    //            {
-    //                WhatToDo = AddOrRem.Remove,
-    //                UniqueFacilityID = uniqueFacilityID,
-    //                CardID = card.data.cardID
-    //            });
-    //        }
-    //        ActiveCards.Remove(cardID.UniqueID);
-    //    }
-    //    else if (ActiveFacilities.ContainsKey(cardID.UniqueID))
-    //    {
-    //        GameObject gameObjectCard = ActiveCards[cardID.UniqueID];
-    //        Card card = gameObjectCard.GetComponent<Card>();
-    //        card.state = CardState.CardDiscarded;
-    //        gameObjectCard.GetComponentInParent<slippy>().enabled = false;
-    //        gameObjectCard.GetComponentInParent<slippy>().ResetScale();
-    //        gameObjectCard.transform.SetParent(discardDropZone.transform, false);
-    //        gameObjectCard.transform.localPosition = new Vector3();
-    //        gameObjectCard.SetActive(false);
-    //        card.cardZone = discardDropZone;
-
-    //        Discards.Add(card.UniqueID, gameObjectCard);
-    //        if (addUpdate)
-    //        {
-    //            mUpdatesThisPhase.Add(new Updates
-    //            {
-    //                WhatToDo = AddOrRem.Remove,
-    //                UniqueFacilityID = uniqueFacilityID,
-    //                CardID = card.data.cardID
-    //            });
-    //        }
-    //        ActiveFacilities.Remove(cardID.UniqueID);
-    //    }
-    //}
 
     public bool CheckForCardsOfType(CardType cardType, Dictionary<int, GameObject> listToCheck)
     {
@@ -1138,11 +1072,12 @@ public class CardPlayer : MonoBehaviour
                             {
                                 Card discardCard = cardObject.GetComponent<Card>();
                                 discardCard.state = CardState.CardNeedsToBeDiscarded;
-                                manager.actualPlayer.HandleDiscard(manager.actualPlayer.HandCards, manager.actualPlayer.playerDropZone,
-                                    facilityCard.UniqueID, false);
-                                manager.actualPlayer.HandleDiscard(manager.actualPlayer.ActiveCards, manager.actualPlayer.playerDropZone,
-                                facilityCard.UniqueID, false);
-
+                                //manager.actualPlayer.HandleDiscard(manager.actualPlayer.HandCards, manager.actualPlayer.playerDropZone,
+                                //    facilityCard.UniqueID, false);
+                                //manager.actualPlayer.HandleDiscard(manager.actualPlayer.ActiveCards, manager.actualPlayer.playerDropZone,
+                                //facilityCard.UniqueID, false);
+                                manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.Hand, false, facilityCard.UniqueID);
+                                manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, facilityCard.UniqueID);
                             } else
                             {
                                 Debug.Log("an attack card couldn't be found in the hand at 1139 in CardPlayer. " + cardInfo);
@@ -1155,26 +1090,31 @@ public class CardPlayer : MonoBehaviour
                     }
                     else
                     {
-                        // now we can discard all the facility cards no longer active
-                        // start at the back of the list and then remove towards the front
+                        // discard all the cards attacking this now dead facility
+                        foreach (CardIDInfo cardInfo in facilityCard.AttackingCards)
+                        {
+                            GameObject cardObject = manager.actualPlayer.GetActiveCardObject(cardInfo);
+                            if (cardObject != null)
+                            {
+                                Card cardToDispose = cardObject.GetComponent<Card>();
+                                Debug.Log("handling all attack cards on defunct facility : this one's id is " + cardToDispose.UniqueID);
+                                cardToDispose.state = CardState.CardNeedsToBeDiscarded;
 
-                        Debug.Log("removing facility ");
+                            }
+                            else
+                            {
+                                Debug.Log("attack card with id " + cardInfo.CardID + " wasn't found in the pile of cards on a defunct facility.");
+                            }
+                            //opponent.HandleDiscard(opponent.ActiveCards, opponent.opponentDropZone, facilityCard.UniqueID, true);
+                        }
+                        // let's discard all the cards on the facility in question
+                        manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
+                        facilityCard.AttackingCards.Clear();
                         facilityCard.state = CardState.CardNeedsToBeDiscarded;
-                        HandleDiscard(ActiveFacilities, dropZone, facilityCard.UniqueID, false);
-                        //Discards.Add(facilityCard.UniqueID, facility);
 
-                        //facilityCard.state = CardState.CardDiscarded;
-
-                        //// change parent and rescale
-                        //facility.GetComponentInParent<slippy>().enabled = false;
-                        //facility.GetComponentInParent<slippy>().ResetScale();
-                        //facility.transform.SetParent(discardDropZone.transform, false);
-                        //facility.transform.localPosition = new Vector3();
-
-                        //// for the future might want to stack cards in the discard zone
-                        //facility.SetActive(false);
-                        //facilityCard.cardZone = discardDropZone;
-                        //ActiveFacilities.Remove(facilityCard.UniqueID);
+                        // now discard the facility itself
+                        //HandleDiscard(ActiveFacilities, dropZone, facilityCard.UniqueID, false);
+                        DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, facilityCard.UniqueID);
                     }
                 }
             }
@@ -1230,9 +1170,9 @@ public class CardPlayer : MonoBehaviour
     }
 
     // an update message consists of:
-    // count of updates - 1 per card
-    // what game phase this is happening for
-    // the list of updates in the order of: add/remove, unique facility id, card id
+    // a. count of updates - 1 per card
+    // b. what game phase this is happening for
+    // c. the list of updates in the order of: add/remove, unique facility id, card id
     public void GetUpdatesInMessageFormat(ref List<int> playsForMessage, GamePhase phase)
     {
         playsForMessage.Add(mUpdatesThisPhase.Count);
