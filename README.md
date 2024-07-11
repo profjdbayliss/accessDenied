@@ -56,7 +56,7 @@ Score is tallied with the following:
 
 All players do each phase together and nobody starts the next phase before everybody has finished the current phase.
 
-**Draw regular card phase**: Draw until you have 6 cards in your hand. Optionally, you may discard one to two cards into your discard pile and redraw until you get 6. The round always starts with six cards per player unless it’s the end of the game where somebody has run out of cards.
+**Draw, Discard, and Discuss**: Draw until you have 6 cards in your hand. If one or more of the cards are discussion cards, then discuss the topic of the cards for five minutes. Redraw until you have six cards. Optionally, you may discard one to two cards into your discard pile and redraw until you get 6. The round always starts with six cards per player unless it’s the end of the game where somebody has run out of cards.
 
 **Defense phase**: Lay down up to 1 card that gives defense to a facility (+1 are most common). This phase may be skipped if nobody has any cards to play. Defense and station cards have a blue title background.
 
@@ -81,9 +81,9 @@ Spend the number of points in facilities you own (not impacted by current “hea
 
 **Facility phase**: Draw a new station from the facility card pile every turn until the facility card pile is empty. Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. Players are allowed to place facilities in whatever order they prefer.
 
-**Connection phase**: Decide how to connect the new facility to your grid and note that the optimal number of connections at the end of the game (to score further points) is minimally the original point value of the facility. For example, a 2 point facility would need at minimum 2 connections for it to be worth a point at the end of the game. Facilities taken off the board lose their connection line and new connections may be forged with older facilities as a facility is played. Once a facility is set down and connected, it cannot be moved or reconnected in the future as only new connections may be formed when new facilities are laid down.
+**Connection phase**: Decide how to connect the new facility to your grid and note that the optimal number of connections at the end of the game (to score further points) is minimally the original point value of the facility. For example, a 2-point facility would need at minimum 2 connections for the connections to be worth a point at the end of the game. Facilities taken off the board lose their connection lines, but new connections may be forged with older facilities during a connection phase. Once a facility is set down and connected, it cannot be moved or reconnected in the future as connections may not be changed, but only added.
 
-**Repeat from step 1** until one player runs out of cards OR one player loses all their facilities. Score is tallied from the points facilities remaining in play minus their subtracted points plus their defensive bonuses.
+**Repeat from step 1** until one player runs out of cards OR one player loses all their facilities. Then tally the final score.
 
 ## Learning the Game and Suggested Alternate Rules
 
@@ -97,7 +97,6 @@ OR
 
 **More advanced strategic play**:
 
-- Each facility has icons for its most and least vulnerable categories because let’s face it, some facilities are more/less vulnerable than others. Use those icons to build out a less vulnerable network of facilities. More vulnerable icons are 70% likely to have a successful attack if not mitigated (1-6 is an unsuccessful attack on a d20). Less vulnerable icons are 30% likely to be successfully attack (1-14 on a d20 is an unsuccessful attack).
 - A player can’t use a facility’s points in pointing out vulnerabilities if the facility is attached to nothing in the rest of the network. That facility will still count in points at the end of the game though and can still be attacked.
 - Explain the best and worst ways to attack each network at the end of the game in a discussion between players.
 
@@ -105,5 +104,5 @@ OR
 
 - Explain WHY or HOW you would protect or lose a facility beyond what the cards say. If there is a reason a card that ordinarily doesn’t counter a facility might in a specific situation, argue your case. Note: it helps to have a neutral referee if you’re going to do that.
 - Explain different reasons a facility would be put offline outside of what the cards say.
-- Got a new attack/defense in mind? Replace some of the cards with your new attack/defense (the game comes with the ability to do a pdf with cards OR make new digital cards) and make sure to explain it when players come across it. Both players can have fun coming up with the attacks they think would work the best along with mitigations to counter those attacks.
+- Have a new attack/defense in mind? Replace some of the cards with your new attack/defense (the game comes with the ability to do a pdf with cards OR make new digital cards) and make sure to explain it when players come across it. Both players can have fun coming up with the attacks they think would work the best along with mitigations to counter those attacks.
 
