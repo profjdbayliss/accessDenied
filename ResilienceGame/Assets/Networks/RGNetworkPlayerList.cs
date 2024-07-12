@@ -65,6 +65,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         } 
     }
 
+    public void ResetAllPlayersToNotReady()
+    {
+        for (int i = 0; i < playerIDs.Count; i++)
+        {
+            playerTypes[i] = PlayerType.Any;
+        }
+    }
+
     public void SetPlayerType(PlayerType type)
     {
         if (isServer)
@@ -79,6 +87,9 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 {
                     playerTurnTakenFlags[i] = false;
                 }
+            } else
+            {
+                Debug.Log("not ready to start!");
             }
         }
     }
@@ -290,12 +301,10 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 break;
             case CardMessageType.EndGame:
                 {
-                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    RGNetworkShortMessage msg = new RGNetworkShortMessage
                     {
                         indexId = (uint)localPlayerID,
-                        type = (uint)data.Type,
-                        count = (uint)data.arguments.Count(),
-                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                        type = (uint)data.Type
                     };
                     if (isServer)
                     {
@@ -358,7 +367,18 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 case CardMessageType.IncrementTurn:
                     Debug.Log("client received increment turn message!");
                     manager.IncrementTurn();
-                    break;             
+                    break;
+                case CardMessageType.EndGame:
+                    {
+                        if (!manager.HasReceivedEndGame())
+                        {
+                            manager.SetReceivedEndGame(true);
+                            manager.AddMessage(new Message(CardMessageType.EndGame));
+                            manager.ShowEndGameCanvas();
+                            Debug.Log("received end game message and will now end game on server");
+                        }  
+                    }
+                    break;
                 default:
                     Debug.Log("client received unknown message!");
                     break;
@@ -433,6 +453,17 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             case CardMessageType.IncrementTurn:
                 Debug.Log("Server received increment message and did nothing.");
                 break;
+            case CardMessageType.EndGame:
+                {
+                    if (!manager.HasReceivedEndGame())
+                    {
+                        manager.SetReceivedEndGame(true);
+                        manager.AddMessage(new Message(CardMessageType.EndGame));
+                        manager.ShowEndGameCanvas();
+                        Debug.Log("received end game message and will now end game on server");
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -456,25 +487,38 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         uint count = msg.count;
                         int element = 0;
                         for (int i = 0; i < count; i++)
-                        { 
+                        {
                             // the id is the order in the list
-                            playerIDs.Add(i);
-
-                            // then get player type
+                            int existingPlayer = playerIDs.FindIndex(x => x == i);
                             int actualInt = GetIntFromByteArray(element, msg.payload);
-                            playerTypes.Add((PlayerType)actualInt);
-                            // get length of player name
-                            element += 4;
-                            actualInt = GetIntFromByteArray(element, msg.payload);
 
-                            // get player name
-                            element += 4;
-                            ArraySegment<byte> name = msg.payload.Slice(element, actualInt);
-                            playerNames.Add(Encoding.ASCII.GetString(name));
+                            if (existingPlayer == -1)
+                            {
+                                playerIDs.Add(i);
+                                // then get player type
 
-                            element += actualInt;
-                            Debug.Log("player being added : " + playerIDs[i] + " " + playerTypes[i] +
-                                " " + playerNames[i]); 
+                                playerTypes.Add((PlayerType)actualInt);
+                                // get length of player name
+                                element += 4;
+                                actualInt = GetIntFromByteArray(element, msg.payload);
+
+                                // get player name
+                                element += 4;
+                                ArraySegment<byte> name = msg.payload.Slice(element, actualInt);
+                                playerNames.Add(Encoding.ASCII.GetString(name));
+
+                                element += actualInt;
+                                Debug.Log("player being added : " + playerIDs[i] + " " + playerTypes[i] +
+                                    " " + playerNames[i]);
+                            } else
+                            {
+                                // when a game is reset we only need the player type again
+                                playerTypes[existingPlayer] = (PlayerType)actualInt;
+                                Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
+                            }
+                            
+
+                           
                         }
                         // now start the next phase
                         manager.RealGameStart();
@@ -529,15 +573,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         }
                         manager.AddUpdatesFromOpponent(ref updates, gamePhase);
                         
-                    }
-                    break;
-                case CardMessageType.EndGame:
-                    if (msg.count == 1)
-                    {
-                        int whoWins = BitConverter.ToInt32(msg.payload);
-                        manager.EndGame(whoWins, false);
-                        Debug.Log("received end game message and will now end game on client");
-
                     }
                     break;
                 case CardMessageType.SendPlayedFacility:
@@ -664,15 +699,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         Debug.Log("received update message from opponent of size " + numberOfUpdates);
                     }
                     break;
-                case CardMessageType.EndGame:
-                    if (msg.count == 1)
-                    {
-                        int whoWins = BitConverter.ToInt32(msg.payload);
-                        manager.EndGame(whoWins, false);
-                        Debug.Log("received end game message and will now end game on server");
-
-                    }
-                    break;
+               
                 case CardMessageType.SendPlayedFacility:
                     {
                         int element = 0;

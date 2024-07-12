@@ -70,7 +70,7 @@ public class CardPlayer : MonoBehaviour
     static int sUniqueIDCount = 0;
     int mTotalFacilityValue = 0;
     int mValueSpentOnVulnerabilities = 0;
-
+    int mFinalScore = 0;
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
 
     public void Start()
@@ -108,6 +108,8 @@ public class CardPlayer : MonoBehaviour
 
     public void InitializeCards()
     {
+        DeckIDs.Clear();
+        FacilityIDs.Clear();
         manager = GameObject.FindObjectOfType<GameManager>();
         Debug.Log("card count is: " + cards.Count);
         foreach (Card card in cards.Values)
@@ -138,6 +140,7 @@ public class CardPlayer : MonoBehaviour
 
             }
         }
+
     }
 
     public virtual void DrawCards()
@@ -147,7 +150,13 @@ public class CardPlayer : MonoBehaviour
             int count = HandCards.Count;
             for (int i = 0; i < maxHandSize - count; i++)
             {
-                DrawCard(true, 0, -1, ref DeckIDs, handDropZone, true, ref HandCards);
+                if (DeckIDs.Count > 0)
+                {
+                    DrawCard(true, 0, -1, ref DeckIDs, handDropZone, true, ref HandCards);
+                } else
+                {
+                    break;
+                }
             }
         }
     }
@@ -222,7 +231,7 @@ public class CardPlayer : MonoBehaviour
             indexForCard = deckToDrawFrom.FindIndex(x => x == cardId);
             if (indexForCard == -1)
             {
-                Debug.Log("didn't find a card of this type to draw : " + cardId);
+                Debug.Log("didn't find a card of this type to draw : " + cardId + " to card deck with number " + deckToDrawFrom.Count);
                 return null;
             }
         }
@@ -369,7 +378,16 @@ public class CardPlayer : MonoBehaviour
         handSize++;
         tempCardObj.transform.position = tempPos2;
         tempCardObj.SetActive(true);
-        activeDeck.Add(tempCard.UniqueID, tempCardObj);
+        if (!activeDeck.TryAdd(tempCard.UniqueID, tempCardObj))
+        {
+            Debug.Log("number of cards in draw active deck are: " + activeDeck.Count);
+            foreach(GameObject gameObject in activeDeck.Values)
+            {
+                Card card = gameObject.GetComponent<Card>();
+                Debug.Log("active deck value: " + card.UniqueID);
+            }
+        }
+       
 
         // remove this card so we don't draw it again
         deckToDrawFrom.RemoveAt(indexForCard);
@@ -1164,6 +1182,17 @@ public class CardPlayer : MonoBehaviour
         
     }
 
+    void CalculateScore()
+    {
+        mFinalScore = 42;
+    }
+
+    public int GetScore()
+    {
+        CalculateScore();
+        return mFinalScore;
+    }
+
     public bool HasUpdates()
     {
         return (mUpdatesThisPhase.Count != 0);
@@ -1191,4 +1220,65 @@ public class CardPlayer : MonoBehaviour
         mUpdatesThisPhase.Clear();
     }
 
+    // Reset the variables in this class to allow for a new
+    // game to happen.
+    public void ResetForNewGame()
+    {
+        Debug.Log("resetting all game objects on screen - destroying game objects.");
+        foreach(GameObject gameObject in HandCards.Values)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.CanvasHolder != null)
+            {
+                Destroy(card.CanvasHolder);
+            }
+            Destroy(card);
+            Destroy(gameObject);
+        }
+
+        foreach (GameObject gameObject in Discards.Values)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.CanvasHolder != null)
+            {
+                Destroy(card.CanvasHolder);
+            }
+            Destroy(card);
+            Destroy(gameObject);
+        }
+
+        foreach (GameObject gameObject in ActiveCards.Values)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.CanvasHolder != null)
+            {
+                Destroy(card.CanvasHolder);
+            }
+            Destroy(card);
+            Destroy(gameObject);
+        }
+
+        foreach (GameObject gameObject in ActiveFacilities.Values)
+        {
+            Card card = gameObject.GetComponent<Card>();
+            if (card.CanvasHolder != null)
+            {
+                Destroy(card.CanvasHolder);
+            }
+            Destroy(card);
+            Destroy(gameObject);
+        }
+
+        FacilityIDs.Clear();
+        DeckIDs.Clear();
+        HandCards.Clear();
+        Discards.Clear();
+        ActiveCards.Clear();
+        ActiveFacilities.Clear();
+        handSize = 0;
+        mTotalFacilityValue = 0;
+        mValueSpentOnVulnerabilities = 0;
+        mFinalScore = 0;
+        mUpdatesThisPhase.Clear();
+    }
 }

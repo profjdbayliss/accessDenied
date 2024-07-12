@@ -100,6 +100,21 @@ public class Message
     /// sending new facility id info
     /// </summary>
     /// <param name="t">The type of the message</param>
+    /// <param name="arg">single argument</param>
+    public Message(CardMessageType t, int singleArg)
+    {
+        type = t;
+        hasArgs = true;
+        isBytes = false;
+        arguments = new List<int>(1);
+        arguments.Add(singleArg);
+    }
+
+    /// <summary>
+    /// A constructor that sets message info specifically for messages such as
+    /// sending new facility id info
+    /// </summary>
+    /// <param name="t">The type of the message</param>
     /// <param name="uniqueID">card's unique id</param>
     /// <param name="cardID">A unique card id.</param>
     public Message(CardMessageType t, int uniqueID, int cardID)

@@ -53,7 +53,6 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("start on card.cs run");
         originalPosition = this.gameObject.transform.position;
         mManager = GameObject.FindObjectOfType<GameManager>();
         OutlineImage.SetActive(false);
