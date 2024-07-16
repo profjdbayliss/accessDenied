@@ -129,7 +129,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             CardReader reader = waterDeckReader.GetComponent<CardReader>();
             if (reader != null)
             {
-                waterCards = reader.CSVRead(mCreateWaterAtlas);
+                // TODO: Set with csv
+                waterCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
                 CardPlayer.AddCards(waterCards);
                 waterPlayer.playerType = PlayerType.Water;
                 waterPlayer.DeckName = "water";
@@ -140,6 +141,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 Debug.Log("Water deck reader is null.");
             }
 
+
+            // TODO: Remove, should be selected by csv
             // read energy deck
             reader = energyDeckReader.GetComponent<CardReader>();
             if (reader != null)
@@ -175,6 +178,8 @@ public class GameManager : MonoBehaviour, IRGObservable
         // we should know when choice they
         // wanted by now and can set up
         // appropriate values
+
+        // TODO: Change PlayerType
         if (playerType==PlayerType.Energy)
         {
             actualPlayer = energyPlayer;
@@ -238,6 +243,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     // this simple state machine.
     public void HandlePhases(GamePhase phase)
     {
+        // TODO: Implement team turns
+
         // keep track of 
         bool phaseJustChanged = false;
         mGamePhase = phase;
@@ -251,6 +258,8 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         switch (phase)
         {
+
+            // TODO: Change GamePhase
             case GamePhase.Start:
                 // start of game phase
                 // handled with specialty code outside of this
@@ -983,6 +992,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
     }
     //Sets dialogue to inactive
+    // TODO: For all tutorial methods, rework to display different text depending on player
     private void SkipTutorial()
     {
         if (!yarnSpinner.activeInHierarchy) { return; }

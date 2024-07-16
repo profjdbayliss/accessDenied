@@ -29,7 +29,7 @@ public class CardReader : MonoBehaviour
 
     public List<Card> CSVRead(bool createAtlas)
     {
-        List<Card> cards = new List<Card>(50);
+        List<Card> cards = new List<Card>(50); // TODO: Get number per deck
 
         // Check to see if the file exists
         fileLocation = Application.streamingAssetsPath + "/" + cardFileName;
@@ -87,27 +87,47 @@ public class CardReader : MonoBehaviour
             // NOTE: row 0 is always headings and not data
             for (int i = 1; i < allCSVObjects.Length; i++)
             {
+                //TODO: Create check for deck type
+
                 // Then in each of the lines of csv data, split them based on commas to get the different pieces of information on each object
                 // and instantiate a base card object to then fill in with data.
-                string[] individualCSVObjects = allCSVObjects[i].Split(",");
+                string[] individualCSVObjects = allCSVObjects[i].Split(","); 
                 if (individualCSVObjects.Length > 1) // excel adds an empty line at the end
                 {
                     // columns in the spreadsheet: changes depending on game
-                    // 0:  how many cards of this type in the deck
-                    // 1:  type of the card
-                    // 2: played on (some cards are only played on a specific infrastructure type)
-                    // 3:  title
-                    // 4:  title color
-                    // 5:  card image
-                    // 6:  background image
-                    // 7:  does it have a worth circle?
-                    // 8:  what's in the worth circle?
-                    // 9:  cost of card if there is one
-                    // 10: the category of the card if there is one
-                    // 11: column
-                    // 12: row
-                    // 13: mitigates
-                    // 14+:  text description
+                    //  0:  How many cards of this type in the deck
+                    //  1:  Team of the card // TODO: Split ; in Team
+                    //  2:  Method called
+                    //  3: Target Type
+                    //  4:  Played on (some cards are only played on a specific infrastructure type)
+                    //  5:  Amount of targets
+                    //  6:  Title
+                    //  7:  Background color
+                    //  8:  Card image
+                    //  9:  col
+                    // 10:  row
+                    // 11:  Background image
+                    // 12:  col
+                    // 13:  row
+                    // 14:  Meeple type changed
+                    // 15:  Number of Meeples changed
+                    // 16:  Meeple cost
+                    // 17:  Blue cost
+                    // 18:  Black cost
+                    // 19:  Purple cost
+                    // 20:  Network damage
+                    // 21:  Physical damage
+                    // 22:  Financial damage
+                    // 23:  Cards drawn
+                    // 24:  Cards discarded
+                    // 25:  Cards shuffled
+                    // 26:  Effect placed
+                    // 27:  Effect removed
+                    // 28:  Duration
+                    // 29:  Amount playable on a turn
+                    // 30:  Effect during doom clock
+                    // 31:  Dice roll minimum
+                    // 32:  Text description
 
                     // 0: if there's one or more cards to be inserted into the deck
                     int numberOfCards = int.Parse(individualCSVObjects[0].Trim());

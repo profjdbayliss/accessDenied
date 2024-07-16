@@ -11,6 +11,11 @@ using Vector3 = UnityEngine.Vector3;
 // Enum to track player type
 public enum PlayerType
 {
+    /*
+    Red,
+    Blue,
+    White
+     */
     Water,
     Energy,
     Any
@@ -31,6 +36,7 @@ public struct Updates
 
 public enum DiscardFromWhere
 {
+    // TODO: Needs ref to others play zones
     Hand,
     MyPlayZone,
     MyFacility
@@ -59,7 +65,7 @@ public class CardPlayer : MonoBehaviour
     public readonly float ORIGINAL_SCALE = 0.2f;
     public string DeckName="";
 
-    Vector2 discardDropMin;
+    Vector2 discardDropMin; 
     Vector2 discardDropMax;
     Vector2 playedDropMin;
     Vector2 playedDropMax;
@@ -109,7 +115,7 @@ public class CardPlayer : MonoBehaviour
     public void InitializeCards()
     {
         DeckIDs.Clear();
-        FacilityIDs.Clear();
+        FacilityIDs.Clear(); // TODO: Remove facility card
         manager = GameObject.FindObjectOfType<GameManager>();
         Debug.Log("card count is: " + cards.Count);
         foreach (Card card in cards.Values)
@@ -161,6 +167,7 @@ public class CardPlayer : MonoBehaviour
         }
     }
 
+    // TODO: Remove or rewrite
     public virtual Card DrawFacility(bool isRandom, int worth)
     {
         Card card = null;
@@ -345,6 +352,7 @@ public class CardPlayer : MonoBehaviour
 
         switch (tempCard.data.cardType)
         {
+            // TODO: Change card type
             case CardType.Defense:
                 tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
                 break;
@@ -417,6 +425,9 @@ public class CardPlayer : MonoBehaviour
             // for all attacking cards on those facilities
             foreach(CardIDInfo cardInfo in facilityCard.AttackingCards)
             {
+                // TODO: Remove random
+
+
                 // run the effects of the card, but only if we roll between 11-20 on a d20 does the attack happen
                 // This is the same as 50-99 on a 0-100 random roll
                 int randomNumber = UnityEngine.Random.Range(0, 100);
