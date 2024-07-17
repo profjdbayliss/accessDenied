@@ -119,11 +119,16 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     {
         if (!isServer) return;
 
-        playerIDs.Remove(id);
-        playerNames.RemoveAt(id);
-        playerTypes.RemoveAt(id);
-        playerNetworkReadyFlags.RemoveAt(id);
-        playerTurnTakenFlags.RemoveAt(id);
+        // get the index of the id
+        int index = playerIDs.FindIndex(x => x == id);
+        if (index != -1)
+        {
+            playerIDs.Remove(id);
+            playerNames.RemoveAt(index);
+            playerTypes.RemoveAt(index);
+            playerNetworkReadyFlags.RemoveAt(index);
+            playerTurnTakenFlags.RemoveAt(index);
+        }
     }
 
     public int GetIntFromByteArray(int indexStart, ArraySegment<byte> payload)
@@ -296,6 +301,30 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     {
                         NetworkClient.Send(msg);
                         Debug.Log("CLIENT SENT GAMEPLAY UPDATES");
+                    }
+                }
+                break;
+            case CardMessageType.AddConnections:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count,
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+                    Debug.Log("update observer called add connections");
+
+                    if (isServer)
+                    {
+                        // send to all
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT ADD CONNECTIONS");
+                    }
+                    else
+                    {
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT SENT ADD CONNECTIONS");
                     }
                 }
                 break;
@@ -590,6 +619,32 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         }
                     }
                     break;
+                case CardMessageType.AddConnections:
+                    {
+                        int element = 0;
+                        List<FacilityConnectionInfo> updates = new List<FacilityConnectionInfo>(7);
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        element += 4;
+                        int originalFacilityUniqueID = GetIntFromByteArray(element, msg.payload);
+                        element += 4;
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+                            int facilityZone = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+
+                            updates.Add(new FacilityConnectionInfo
+                            {
+                                UniqueFacilityID = facilityId,
+                                WhichFacilityZone = facilityZone,
+                            });
+                            Debug.Log("client received connection message from opponent containing : " + facilityId + " and zone " + facilityZone);
+                        }
+                        manager.AddConnectionsFromOpponent(ref updates, originalFacilityUniqueID);
+
+                    }
+                    break;
                 default:
                     break;
             }
@@ -713,6 +768,33 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             Debug.Log("received facility message from opponent with unique id " + uniqueId + " and card facility id " + facilityId);
 
                         }
+                    }
+                    break;
+                case CardMessageType.AddConnections:
+                    {
+                        int element = 0;
+                        List<FacilityConnectionInfo> updates = new List<FacilityConnectionInfo>(7);
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        Debug.Log("Number of updates in connection message is " + numberOfUpdates);
+                        element += 4;
+                        int originalFacilityUniqueID = GetIntFromByteArray(element, msg.payload);
+                        element += 4;
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+                            int facilityZone = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+
+                            updates.Add(new FacilityConnectionInfo
+                            {
+                                UniqueFacilityID = facilityId,
+                                WhichFacilityZone = facilityZone,
+                            });
+                            Debug.Log("client received connection message from opponent containing : " + facilityId + " and zone " + facilityZone);
+                        }
+                        manager.AddConnectionsFromOpponent(ref updates, originalFacilityUniqueID);
+
                     }
                     break;
                 default:

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Xml;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,12 @@ public struct Updates
     public int CardID;
 };
 
+public struct FacilityConnectionInfo
+{
+    public int UniqueFacilityID;
+    public int WhichFacilityZone;
+}
+
 public enum DiscardFromWhere
 {
     Hand,
@@ -56,6 +63,8 @@ public class CardPlayer : MonoBehaviour
     public GameObject opponentDropZone;
     public GameObject playerDropZone;
     public GameObject cardStackingCanvas;
+    public List<GameObject> AllFacilityLocations;
+    int mFacilityNumber = 0;
     public readonly float ORIGINAL_SCALE = 0.2f;
     public string DeckName="";
 
@@ -72,6 +81,8 @@ public class CardPlayer : MonoBehaviour
     int mValueSpentOnVulnerabilities = 0;
     int mFinalScore = 0;
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
+    int mMaxFacilities = 0;
+    GameObject mActiveConnectFacility = null;
 
     public void Start()
     {
@@ -141,6 +152,8 @@ public class CardPlayer : MonoBehaviour
             }
         }
 
+        mMaxFacilities = FacilityIDs.Count;
+
     }
 
     public virtual void DrawCards()
@@ -161,16 +174,36 @@ public class CardPlayer : MonoBehaviour
         }
     }
 
-    public virtual Card DrawFacility(bool isRandom, int worth)
+    public virtual Card DrawFacility(bool isRandom, int facilityID, int uniqueID, int worth)
     {
         Card card = null;
         if (FacilityIDs.Count > 0)
         {
-            if (isRandom)
+            if (isRandom && uniqueID == -1)
             {
-                card = DrawCard(true, 0, -1, ref FacilityIDs, playerDropZone, false,
-                    ref ActiveFacilities);
-                mTotalFacilityValue += card.data.worth;
+               
+                if (mFacilityNumber < AllFacilityLocations.Count)
+                {
+                    card = DrawCard(true, 0, -1, ref FacilityIDs, AllFacilityLocations[mFacilityNumber], false,
+                   ref ActiveFacilities);
+                    mTotalFacilityValue += card.data.worth;
+                    card.HasCanvas = true;
+                    card.CanvasHolder = AllFacilityLocations[mFacilityNumber];
+                    card.WhichFacilityZone = mFacilityNumber;
+                    mFacilityNumber++;
+                }
+            } else if (uniqueID != -1)
+            {
+                if (mFacilityNumber < AllFacilityLocations.Count)
+                {
+                    card = DrawCard(false, facilityID, uniqueID, ref FacilityIDs, AllFacilityLocations[mFacilityNumber],
+           false, ref ActiveFacilities);
+                    mTotalFacilityValue += card.data.worth;
+                    card.HasCanvas = true;
+                    card.CanvasHolder = AllFacilityLocations[mFacilityNumber];
+                    card.WhichFacilityZone = mFacilityNumber;
+                    mFacilityNumber++;
+                }
             } else
             {
                 // need to draw the 2 pt facility according to rules
@@ -179,9 +212,18 @@ public class CardPlayer : MonoBehaviour
                 {
                     if (cards[FacilityIDs[i]].data.worth == worth)
                     {
-                        card = DrawCard(false, FacilityIDs[i], -1, ref FacilityIDs, playerDropZone, false,
-                            ref ActiveFacilities);
-                        mTotalFacilityValue += card.data.worth;
+                       
+                        if (mFacilityNumber < AllFacilityLocations.Count)
+                        {
+                            card = DrawCard(false, FacilityIDs[i], -1, ref FacilityIDs, AllFacilityLocations[mFacilityNumber], false,
+                           ref ActiveFacilities);
+                            card.HasCanvas = true;
+                            card.CanvasHolder = AllFacilityLocations[mFacilityNumber];
+                            card.WhichFacilityZone = mFacilityNumber;
+                            mFacilityNumber++;
+                            mTotalFacilityValue += card.data.worth;
+                        }
+                        
                         break;
                     }
                 }
@@ -372,8 +414,12 @@ public class CardPlayer : MonoBehaviour
         }
         tempCard.state = CardState.CardDrawn;
         Vector3 tempPos = tempCardObj.transform.position;
-        tempCardObj.transform.position = tempPos;
+        tempCardObj.transform.position = tempPos;       
         tempCardObj.transform.SetParent(dropZone.transform, false);
+        if (dropZone.Equals(handDropZone))
+        {
+            tempCardObj.transform.localScale = new Vector3(0.2f, 0.2f, 1.0f);
+        }
         Vector3 tempPos2 = dropZone.transform.position;
         handSize++;
         tempCardObj.transform.position = tempPos2;
@@ -452,6 +498,43 @@ public class CardPlayer : MonoBehaviour
             if (facilityCard.data.worth+facilityCard.DefenseHealth <= 0)
             {
                 Debug.Log("we need to get rid of this facility");
+                // get rid of all potential connectors from both sides
+                int whichFacilityZone = facilityCard.WhichFacilityZone;
+                GameObject facilityZoneHolder = facilityCard.CanvasHolder;
+                Connections connections = facilityZoneHolder.GetComponent<Connections>();
+
+                foreach (FacilityConnectionInfo connectionInfo in facilityCard.ConnectionList)
+                {
+                    int zoneToTurnOff = connectionInfo.WhichFacilityZone;
+                    // turn off this facility's possible connection to the other
+                    connections.connections[zoneToTurnOff].SetActive(false);
+
+                    // turn off the other facility's possible connection to this one
+                    // and delete this facility from its active connections list
+                    GameObject otherFacility = ActiveFacilities[connectionInfo.UniqueFacilityID];
+                    if (otherFacility != null)
+                    {
+                        Card otherFacilityCard = otherFacility.GetComponent<Card>();
+                        GameObject otherFacilityZone = otherFacilityCard.CanvasHolder;
+                        Connections otherConnections = otherFacilityZone.GetComponent<Connections>();
+                        otherConnections.connections[whichFacilityZone].SetActive(false);
+                        int indexToRemove = otherFacilityCard.ConnectionList.FindIndex(x => x.WhichFacilityZone == whichFacilityZone);
+                        if (indexToRemove >= 0)
+                        {
+                            otherFacilityCard.ConnectionList.RemoveAt(indexToRemove);
+                        } else
+                        {
+                            Debug.Log("Error finding facility for zone " + whichFacilityZone + " to remove.");
+                        }
+
+                    } else
+                    {
+                        Debug.Log("Error finding facility " + connectionInfo.UniqueFacilityID + " to turn its connection off");
+                    }
+                }
+                // now clear all the connection info
+                facilityCard.ConnectionList.Clear();
+
                 // the facility needs to be removed along with all remaining
                 // attack cards on it
                 foreach(CardIDInfo cardInfo in facilityCard.AttackingCards)
@@ -582,6 +665,79 @@ public class CardPlayer : MonoBehaviour
     public int GetTotalFacilityValue()
     {
         return mTotalFacilityValue;
+    }
+
+    public void ClearAllHighlightedFacilities()
+    {
+        foreach(GameObject facility in ActiveFacilities.Values)
+        {
+            Card card = facility.GetComponent<Card>();
+            if (card.OutlineActive())
+            {
+                card.OutlineImage.SetActive(false);
+            }
+        }
+    }
+
+    public void HandleConnections(bool highlightFirst)
+    {
+        if (highlightFirst && (ActiveFacilities.Count < mMaxFacilities) && (ActiveFacilities.Count > 1))
+        {
+            int currentFacilityToHighlight = mFacilityNumber - 1;
+            // find which facility this is since the unique numbers aren't the same
+            // as the place the facility is located
+            foreach(GameObject facility in ActiveFacilities.Values)
+            {
+                Card card = facility.GetComponent<Card>();
+                if (card.WhichFacilityZone == currentFacilityToHighlight)
+                {
+                    card.OutlineImage.SetActive(true);
+                    mActiveConnectFacility = facility;
+                    Debug.Log("first facillity for connection set!");
+                    break;
+                }
+            }
+        } else if (ActiveFacilities.Count < mMaxFacilities && mActiveConnectFacility!=null && (ActiveFacilities.Count > 1))
+        {
+            // now we wait until the player highlights at least one facility for connections
+            foreach (GameObject facility in ActiveFacilities.Values)
+            {
+                // check each facility to see if we've selected it for a connection
+                // and it's not the initial connection!
+                Card card = facility.GetComponent<Card>();
+                if (card.OutlineImage.activeSelf && !facility.Equals(mActiveConnectFacility))
+                {
+                    // this is a facility to connect to
+                    card.OutlineImage.SetActive(false);
+                    int facilityNumber = card.WhichFacilityZone;
+                    Card firstFacilityCard = mActiveConnectFacility.GetComponent<Card>();
+                    GameObject facilityHolder = firstFacilityCard.CanvasHolder;
+                    // add this connection to the initial facility's list
+                    firstFacilityCard.ConnectionList.Add(new FacilityConnectionInfo
+                    {
+                        WhichFacilityZone = facilityNumber,
+                        UniqueFacilityID = card.UniqueID
+                    });
+                    // add the connection to the second facility's list as well
+                    card.ConnectionList.Add(new FacilityConnectionInfo {
+                        WhichFacilityZone = firstFacilityCard.WhichFacilityZone,
+                        UniqueFacilityID=firstFacilityCard.UniqueID
+                        });
+
+                    // now turn on the connection image in the interface
+                    Connections connections = facilityHolder.GetComponent<Connections>();
+                    if (connections != null)
+                    {
+                        connections.connections[facilityNumber].SetActive(true);
+                        Debug.Log("setting a connection from " + firstFacilityCard.WhichFacilityZone + " to " + facilityNumber);
+                    } else
+                    {
+                        Debug.Log("something wrong as connections are null");
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     public virtual int HandlePlayCard(GamePhase phase, CardPlayer opponentPlayer)
@@ -1108,6 +1264,48 @@ public class CardPlayer : MonoBehaviour
                     }
                     else
                     {
+                        // get rid of all connections on this facility
+                        Debug.Log("we need to get rid of this opponent facility");
+                        // get rid of all potential connectors from both sides
+                        int whichFacilityZone = facilityCard.WhichFacilityZone;
+                        GameObject facilityZoneHolder = facilityCard.CanvasHolder;
+                        Connections connections = facilityZoneHolder.GetComponent<Connections>();
+
+                        foreach (FacilityConnectionInfo connectionInfo in facilityCard.ConnectionList)
+                        {
+                            int zoneToTurnOff = connectionInfo.WhichFacilityZone;
+                            // turn off this facility's possible connection to the other
+                            connections.connections[zoneToTurnOff].SetActive(false);
+
+                            // turn off the other facility's possible connection to this one
+                            // and delete this facility from its active connections list
+                            GameObject otherFacility = ActiveFacilities[connectionInfo.UniqueFacilityID];
+                            if (otherFacility != null)
+                            {
+                                Card otherFacilityCard = otherFacility.GetComponent<Card>();
+                                GameObject otherFacilityZone = otherFacilityCard.CanvasHolder;
+                                Connections otherConnections = otherFacilityZone.GetComponent<Connections>();
+                                otherConnections.connections[whichFacilityZone].SetActive(false);
+                                int indexToRemove = otherFacilityCard.ConnectionList.FindIndex(x => x.WhichFacilityZone == whichFacilityZone);
+                                if (indexToRemove >= 0)
+                                {
+                                    otherFacilityCard.ConnectionList.RemoveAt(indexToRemove);
+                                }
+                                else
+                                {
+                                    Debug.Log("Error finding facility for zone " + whichFacilityZone + " to remove.");
+                                }
+
+                            }
+                            else
+                            {
+                                Debug.Log("Error finding facility " + connectionInfo.UniqueFacilityID + " to turn its connection off");
+                            }
+                        }
+                        // now clear all the connection info
+                        facilityCard.ConnectionList.Clear();
+
+
                         // discard all the cards attacking this now dead facility
                         foreach (CardIDInfo cardInfo in facilityCard.AttackingCards)
                         {
@@ -1131,7 +1329,6 @@ public class CardPlayer : MonoBehaviour
                         facilityCard.state = CardState.CardNeedsToBeDiscarded;
 
                         // now discard the facility itself
-                        //HandleDiscard(ActiveFacilities, dropZone, facilityCard.UniqueID, false);
                         DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, facilityCard.UniqueID);
                     }
                 }
@@ -1182,6 +1379,54 @@ public class CardPlayer : MonoBehaviour
         
     }
 
+    public void AddConnections(ref List<FacilityConnectionInfo> updates, int uniqueFacilityID)
+    {
+        GameObject facilityObject = ActiveFacilities[uniqueFacilityID];
+
+        if (facilityObject != null)
+        {
+            Card facilityCard = facilityObject.GetComponent<Card>();
+            GameObject facilityHolder = facilityCard.CanvasHolder;
+            Connections connections = facilityHolder.GetComponent<Connections>();
+            if (connections != null)
+            {
+                foreach(FacilityConnectionInfo update in updates)
+                {
+                    // add this connection to the initial facility's list
+                    facilityCard.ConnectionList.Add(update);
+
+                    // add it to the other facility list as well
+                    GameObject otherFacility = ActiveFacilities[update.UniqueFacilityID];
+                    if (otherFacility != null)
+                    {
+                        Card otherCard = otherFacility.GetComponent<Card>();
+               
+                        // add the connection to the second facility's list as well
+                        otherCard.ConnectionList.Add(new FacilityConnectionInfo
+                        {
+                            WhichFacilityZone = facilityCard.WhichFacilityZone,
+                            UniqueFacilityID = facilityCard.UniqueID
+                        });
+                    } else
+                    {
+                        Debug.Log("connected facility " + update.UniqueFacilityID + " is null. There's an error in the program.");
+                    }
+                   
+                    // now turn on the connection image in the interface
+                    connections.connections[update.WhichFacilityZone].SetActive(true);          
+                }
+            } else
+            {
+                Debug.Log("Connections on opponent was null. There's an error somewhere!");
+            }
+        }
+         else   
+        {
+            Debug.Log("opponent sent facility that is NOT in the active facilities for connection update. Error!");
+        }
+       
+    }
+
     void CalculateScore()
     {
         mFinalScore = 42;
@@ -1219,6 +1464,34 @@ public class CardPlayer : MonoBehaviour
         // clear the list
         mUpdatesThisPhase.Clear();
     }
+
+    // an update message consists of:
+    // a. count of new connections to be attached to chosen facility for connections this round
+    // b. unique facility id of facility these connections come from
+    // c. list of zone and unique id for all new connections
+    public void GetNewConnectionsInMessageFormat(ref List<int> playsForMessage)
+    {
+        if (mActiveConnectFacility != null)
+        {
+            Card card = mActiveConnectFacility.GetComponent<Card>();
+            if (card.ConnectionList.Count > 0)
+            {
+                playsForMessage.Add(card.ConnectionList.Count);
+                playsForMessage.Add(card.UniqueID);
+                foreach (FacilityConnectionInfo info in card.ConnectionList)
+                {
+                    playsForMessage.Add(info.UniqueFacilityID);
+                    playsForMessage.Add(info.WhichFacilityZone);
+                }
+            }
+
+            // this resets the last facility connected
+            // so we don't keep sending data after the 
+            // last facility card is played
+            mActiveConnectFacility = null;
+        }     
+    }
+
 
     // Reset the variables in this class to allow for a new
     // game to happen.

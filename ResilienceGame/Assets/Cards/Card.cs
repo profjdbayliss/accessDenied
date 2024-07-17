@@ -32,6 +32,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public CardFront front;
     public CardState state;
     public string DeckName;
+    public int WhichFacilityZone = 0;
     public GameObject cardZone;
     public GameObject originalParent;
     public Vector3 originalPosition;
@@ -42,7 +43,9 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public int DefenseHealth = 0;
     public List<int> ModifyingCards = new List<int>(10);
     public List<CardIDInfo> AttackingCards = new List<CardIDInfo>(10);
-    
+    public List<FacilityConnectionInfo> ConnectionList = new List<FacilityConnectionInfo>(3);
+
+
     // NOTE: this is a string currently because mitigations are for 
     // cards from the other player's deck.
     public List<string> MitigatesWhatCards = new List<string>(10);
@@ -57,7 +60,6 @@ public class Card : MonoBehaviour, IPointerClickHandler
         mManager = GameObject.FindObjectOfType<GameManager>();
         OutlineImage.SetActive(false);
     }
-
 
     public void OnPointerClick(PointerEventData eventData)
     {

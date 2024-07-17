@@ -7,6 +7,7 @@ using Mirror;
 using System.Linq;
 using Yarn.Unity;
 using System.Xml;
+using UnityEngine.PlayerLoop;
 
 public class GameManager : MonoBehaviour, IRGObservable
 {
@@ -60,10 +61,6 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     // other classes observe this one's gameplay data
     List<IRGObserver> mObservers = new List<IRGObserver>(20);
-
-    // player types
-    public CardPlayer energyPlayer;
-    public CardPlayer waterPlayer;
 
     // var's we use so we don't have to switch between
     // the player types for generic stuff
@@ -131,8 +128,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 waterCards = reader.CSVRead(mCreateWaterAtlas);
                 CardPlayer.AddCards(waterCards);
-                waterPlayer.playerType = PlayerType.Water;
-                waterPlayer.DeckName = "water";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
             }
             else
@@ -146,8 +141,6 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 energyCards = reader.CSVRead(mCreateEnergyAtlas);
                 CardPlayer.AddCards(energyCards);
-                energyPlayer.playerType = PlayerType.Energy;
-                energyPlayer.DeckName = "power";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
 
             }
@@ -176,14 +169,12 @@ public class GameManager : MonoBehaviour, IRGObservable
         // wanted by now and can set up
         // appropriate values
         if (playerType==PlayerType.Energy)
-        {
-            actualPlayer = energyPlayer;
+        { 
             actualPlayer.playerType = PlayerType.Energy;
             actualPlayer.DeckName = "power";
         }
         else if (playerType==PlayerType.Water)
         {
-            actualPlayer = waterPlayer;
             actualPlayer.playerType = PlayerType.Water;
             actualPlayer.DeckName = "water";
         }
@@ -413,7 +404,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 { 
                     // we only need one cycle for this particular
                     // phase as it's automated.
-                    Card card = actualPlayer.DrawFacility(true, 0);
+                    Card card = actualPlayer.DrawFacility(true, -1, -1, 0);
                     // send message about what facility got drawn                 
                     if (card != null)
                     {
@@ -424,14 +415,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.AddConnections:
-                if (phaseJustChanged)
+                if (!phaseJustChanged)
                 {
+                    actualPlayer.HandleConnections(false);
+                } else { 
                     mAllowConnections = true;
-                } else if (mAllowConnections)
-                {
-                    DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
-                    mAllowConnections = false;
-                }          
+                    actualPlayer.HandleConnections(true);
+                }
+                
                 break;
             case GamePhase.End:
                 // end of game phase
@@ -502,7 +493,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         if (actualPlayer.ActiveFacilities.Count==0 )
         {
             // draw our first 2 pt facility
-            Card card = actualPlayer.DrawFacility(false, 2);
+            Card card = actualPlayer.DrawFacility(false, -1, -1, 2);
             // send message about what facility got drawn
             if (card != null)
             {
@@ -538,14 +529,16 @@ public class GameManager : MonoBehaviour, IRGObservable
                 mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
                 opponentType = RGNetworkPlayerList.instance.playerTypes[0];
             }
+
+            // WORK: this assumes the players don't play the same type of deck
             if (opponentType == PlayerType.Energy)
             {
-                opponentPlayer = energyPlayer;
+                opponentPlayer.playerType = PlayerType.Energy;
                 opponentPlayer.DeckName = "power";
             }
             else
             {
-                opponentPlayer = waterPlayer;
+                opponentPlayer.playerType = PlayerType.Water;
                 opponentPlayer.DeckName = "water";
             }
             opponentPlayer.InitializeCards();
@@ -687,6 +680,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // reset the defense var's for the next turn
                     mIsDefenseAllowed = false;
                     mNumberDefense = 0;
+                    actualPlayer.ClearAllHighlightedFacilities();
                 }
                 break;
             case GamePhase.Vulnerability:
@@ -696,6 +690,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // we need to reset vulnerability costs to be used for next turn               
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     actualPlayer.ResetVulnerabilityCost();
+                    opponentPlayer.ClearAllHighlightedFacilities();
                 }
                 break;
             case GamePhase.Mitigate:
@@ -703,6 +698,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     mAllowMitigationPlayed = false;
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     SendUpdatesToOpponent(mGamePhase, opponentPlayer);
+                    actualPlayer.ClearAllHighlightedFacilities();
                 }
                 break;
             case GamePhase.Attack:
@@ -713,7 +709,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
 
             case GamePhase.AddConnections:
-                // WORK
+                {
+                    mAllowConnections = false;
+                    List<int> playsForMessage = new List<int>(5);
+                    actualPlayer.GetNewConnectionsInMessageFormat(ref playsForMessage);
+                    if (playsForMessage.Count > 0)
+                    {
+                        Message msg = new Message(CardMessageType.AddConnections, playsForMessage);
+                        AddMessage(msg);
+                    } 
+                    actualPlayer.ClearAllHighlightedFacilities();
+                }
                 break;
             case GamePhase.End:
                 break;
@@ -739,6 +745,23 @@ public class GameManager : MonoBehaviour, IRGObservable
         player.GetUpdatesInMessageFormat(ref tmpList, phase);
         msg = new Message(CardMessageType.SendCardUpdates, tmpList);
         AddMessage(msg);
+    }
+
+    
+    public void AddConnectionsFromOpponent(ref List<FacilityConnectionInfo> updates, int originalFacilityUniqueID)
+    {
+        if (updates.Count == 0)
+        {
+            DisplayGameStatus("Opponent did not connect any facilities during the connection phase.");
+        }
+        else if (updates.Count == 1)
+        {
+            DisplayGameStatus("Opponent connected " + updates.Count + " facility in the connection phase");
+        } else
+        {
+            DisplayGameStatus("Opponent connected " + updates.Count + " facilities in the connection phase");
+        }
+        opponentPlayer.AddConnections(ref updates, originalFacilityUniqueID);
     }
 
     public void AddUpdatesFromOpponent(ref List<Updates> updates, GamePhase phase)
@@ -824,8 +847,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     public void AddOpponentFacility(int facilityId, int uniqueId)
     {
-        opponentPlayer.DrawCard(false, facilityId, uniqueId, ref opponentPlayer.FacilityIDs, opponentPlayedZone,
-            false, ref opponentPlayer.ActiveFacilities);
+        opponentPlayer.DrawFacility(false, facilityId, uniqueId, -1);
     }
 
     // Gets the next phase.
@@ -932,6 +954,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.AddStation:
                 canBe = false;
+                break;
+            case GamePhase.AddConnections:
+                canBe = true;
                 break;
             case GamePhase.End:
                 canBe = false;
