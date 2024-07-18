@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class CardReader : MonoBehaviour
 {
+    // TODO: Currently used in two objects, one for each of Jessica's decks
+
     // deck name to use for the deck
     public string DeckName;
 
@@ -94,11 +96,13 @@ public class CardReader : MonoBehaviour
                 string[] individualCSVObjects = allCSVObjects[i].Split(","); 
                 if (individualCSVObjects.Length > 1) // excel adds an empty line at the end
                 {
+                    // TODO: update list and numbering
+
                     // columns in the spreadsheet: changes depending on game
-                    //  0:  How many cards of this type in the deck
-                    //  1:  Team of the card // TODO: Split ; in Team
+                    //  0:  Team of the card // TODO: Split ; in Team
+                    //  1:  How many cards of this type in the deck
                     //  2:  Method called
-                    //  3: Target Type
+                    //  3:  Target Type
                     //  4:  Played on (some cards are only played on a specific infrastructure type)
                     //  5:  Amount of targets
                     //  6:  Title
@@ -129,11 +133,18 @@ public class CardReader : MonoBehaviour
                     // 31:  Dice roll minimum
                     // 32:  Text description
 
-                    // 0: if there's one or more cards to be inserted into the deck
-                    int numberOfCards = int.Parse(individualCSVObjects[0].Trim());
+                    // 0: Read only cards of the correct team
+                    if (individualCSVObjects[0].Trim().ToLower() != DeckName.ToLower())
+                    {
+                        continue;
+                    }
+
+                    Debug.Log(DeckName);
+
+                    // 1:if there's one or more cards to be inserted into the deck
+                    int numberOfCards = int.Parse(individualCSVObjects[1].Trim());
                     if (numberOfCards > 0)
                     {
-
                         // get appropriate game objects to set up
                         GameObject tempCardObj = Instantiate(cardPrefab);
 
@@ -144,13 +155,14 @@ public class CardReader : MonoBehaviour
                         tempCard.data.cardID = sCardID;
                         sCardID++;
 
-                        // 1: which type of card is this?
+                        // 2: which type of card is this?
                         // NOTE: here is where we add appropriate card actions
                         // WORK: just add appropriate action to the actions list
-                        string type = individualCSVObjects[1].Trim();
+                        string type = individualCSVObjects[2].Trim();
                         switch (type)
                         {
-                            case "Defense":
+                            // TODO: Should be used to assign method called on played
+                            /*case "Defense":
                                 tempCard.data.cardType = CardType.Defense;
                                 tempCardFront.cardType = CardType.Defense;
                                 break;
@@ -173,13 +185,33 @@ public class CardReader : MonoBehaviour
                             case "Special":
                                 tempCard.data.cardType = CardType.Special;
                                 tempCardFront.cardType = CardType.Special;
-                                break;
+                                break;*/
                             default:
+                                tempCard.data.cardType = CardType.Defense;
+                                tempCardFront.cardType = CardType.Defense;
                                 break;
                         }
 
-                        // 2: is this card only played on a specific player type?
-                        string onlyPlayedOn = individualCSVObjects[2].Trim();
+                        // 3: Target type
+                        string target = individualCSVObjects[3].Trim();
+                        switch (target)
+                        {
+                            /*case "any":
+                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                break;
+                            case "power":
+                                tempCard.data.onlyPlayedOn = PlayerType.Energy;
+                                break;
+                            case "water":
+                                tempCard.data.onlyPlayedOn = PlayerType.Water;
+                                break;*/
+                            default:
+                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                break;
+                        }
+
+                        // 4: is this card only played on a specific player type?
+                        string onlyPlayedOn = individualCSVObjects[4].Trim();
                         switch (onlyPlayedOn)
                         {
                             case "any":
@@ -192,21 +224,26 @@ public class CardReader : MonoBehaviour
                                 tempCard.data.onlyPlayedOn = PlayerType.Water;
                                 break;
                             default:
+                                tempCard.data.onlyPlayedOn = PlayerType.Any;
                                 break;
                         }
 
-                        // 3: set up the card title
+                        // 5: Amount of possible targets
+
+                        // 6: set up the card title
                         // WORK: do we really need to set both of these?
-                        tempCardObj.name = individualCSVObjects[3];
+                        tempCardObj.name = individualCSVObjects[6];
                         tempCardFront.title = tempCardObj.name;
 
-                        // 4: set up the title color, which also 
+                        // 7: set up the title color, which also 
                         // determines the card type in this game
                         // NOTE: the format required by the physical card game program
                         // is a bit different than Unity's format, which requires the 
                         // # sign rather than just straight hex code.
                         // so we change it appropriately
-                        string[] htmlColorInfo = individualCSVObjects[4].Trim().Split("x");
+
+                        // TODO: check this effect
+                        string[] htmlColorInfo = individualCSVObjects[7].Trim().Split("x");
                         string htmlColor="";
                         if (htmlColorInfo.Length == 2)
                         {
@@ -223,15 +260,15 @@ public class CardReader : MonoBehaviour
                         }
                         
 
-                        // 5: card image
+                        // 8: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        string imageFilename = individualCSVObjects[5].Trim();
+                        string imageFilename = individualCSVObjects[8].Trim();
                         //Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
 
                         if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
                         {
-                            int col = int.Parse(individualCSVObjects[11].Trim());
-                            int row = int.Parse(individualCSVObjects[12].Trim());
+                            int col = int.Parse(individualCSVObjects[9].Trim());
+                            int row = int.Parse(individualCSVObjects[10].Trim());
                             //Debug.Log("col is " + col + " row is " + row);
 
                             Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
@@ -241,25 +278,38 @@ public class CardReader : MonoBehaviour
                         }
                         tempCardFront.img = tex3;
 
-                        // 6: card background
+                        // 11: card background 12/13
                         // we're currently ignoring this as it's set inside
                         // the unity editor
+                        // TODO: If needed set programmatically
 
-                        // 13: mitigation list
-                        string[] mitigations = individualCSVObjects[13].Trim().Split(";");
-                        foreach(string mitigation in mitigations)
-                        {
-                            if(!mitigation.Equals(""))
-                            {
-                                tempCard.MitigatesWhatCards.Add(mitigation);
-                            }       
-                        }
+                        // 14:  Meeple type changed
+                        // 15:  Number of Meeples changed
+                        // 16:  Meeple cost
+                        // 17:  Blue cost
+                        // 18:  Black cost
+                        // 19:  Purple cost
+                        // 20:  Network damage
+                        // 21:  Physical damage
+                        // 22:  Financial damage
+                        // 23:  Cards drawn
+                        // 24:  Cards discarded
+                        // 25:  Cards shuffled
+                        // 26:  Effect placed
+                        // 27:  Effect removed
+                        // 28:  Duration
+                        // 29:  Amount playable on a turn
+                        // 30:  Effect during doom clock
+                        // 31:  Dice roll minimum
 
-                        // 14: text description
+                        // 32: text description
+
+
+
                         // pick up any extra things with commas in them that got incorrectly separated
-                        tempCardFront.description = individualCSVObjects[14];
+                        tempCardFront.description = individualCSVObjects[29]; // TODO: OOI err
 
-                        if (individualCSVObjects.Length > 14)
+                        if (individualCSVObjects.Length > 29)
                         {
                             // means the text description itself contains commas, which are our
                             // separator. So now put these pieces together!
@@ -274,6 +324,7 @@ public class CardReader : MonoBehaviour
                             tempCardFront.description = fullDescription.ToString();
                         }
 
+                        /*
                         // 8:  does it have a worth circle?
                         if (individualCSVObjects[7].Equals(string.Empty) ||
                             individualCSVObjects[7].Equals(""))
@@ -301,16 +352,25 @@ public class CardReader : MonoBehaviour
                             tempCardFront.costCircle = true;
                             // 9:  what's in the worth circle?
                             tempCard.data.cost = int.Parse(individualCSVObjects[9].Trim());
-                        }
+                        }*/
 
                         // 10: the category of the card if there is one
                         // WORK - not in simpler version of initial game
+
+                        // 14: mitigation list TODO
+                        /*string[] mitigations = individualCSVObjects[14].Trim().Split(";");
+                        foreach(string mitigation in mitigations)
+                        {
+                            if(!mitigation.Equals(""))
+                            {
+                                tempCard.MitigatesWhatCards.Add(mitigation);// TODO: Remove mitigation
+                            }       
+                        }*/
 
                         // now add one copy of this card for every instance in the card game
                         tempCard.data.numberInDeck = numberOfCards;
 
                         // now add to the deck of single types of cards
-
                         cards.Add(tempCard);
                     }
                 }

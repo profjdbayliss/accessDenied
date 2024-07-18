@@ -125,6 +125,8 @@ public class GameManager : MonoBehaviour, IRGObservable
         {
             startScreen.SetActive(true);
 
+            //TODO: Read based on number of players/selection
+
             // read water deck
             CardReader reader = waterDeckReader.GetComponent<CardReader>();
             if (reader != null)
@@ -267,15 +269,15 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged && !skip)
                 {
-                    runner.StartDialogue("DrawAndDiscard");
-                    background.SetActive(true);
+                    //runner.StartDialogue("DrawAndDiscard"); // TODO: NULL REF
+                    //background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
                 {                   
                     mIsDiscardAllowed = true;
                     // draw cards if necessary
-                    actualPlayer.DrawCards();
+                    actualPlayer.DrawCards(); // TODO: Source of display error?
                     // set the discard area to work if necessary
                     actualPlayer.discardDropZone.SetActive(true);
                     mNumberDiscarded = 0;
@@ -634,6 +636,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             // set this player's type
             switch (playerDeckChoice.value)
             {
+                // TODO: this is tied to the drop down menu
                 case 0:
                     playerType = PlayerType.Energy;
                     break;
