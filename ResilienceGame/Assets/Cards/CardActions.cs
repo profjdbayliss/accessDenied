@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+// TODO: Rewrite card actions for Sector Down
+
 public class ActionAddDefenseWorthToStation : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)

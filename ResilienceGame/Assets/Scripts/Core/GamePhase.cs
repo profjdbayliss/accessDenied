@@ -10,4 +10,13 @@ public enum GamePhase
     AddStation,
     AddConnections,
     End
+    /*
+    Start,
+    Draw,
+    Overtime,
+    Action,
+    Discard,
+    Donate,
+    End
+    */
 };

@@ -116,6 +116,8 @@ public class Card : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    // TODO: Remove
+
     public bool CanMitigate(string attackName)
     {
         bool canMitigate = false;
