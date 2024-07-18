@@ -418,6 +418,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                 if (!phaseJustChanged)
                 {
                     actualPlayer.HandleConnections(false);
+                    List<int> playsForMessage = new List<int>(5);
+                    actualPlayer.GetNewConnectionsInMessageFormat(ref playsForMessage);
+
+                    if (playsForMessage.Count > 0)
+                    {
+                        Message msg = new Message(CardMessageType.AddConnections, playsForMessage);
+                        AddMessage(msg);
+                    }
                 } else { 
                     mAllowConnections = true;
                     actualPlayer.HandleConnections(true);

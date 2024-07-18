@@ -99,6 +99,14 @@ public class Card : MonoBehaviour, IPointerClickHandler
         return mDroppedPosition;
     }
 
+    // Play all of a cards actions
+    public void Play(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card cardForAttack)
+    {
+        foreach (ICardAction action in ActionList)
+        {
+            action.Played(player, opponent, cardActedUpon, cardForAttack);
+        }
+    }
 
     // Play all of a cards actions
     public void Play(CardPlayer player, CardPlayer opponent, Card cardActedUpon)

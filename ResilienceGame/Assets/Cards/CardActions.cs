@@ -65,7 +65,7 @@ public class ActionMitigateCard : ICardAction
                     Debug.Log(attackName + " can be mitigated by " + card.front.title);
                     // our goal is to find whichever card is the most negative
                     // and mitigate that one!
-                    if (tmpCard.data.worth < cardValue)
+                    if (tmpCard.data.worth <= cardValue)
                     {
                         opponentCardObject = tmpCardObject;
                         opponentCard = tmpCard;
@@ -81,12 +81,7 @@ public class ActionMitigateCard : ICardAction
             // get the right card from the station to clear it from the station
             // and send it to opponent's discard pile
             opponentCard.state = CardState.CardNeedsToBeDiscarded;
-            //GameManager.instance.DiscardOpponentActiveCard(cardActedUpon.UniqueID, 
-            //    new CardIDInfo {
-            //        CardID = opponentCard.data.cardID,
-            //        UniqueID = opponentCard.UniqueID,
-            //        }, true);
-
+           
             // put our card in the discard pile as well
             card.state = CardState.CardNeedsToBeDiscarded;
 
@@ -131,5 +126,36 @@ public class ActionImpactFacilityWorth : ICardAction
                 tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
             }
         }
+    }
+}
+
+// a lateral movement card adds this action
+// to the attack card that was played before it
+public class ActionLateralMovement: ICardAction
+{
+    public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
+    {
+        Debug.Log("lateral movement card played on station in zone: " + card.WhichFacilityZone);
+        card.state = CardState.CardNeedsToBeDiscarded;
+
+        // for each connection to this facility
+        // play this attack card
+        foreach (FacilityConnectionInfo connections in cardActedUpon.ConnectionList)
+        {
+            GameObject connectedFacility = player.ActiveFacilities[connections.UniqueFacilityID];
+            if (connectedFacility != null)
+            {
+                
+                Card connectedCard = connectedFacility.GetComponent<Card>();
+                Debug.Log("lateral movement played on zone " + connectedCard.WhichFacilityZone);
+                card.Play(player, opponent, connectedCard);
+            }
+        }
+         
+    }
+
+    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
+    {
+       // can lateral movement cards be undone?????
     }
 }

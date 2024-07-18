@@ -609,6 +609,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         int element = 0;
                         if (msg.count == 2)
                         {
+                            Debug.Log("client received facility message with 2 args");
                             int uniqueId = GetIntFromByteArray(element, msg.payload);
                             element += 4;             
                             int facilityId = GetIntFromByteArray(element, msg.payload);
