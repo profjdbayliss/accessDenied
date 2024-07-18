@@ -82,7 +82,10 @@ public class CardPlayer : MonoBehaviour
     int mFinalScore = 0;
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
     int mMaxFacilities = 0;
-    GameObject mActiveConnectFacility = null;
+    int mDrawnFacilityZone = -1;
+    List<int> mNewConnectionUniqueIDs = new List<int>();
+    bool mNewFacilityConnected = false;
+    bool mAllFacilitiesDrawn = false;
 
     public void Start()
     {
@@ -237,6 +240,12 @@ public class CardPlayer : MonoBehaviour
             {
                 theSlippy.enabled = false;
             }
+
+            // whenever we draw a new facility it's not yet connected
+            mNewFacilityConnected = false;
+        } else
+        {
+            mAllFacilitiesDrawn = true;
         }
 
        
@@ -679,9 +688,14 @@ public class CardPlayer : MonoBehaviour
         }
     }
 
+    // if we've recently drawn an unconnected facility then the goal
+    // is to highlight that facility automatically so that a second
+    // facility is chosen to connect it to. This makes an initial
+    // connection easy. All other connections must have both facilities
+    // to connect chosen
     public void HandleConnections(bool highlightFirst)
     {
-        if (highlightFirst && (ActiveFacilities.Count < mMaxFacilities) && (ActiveFacilities.Count > 1))
+        if (highlightFirst && !mAllFacilitiesDrawn && (ActiveFacilities.Count > 1))
         {
             int currentFacilityToHighlight = mFacilityNumber - 1;
             // find which facility this is since the unique numbers aren't the same
@@ -692,52 +706,106 @@ public class CardPlayer : MonoBehaviour
                 if (card.WhichFacilityZone == currentFacilityToHighlight)
                 {
                     card.OutlineImage.SetActive(true);
-                    mActiveConnectFacility = facility;
+                    mDrawnFacilityZone = card.WhichFacilityZone;
                     Debug.Log("first facillity for connection set!");
                     break;
                 }
             }
-        } else if (ActiveFacilities.Count < mMaxFacilities && mActiveConnectFacility!=null && (ActiveFacilities.Count > 1))
+        } else
         {
-            // now we wait until the player highlights at least one facility for connections
-            foreach (GameObject facility in ActiveFacilities.Values)
+            // if two facilities are selected then they become connected
+            int howManySelected = 0;
+            Card firstSelected = null;
+            Card secondSelected = null;
+            foreach(GameObject activeFacilityObject in ActiveFacilities.Values)
             {
-                // check each facility to see if we've selected it for a connection
-                // and it's not the initial connection!
-                Card card = facility.GetComponent<Card>();
-                if (card.OutlineImage.activeSelf && !facility.Equals(mActiveConnectFacility))
+                Card card = activeFacilityObject.GetComponent<Card>();
+                if (card.OutlineActive())
                 {
-                    // this is a facility to connect to
-                    card.OutlineImage.SetActive(false);
-                    int facilityNumber = card.WhichFacilityZone;
-                    Card firstFacilityCard = mActiveConnectFacility.GetComponent<Card>();
-                    GameObject facilityHolder = firstFacilityCard.CanvasHolder;
-                    // add this connection to the initial facility's list
-                    firstFacilityCard.ConnectionList.Add(new FacilityConnectionInfo
+                    if (howManySelected == 0)
                     {
-                        WhichFacilityZone = facilityNumber,
-                        UniqueFacilityID = card.UniqueID
-                    });
-                    // add the connection to the second facility's list as well
-                    card.ConnectionList.Add(new FacilityConnectionInfo {
-                        WhichFacilityZone = firstFacilityCard.WhichFacilityZone,
-                        UniqueFacilityID=firstFacilityCard.UniqueID
+                        firstSelected = card;
+                    } else if (howManySelected == 1)
+                    {
+                        secondSelected = card;
+                    }
+                    howManySelected++;
+                }
+
+                if (howManySelected ==2)
+                {
+                    bool connectionAlreadyExists = false;
+
+                    // form a connection between these two facilities
+                    // this is a facility to connect to
+                    int firstNumber = firstSelected.WhichFacilityZone;
+                    int secondNumber = secondSelected.WhichFacilityZone;
+                    GameObject firstFacilityHolder = firstSelected.CanvasHolder;
+                    // add this connection to the initial facility's list
+                    // only if it doesn't already have it
+                    if (firstSelected.ConnectionList.FindIndex(
+                        x => x.WhichFacilityZone == secondNumber) == -1)
+                    {
+                        firstSelected.ConnectionList.Add(new FacilityConnectionInfo
+                        {
+                            WhichFacilityZone = secondNumber,
+                            UniqueFacilityID = secondSelected.UniqueID
                         });
+                    } else
+                    {
+                        connectionAlreadyExists = true;
+                    }
+
+                    // add the connection to the second facility's list as well
+                    // only if it doesn't already have it
+                    if (secondSelected.ConnectionList.FindIndex(
+                       x => x.WhichFacilityZone == firstNumber) == -1)
+                    {
+                        secondSelected.ConnectionList.Add(new FacilityConnectionInfo
+                        {
+                            WhichFacilityZone = firstNumber,
+                            UniqueFacilityID = firstSelected.UniqueID
+                        });
+                    } else
+                    {
+                        connectionAlreadyExists = true;
+                    }
+
+                    // this allows us to keep track of info to send to the opponent
+                    if (!connectionAlreadyExists)
+                    {
+                        mNewConnectionUniqueIDs.Add(firstSelected.UniqueID);
+                    }
 
                     // now turn on the connection image in the interface
-                    Connections connections = facilityHolder.GetComponent<Connections>();
+                    Connections connections = firstFacilityHolder.GetComponent<Connections>();
                     if (connections != null)
                     {
-                        connections.connections[facilityNumber].SetActive(true);
-                        Debug.Log("setting a connection from " + firstFacilityCard.WhichFacilityZone + " to " + facilityNumber);
-                    } else
+                        connections.connections[secondNumber].SetActive(true);
+                        Debug.Log("setting a connection from " + firstSelected.WhichFacilityZone + " to " + secondNumber);
+                    }
+                    else
                     {
                         Debug.Log("something wrong as connections are null");
                     }
-                    break;
+
+                    // now unhighlight both facilities that have been connected
+                    firstSelected.OutlineImage.SetActive(false);
+                    secondSelected.OutlineImage.SetActive(false);
+
+                    if (!mAllFacilitiesDrawn && (mDrawnFacilityZone==firstNumber || mDrawnFacilityZone==secondNumber))
+                    {
+                        mNewFacilityConnected = true;
+                    }
+                    
                 }
             }
         }
+    }
+
+    public bool GetNewFacilityConnected()
+    {
+        return mNewFacilityConnected;
     }
 
     public virtual int HandlePlayCard(GamePhase phase, CardPlayer opponentPlayer)
@@ -1393,20 +1461,30 @@ public class CardPlayer : MonoBehaviour
                 foreach(FacilityConnectionInfo update in updates)
                 {
                     // add this connection to the initial facility's list
-                    facilityCard.ConnectionList.Add(update);
+                    if (facilityCard.ConnectionList.FindIndex(
+                       x => x.WhichFacilityZone == update.WhichFacilityZone) == -1)
+                    {
+                        facilityCard.ConnectionList.Add(update);
+                    }
+                       
 
                     // add it to the other facility list as well
                     GameObject otherFacility = ActiveFacilities[update.UniqueFacilityID];
                     if (otherFacility != null)
                     {
                         Card otherCard = otherFacility.GetComponent<Card>();
-               
-                        // add the connection to the second facility's list as well
-                        otherCard.ConnectionList.Add(new FacilityConnectionInfo
+
+                        if (otherCard.ConnectionList.FindIndex(
+                      x => x.WhichFacilityZone == facilityCard.WhichFacilityZone) == -1)
                         {
-                            WhichFacilityZone = facilityCard.WhichFacilityZone,
-                            UniqueFacilityID = facilityCard.UniqueID
-                        });
+                            // add the connection to the second facility's list as well
+                            otherCard.ConnectionList.Add(new FacilityConnectionInfo
+                            {
+                                WhichFacilityZone = facilityCard.WhichFacilityZone,
+                                UniqueFacilityID = facilityCard.UniqueID
+                            });
+                        }
+                           
                     } else
                     {
                         Debug.Log("connected facility " + update.UniqueFacilityID + " is null. There's an error in the program.");
@@ -1471,25 +1549,37 @@ public class CardPlayer : MonoBehaviour
     // c. list of zone and unique id for all new connections
     public void GetNewConnectionsInMessageFormat(ref List<int> playsForMessage)
     {
-        if (mActiveConnectFacility != null)
-        {
-            Card card = mActiveConnectFacility.GetComponent<Card>();
-            if (card.ConnectionList.Count > 0)
-            {
-                playsForMessage.Add(card.ConnectionList.Count);
-                playsForMessage.Add(card.UniqueID);
-                foreach (FacilityConnectionInfo info in card.ConnectionList)
-                {
-                    playsForMessage.Add(info.UniqueFacilityID);
-                    playsForMessage.Add(info.WhichFacilityZone);
-                }
-            }
+        int numberOfMessages = mNewConnectionUniqueIDs.Count;
 
-            // this resets the last facility connected
-            // so we don't keep sending data after the 
-            // last facility card is played
-            mActiveConnectFacility = null;
-        }     
+        if (numberOfMessages > 0)
+        {
+            int key = mNewConnectionUniqueIDs[mNewConnectionUniqueIDs.Count - 1];
+            GameObject facilityObject = ActiveFacilities[key];
+
+            if (facilityObject != null)
+            {
+                Card card = facilityObject.GetComponent<Card>();
+                if (card.ConnectionList.Count > 0)
+                {
+                    playsForMessage.Add(card.ConnectionList.Count);
+                    playsForMessage.Add(card.UniqueID);
+                    foreach (FacilityConnectionInfo info in card.ConnectionList)
+                    {
+                        playsForMessage.Add(info.UniqueFacilityID);
+                        playsForMessage.Add(info.WhichFacilityZone);
+                    }
+                }
+
+                // remove the facility id since we've created the message for it
+                mNewConnectionUniqueIDs.RemoveAt(mNewConnectionUniqueIDs.Count - 1);
+            }
+        
+        }
+
+        if (numberOfMessages > 1)
+        {
+            Debug.Log("ERROR: shouldn't be able to get more than one connection per frame");
+        }
     }
 
 

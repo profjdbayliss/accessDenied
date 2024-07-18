@@ -651,6 +651,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     // Ends the phase.
     public void EndPhase()
     {
+        bool allowNextPhase = true;
+
         switch (mGamePhase)
         {
             case GamePhase.DrawAndDiscard:
@@ -710,15 +712,22 @@ public class GameManager : MonoBehaviour, IRGObservable
 
             case GamePhase.AddConnections:
                 {
-                    mAllowConnections = false;
-                    List<int> playsForMessage = new List<int>(5);
-                    actualPlayer.GetNewConnectionsInMessageFormat(ref playsForMessage);
-                    if (playsForMessage.Count > 0)
+                    if (actualPlayer.GetNewFacilityConnected())
                     {
-                        Message msg = new Message(CardMessageType.AddConnections, playsForMessage);
-                        AddMessage(msg);
-                    } 
-                    actualPlayer.ClearAllHighlightedFacilities();
+                        mAllowConnections = false;
+                        List<int> playsForMessage = new List<int>(5);
+                        actualPlayer.GetNewConnectionsInMessageFormat(ref playsForMessage);
+                       
+                        if (playsForMessage.Count > 0)
+                        {
+                            Message msg = new Message(CardMessageType.AddConnections, playsForMessage);
+                            AddMessage(msg);
+                        }
+                        actualPlayer.ClearAllHighlightedFacilities();
+                    } else
+                    {
+                        allowNextPhase = false;
+                    }              
                 }
                 break;
             case GamePhase.End:
@@ -727,7 +736,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
         }
 
-        if (myTurn)
+        if (myTurn && allowNextPhase)
         {
             Debug.Log("ending the game phase in gamemanager!");
             //HidePlayUI();
