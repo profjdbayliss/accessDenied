@@ -9,15 +9,11 @@ using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
 // Enum to track player type
-public enum PlayerType
+public enum PlayerTeam
 {
-    /*
     Red,
     Blue,
-    White
-     */
-    Water,
-    Energy,
+    White,
     Any
 };
 
@@ -45,7 +41,7 @@ public enum DiscardFromWhere
 public class CardPlayer : MonoBehaviour
 {
     // Establish necessary fields
-    public PlayerType playerType = PlayerType.Energy;
+    public PlayerTeam playerTeam = PlayerTeam.Any;
     public GameManager manager;
     public static Dictionary<int, Card> cards = new Dictionary<int,Card>();
     public List<int> FacilityIDs = new List<int>(10);
@@ -352,7 +348,7 @@ public class CardPlayer : MonoBehaviour
 
         switch (tempCard.data.cardType)
         {
-            // TODO: Change card type
+            // TODO: Change card types
             case CardType.Defense:
                 tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
                 break;

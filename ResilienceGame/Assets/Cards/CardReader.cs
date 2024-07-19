@@ -162,6 +162,7 @@ public class CardReader : MonoBehaviour
                         switch (type)
                         {
                             // TODO: Should be used to assign method called on played
+                            // TODO: Should be converted to match card player line 350
                             /*case "Defense":
                                 tempCard.data.cardType = CardType.Defense;
                                 tempCardFront.cardType = CardType.Defense;
@@ -187,8 +188,8 @@ public class CardReader : MonoBehaviour
                                 tempCardFront.cardType = CardType.Special;
                                 break;*/
                             default:
-                                tempCard.data.cardType = CardType.Defense;
-                                tempCardFront.cardType = CardType.Defense;
+                                tempCard.data.cardType = CardType.None;
+                                tempCardFront.cardType = CardType.None;
                                 break;
                         }
 
@@ -206,7 +207,7 @@ public class CardReader : MonoBehaviour
                                 tempCard.data.onlyPlayedOn = PlayerType.Water;
                                 break;*/
                             default:
-                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
                                 break;
                         }
 
@@ -214,17 +215,18 @@ public class CardReader : MonoBehaviour
                         string onlyPlayedOn = individualCSVObjects[4].Trim();
                         switch (onlyPlayedOn)
                         {
+                            // TODO: This should be sector names
                             case "any":
-                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
                                 break;
-                            case "power":
-                                tempCard.data.onlyPlayedOn = PlayerType.Energy;
+                            case "energy":
+                                //tempCard.data.onlyPlayedOn = PlayerTeam.Red;
                                 break;
                             case "water":
-                                tempCard.data.onlyPlayedOn = PlayerType.Water;
+                                //tempCard.data.onlyPlayedOn = PlayerTeam.Water;
                                 break;
                             default:
-                                tempCard.data.onlyPlayedOn = PlayerType.Any;
+                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
                                 break;
                         }
 

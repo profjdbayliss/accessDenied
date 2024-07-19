@@ -36,7 +36,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
     private List<bool> playerNetworkReadyFlags = new List<bool>();
     private List<bool> playerTurnTakenFlags = new List<bool>();
-    public List<PlayerType> playerTypes = new List<PlayerType>();
+    public List<PlayerTeam> playerTypes = new List<PlayerTeam>();
     public List<string> playerNames = new List<string>();
 
     private void Awake()
@@ -59,7 +59,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             playerIDs.Add(id);
             playerNetworkReadyFlags.Add(true);
             playerTurnTakenFlags.Add(false);
-            playerTypes.Add(PlayerType.Any);
+            playerTypes.Add(PlayerTeam.Any);
             playerNames.Add(name);
             
         } 
@@ -69,11 +69,11 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     {
         for (int i = 0; i < playerIDs.Count; i++)
         {
-            playerTypes[i] = PlayerType.Any;
+            playerTypes[i] = PlayerTeam.Any;
         }
     }
 
-    public void SetPlayerType(PlayerType type)
+    public void SetPlayerType(PlayerTeam type)
     {
         if (isServer)
         {
@@ -497,7 +497,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 playerIDs.Add(i);
                                 // then get player type
 
-                                playerTypes.Add((PlayerType)actualInt);
+                                playerTypes.Add((PlayerTeam)actualInt);
                                 // get length of player name
                                 element += 4;
                                 actualInt = GetIntFromByteArray(element, msg.payload);
@@ -513,7 +513,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             } else
                             {
                                 // when a game is reset we only need the player type again
-                                playerTypes[existingPlayer] = (PlayerType)actualInt;
+                                playerTypes[existingPlayer] = (PlayerTeam)actualInt;
                                 Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
                             }
                             
@@ -601,7 +601,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         bool readyToStart = true;
         for (int i = 0; i < playerIDs.Count; i++)
         {
-            if (playerTypes[i] == PlayerType.Any)
+            if (playerTypes[i] == PlayerTeam.Any)
             {
                 readyToStart = false;
                 break;
@@ -627,7 +627,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         if (count == 1)
                         {
                             // turn the first element into an int
-                            PlayerType playerType = (PlayerType)BitConverter.ToInt32(msg.payload);
+                            PlayerTeam playerType = (PlayerTeam)BitConverter.ToInt32(msg.payload);
                             int playerIndex = (int)msg.indexId;
                             playerTypes[playerIndex] = playerType;
                             playerTurnTakenFlags[playerIndex] = true;

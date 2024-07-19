@@ -28,8 +28,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     
 
     // set up the proper player cards and type
-    PlayerType playerType = PlayerType.Energy;
-    PlayerType opponentType = PlayerType.Water;
+    PlayerTeam playerType = PlayerTeam.Any;
+    PlayerTeam opponentType = PlayerTeam.Any;
     
     public GameObject playerDeckList;
     TMPro.TMP_Dropdown playerDeckChoice;
@@ -134,8 +134,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // TODO: Set with csv
                 waterCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
                 CardPlayer.AddCards(waterCards);
-                waterPlayer.playerType = PlayerType.Water;
-                waterPlayer.DeckName = "water";
+                waterPlayer.playerTeam = PlayerTeam.Blue;
+                waterPlayer.DeckName = "blue";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
             }
             else
@@ -151,8 +151,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 energyCards = reader.CSVRead(mCreateEnergyAtlas);
                 CardPlayer.AddCards(energyCards);
-                energyPlayer.playerType = PlayerType.Energy;
-                energyPlayer.DeckName = "power";
+                energyPlayer.playerTeam = PlayerTeam.Red;
+                energyPlayer.DeckName = "red";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
 
             }
@@ -182,17 +182,17 @@ public class GameManager : MonoBehaviour, IRGObservable
         // appropriate values
 
         // TODO: Change PlayerType
-        if (playerType==PlayerType.Energy)
+        if (playerType==PlayerTeam.Red)
         {
             actualPlayer = energyPlayer;
-            actualPlayer.playerType = PlayerType.Energy;
-            actualPlayer.DeckName = "power";
+            actualPlayer.playerTeam = PlayerTeam.Red;
+            actualPlayer.DeckName = "red";
         }
-        else if (playerType==PlayerType.Water)
+        else if (playerType==PlayerTeam.Blue)
         {
             actualPlayer = waterPlayer;
-            actualPlayer.playerType = PlayerType.Water;
-            actualPlayer.DeckName = "water";
+            actualPlayer.playerTeam = PlayerTeam.Blue;
+            actualPlayer.DeckName = "blue";
         }
 
         // Initialize the deck info and set various
@@ -424,13 +424,13 @@ public class GameManager : MonoBehaviour, IRGObservable
                 { 
                     // we only need one cycle for this particular
                     // phase as it's automated.
-                    Card card = actualPlayer.DrawFacility(true, 0);
+                    /*Card card = actualPlayer.DrawFacility(true, 0);
                     // send message about what facility got drawn                 
                     if (card != null)
                     {
                         AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
                         DisplayGameStatus("Both players drew a station card. Please push End Phase to continue.");
-                    }
+                    }*/
 
                 }
                 break;
@@ -510,7 +510,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
 
         // if it's a network rejoin we already have our facility
-        if (actualPlayer.ActiveFacilities.Count==0 )
+        /*if (actualPlayer.ActiveFacilities.Count==0 )
         {
             // draw our first 2 pt facility
             Card card = actualPlayer.DrawFacility(false, 2);
@@ -523,7 +523,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 Debug.Log("problem in drawing first facility as it's null!");
             }
-        }
+        }*/
        
      
         // make sure to show all our cards
@@ -549,15 +549,15 @@ public class GameManager : MonoBehaviour, IRGObservable
                 mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
                 opponentType = RGNetworkPlayerList.instance.playerTypes[0];
             }
-            if (opponentType == PlayerType.Energy)
+            if (opponentType == PlayerTeam.Red)
             {
                 opponentPlayer = energyPlayer;
-                opponentPlayer.DeckName = "power";
+                opponentPlayer.DeckName = "red";
             }
             else
             {
                 opponentPlayer = waterPlayer;
-                opponentPlayer.DeckName = "water";
+                opponentPlayer.DeckName = "blue";
             }
             opponentPlayer.InitializeCards();
         }
@@ -638,10 +638,10 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 // TODO: this is tied to the drop down menu
                 case 0:
-                    playerType = PlayerType.Energy;
+                    playerType = PlayerTeam.Red;
                     break;
                 case 1:
-                    playerType = PlayerType.Water;
+                    playerType = PlayerTeam.Blue;
                     break;
                 default:
                     break;
@@ -1066,6 +1066,6 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         // set the network player ready to play again
         RGNetworkPlayerList.instance.ResetAllPlayersToNotReady();
-        RGNetworkPlayerList.instance.SetPlayerType(actualPlayer.playerType);
+        RGNetworkPlayerList.instance.SetPlayerType(actualPlayer.playerTeam);
     }
 }

@@ -12,6 +12,8 @@ public enum CardType
     Instant,
     Special,
     None
+
+    // TODO: Add Card Types for SD
 }
 
 public struct CardData
@@ -21,7 +23,7 @@ public struct CardData
     public float percentSuccess;
     public int cardID;
     public int teamID;
-    public int cost;
+    public int cost; // TODO: 3 for meeples
     public int worth;
-    public PlayerType onlyPlayedOn;
+    public PlayerTeam onlyPlayedOn;
 }

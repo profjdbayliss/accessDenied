@@ -635,7 +635,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Energy
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3879,8 +3879,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2403c2ce18016fb4fa5fea33776ebb3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DeckName: water
-  cardFileName: waterCards.csv
+  DeckName: blue
+  cardFileName: SectorDownCards.csv
   outputAtlasName: waterAtlas.png
   cardPrefab: {fileID: 4414296152829722398}
 --- !u!1 &570149378
@@ -4641,7 +4641,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f279711f1e71d3940932e3969666c8c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerType: 1
+  playerTeam: 3
   manager: {fileID: 2133546051}
   FacilityIDs: 
   DeckIDs: 
@@ -6426,8 +6426,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2403c2ce18016fb4fa5fea33776ebb3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DeckName: power
-  cardFileName: powerCards.csv
+  DeckName: red
+  cardFileName: SectorDownCards.csv
   outputAtlasName: energyAtlas.png
   cardPrefab: {fileID: 4414296152829722398}
 --- !u!1 &842196070
@@ -7883,7 +7883,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f279711f1e71d3940932e3969666c8c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerType: 1
+  playerTeam: 3
   manager: {fileID: 2133546051}
   FacilityIDs: 
   DeckIDs: 
@@ -10213,7 +10213,7 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: Energy
+    - m_Text: 
       m_Image: {fileID: 0}
     - m_Text: Water and Waste Water
       m_Image: {fileID: 0}
