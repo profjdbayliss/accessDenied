@@ -714,7 +714,9 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Attack:
                 {
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
+                    Debug.Log("actual player updates were added to message queue for attack");
                     SendUpdatesToOpponent(mGamePhase, opponentPlayer);
+                    Debug.Log("opponent updates were added to message queue for attack");
                 }
                 break;
 
@@ -759,9 +761,12 @@ public class GameManager : MonoBehaviour, IRGObservable
         // send a message with defense cards played and where they were played
         Message msg;
         List<int> tmpList = new List<int>(4);
+        Debug.Log("inside of sendupdatestoopponent");
         player.GetUpdatesInMessageFormat(ref tmpList, phase);
+        Debug.Log("get updates in message format complete");
         msg = new Message(CardMessageType.SendCardUpdates, tmpList);
         AddMessage(msg);
+        Debug.Log("message added to queue to be sent. Message size is " + tmpList.Count);
     }
 
     
@@ -783,6 +788,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     public void AddUpdatesFromOpponent(ref List<Updates> updates, GamePhase phase)
     {
+        Debug.Log("inside of addupdatesfromopponent method");
         if (updates.Count == 0)
         {
             DisplayGameStatus("Opponent did not play any cards during their turn in phase " + phase);
@@ -792,73 +798,78 @@ public class GameManager : MonoBehaviour, IRGObservable
             DisplayGameStatus("Opponent played " + updates.Count + " cards during their turn in phase " + phase);
         }
 
-        switch (phase)
+        if (updates.Count > 0)
         {
-            case GamePhase.Defense:
-                opponentPlayer.AddUpdates(ref updates, phase, actualPlayer);
-                break;
-            case GamePhase.Vulnerability:
-                // This phase is more painful since it's an opponent card on top of a player facility
-                foreach (Updates update in updates)
-                {
-                    // draw opponent card to place on player facility
-                    // create card to be displayed
-                    Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCards);
-                    Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
-                    GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
-                    actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
-                }
-                break;
-            case GamePhase.Mitigate:
-                // mitigation is also an opponent card on a player facility
-                // note: it's not enough to just have the card id - need to also 
-                // know which facility it's connected to
-                foreach (Updates update in updates)
-                {
-                    // draw opponent card to place on player facility
-                    // create card to be displayed
-                    Debug.Log("phase mitigate opponent card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
-                    opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, false);
-                }
-                break;
-            case GamePhase.Attack:
-                foreach (Updates update in updates)
-                {
-                    bool getRidOfFacility = false;
-                    // first get card type for each update
-                    foreach(GameObject facility in opponentPlayer.ActiveFacilities.Values)
+            switch (phase)
+            {
+                case GamePhase.Defense:
+                    opponentPlayer.AddUpdates(ref updates, phase, actualPlayer);
+                    break;
+                case GamePhase.Vulnerability:
+                    // This phase is more painful since it's an opponent card on top of a player facility
+                    foreach (Updates update in updates)
                     {
-                        Card facilityCard = facility.GetComponent<Card>();
-                        if (facilityCard.data.cardID == update.CardID)
-                        {
-                            getRidOfFacility = true;
-                            break;
-                        }
+                        // draw opponent card to place on player facility
+                        // create card to be displayed
+                        Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCards);
+                        Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
+                        Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                        GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
+                        actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
                     }
-                    if (getRidOfFacility)
+                    break;
+                case GamePhase.Mitigate:
+                    // mitigation is also an opponent card on a player facility
+                    // note: it's not enough to just have the card id - need to also 
+                    // know which facility it's connected to
+                    foreach (Updates update in updates)
                     {
-                        Debug.Log("should be getting rid of facility");
-                        opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, true);
-                    }
-                    else
-                    {
-                        // this card is owned by the player
-                        // NOTE: if facility died then this won't actually do anything except tell
-                        // us the facility isn't there in a debug message
+                        // draw opponent card to place on player facility
+                        // create card to be displayed
+                        Debug.Log("phase mitigate opponent card with id : " + update.CardID + " should be in active opponent list.");
+                        Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
                         opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, false);
                     }
+                    break;
+                case GamePhase.Attack:
+                    foreach (Updates update in updates)
+                    {
+                        bool getRidOfFacility = false;
+                        // first get card type for each update
+                        foreach (GameObject facility in opponentPlayer.ActiveFacilities.Values)
+                        {
+                            Card facilityCard = facility.GetComponent<Card>();
+                            if (facilityCard.data.cardID == update.CardID)
+                            {
+                                getRidOfFacility = true;
+                                break;
+                            }
+                        }
+                        if (getRidOfFacility)
+                        {
+                            Debug.Log("should be getting rid of facility");
+                            opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, true);
+                        }
+                        else
+                        {
+                            // this card is owned by the player
+                            // NOTE: if facility died then this won't actually do anything except tell
+                            // us the facility isn't there in a debug message
+                            opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, phase, false);
+                        }
 
-                    Debug.Log("phase attack needs to change card with id : " + update.CardID + " should be in active opponent list.");
-                    Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
-                    Debug.Log("player active list size is : " + actualPlayer.ActiveCards.Count);
+                        Debug.Log("phase attack needs to change card with id : " + update.CardID + " should be in active opponent list.");
+                        Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                        Debug.Log("player active list size is : " + actualPlayer.ActiveCards.Count);
 
-                }
-                break;
-            default:
-                break;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
+
+        Debug.Log("ending opponent update method");
 
     }
 

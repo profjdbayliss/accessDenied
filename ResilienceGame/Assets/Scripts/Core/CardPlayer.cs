@@ -643,7 +643,8 @@ public class CardPlayer : MonoBehaviour
 
                 // now check the total worth of the facility to see if it
                 // and do a removal of all cards that were spent in attacks
-                if (facilityCard.data.worth + facilityCard.DefenseHealth <= 0)
+                if ((facilityCard.data.worth + facilityCard.DefenseHealth <= 0) &&
+                    (facilityCard.state != CardState.CardNeedsToBeDiscarded))
                 {
                     Debug.Log("we need to get rid of this facility");
                     // get rid of all potential connectors from both sides
@@ -712,12 +713,6 @@ public class CardPlayer : MonoBehaviour
                         {
                             Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
                             card.state = CardState.CardNeedsToBeDiscarded;
-                            mUpdatesThisPhase.Add(new Updates
-                            {
-                                WhatToDo = AddOrRem.Remove,
-                                UniqueFacilityID = facilityCard.UniqueID,
-                                CardID = card.data.cardID
-                            });
                         }
                     }
 
@@ -762,7 +757,7 @@ public class CardPlayer : MonoBehaviour
     {
         List<int> inactives = new List<int>(10);
         Dictionary<int, GameObject> discardFromArea;
-       
+
         switch (where)
         {
             case DiscardFromWhere.Hand:
@@ -786,38 +781,67 @@ public class CardPlayer : MonoBehaviour
 
             if (card.state == CardState.CardNeedsToBeDiscarded)
             {
-                Discards.Add(card.UniqueID, activeCardObject);
-                inactives.Add(card.UniqueID);
-                card.state = CardState.CardDiscarded;
-
+                // it's possible we just tried to put the discard in the pile
+                // so don't add it to discards twice
+                if (Discards.TryAdd(card.UniqueID, activeCardObject))
+                {
+                    inactives.Add(card.UniqueID);
+                    card.state = CardState.CardDiscarded;
+                    if (addUpdate)
+                    {
+                        Debug.Log("adding update for opponent to get");
+                        mUpdatesThisPhase.Add(new Updates
+                        {
+                            WhatToDo = AddOrRem.Remove,
+                            UniqueFacilityID = uniqueFacilityID,
+                            CardID = card.data.cardID
+                        });
+                    }
+                }
+                else
+                {
+                    Debug.Log("adding to discard pile failed. Card unique id of " + card.UniqueID + " was already in it.");
+                }
                 // change parent and rescale
-                activeCardObject.GetComponentInParent<HoverScale>().previousScale = Vector2.zero;
-                activeCardObject.GetComponentInParent<HoverScale>().ResetScale();
-                activeCardObject.GetComponentInParent<slippy>().enabled = false;
-                activeCardObject.GetComponentInParent<slippy>().ResetScale();
-                activeCardObject.GetComponent<HoverScale>().enabled = false;
-                activeCardObject.GetComponent<slippy>().ResetScale();
-                activeCardObject.GetComponent<slippy>().enabled = false;
+                HoverScale hoverScale = activeCardObject.GetComponentInParent<HoverScale>();
+                if (hoverScale != null)
+                {
+                    hoverScale.previousScale = Vector2.zero;
+                    hoverScale.ResetScale();
+                }
+
+                slippy slippyObject = activeCardObject.GetComponentInParent<slippy>();
+                if (slippyObject != null)
+                {
+                    slippyObject.enabled = false;
+                    slippyObject.ResetScale();
+                }
+
+                hoverScale = activeCardObject.GetComponent<HoverScale>();
+                if (hoverScale != null)
+                {
+                    hoverScale.enabled = false;
+                }
+
+                slippyObject = activeCardObject.GetComponent<slippy>();
+                if (slippyObject != null)
+                {
+                    slippyObject.ResetScale();
+                    slippyObject.enabled = false;
+                }
+                
                 activeCardObject.transform.SetParent(discardDropZone.transform, false);
                 activeCardObject.transform.localPosition = new Vector3();
-                activeCardObject.transform.localScale = new Vector3(1,1,1);
+                activeCardObject.transform.localScale = new Vector3(1, 1, 1);
 
                 // for the future might want to stack cards in the discard zone
                 Debug.Log("setting card to discard zone: " + card.UniqueID + " with name " + card.front.title);
                 activeCardObject.SetActive(false);
                 card.cardZone = discardDropZone;
-                if (addUpdate)
-                {
-                    Debug.Log("adding update for opponent to get");
-                    mUpdatesThisPhase.Add(new Updates
-                    {
-                        WhatToDo = AddOrRem.Remove,
-                        UniqueFacilityID = uniqueFacilityID,
-                        CardID = card.data.cardID
-                    });
-                }
+
             }
         }
+
         foreach (int key in inactives)
         {
             Debug.Log("key being discarded is " + key);
@@ -1543,12 +1567,6 @@ public class CardPlayer : MonoBehaviour
                             {
                                 Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
                                 card.state = CardState.CardNeedsToBeDiscarded;
-                                mUpdatesThisPhase.Add(new Updates
-                                {
-                                    WhatToDo = AddOrRem.Remove,
-                                    UniqueFacilityID = facilityCard.UniqueID,
-                                    CardID = card.data.cardID
-                                });
                             }
                         }
 

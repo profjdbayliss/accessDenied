@@ -507,6 +507,8 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
         if (msg.indexId!=localPlayerID && !isServer)
         {
+            Debug.Log("client received a legit message");
+
             // we don't send messages to ourself
             switch (type)
             {
@@ -579,9 +581,12 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     {
                         int element = 0;
                         List<Updates> updates = new List<Updates>(6);
+                        
                         int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        Debug.Log("number of updates received is " + numberOfUpdates);
                         element += 4; 
                         GamePhase gamePhase =(GamePhase)GetIntFromByteArray(element, msg.payload);
+                        Debug.Log("game phase for updates is " + gamePhase);
                         element += 4;
                         for (int i = 0; i < numberOfUpdates; i++)
                         {
@@ -618,6 +623,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             Debug.Log("received facility message from opponent with unique id " + uniqueId + " and card facility id " + facilityId);
 
                         }
+                        Debug.Log("facility played with message count: " + msg.count);
                     }
                     break;
                 case CardMessageType.AddConnections:
