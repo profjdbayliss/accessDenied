@@ -11,8 +11,8 @@ using System.Xml;
 public class GameManager : MonoBehaviour, IRGObservable
 {
     // Deck readers and resulting card lists.
-    public CardReader energyDeckReader;
-    public CardReader waterDeckReader;
+    public CardReader redDeckReader;
+    public CardReader blueDeckReader;
     public bool mCreateEnergyAtlas = false;
     public bool mCreateWaterAtlas = false;
     public List<Card> energyCards;
@@ -62,8 +62,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     List<IRGObserver> mObservers = new List<IRGObserver>(20);
 
     // player types
-    public CardPlayer energyPlayer;
-    public CardPlayer waterPlayer;
+    //public CardPlayer energyPlayer;
+    //public CardPlayer waterPlayer;
 
     // var's we use so we don't have to switch between
     // the player types for generic stuff
@@ -128,14 +128,14 @@ public class GameManager : MonoBehaviour, IRGObservable
             //TODO: Read based on number of players/selection
 
             // read water deck
-            CardReader reader = waterDeckReader.GetComponent<CardReader>();
+            CardReader reader = blueDeckReader.GetComponent<CardReader>();
             if (reader != null)
             {
                 // TODO: Set with csv
                 waterCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
                 CardPlayer.AddCards(waterCards);
-                waterPlayer.playerTeam = PlayerTeam.Blue;
-                waterPlayer.DeckName = "blue";
+                //waterPlayer.playerTeam = PlayerTeam.Blue;
+                //waterPlayer.DeckName = "blue";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
             }
             else
@@ -146,13 +146,13 @@ public class GameManager : MonoBehaviour, IRGObservable
 
             // TODO: Remove, should be selected by csv
             // read energy deck
-            reader = energyDeckReader.GetComponent<CardReader>();
+            reader = redDeckReader.GetComponent<CardReader>();
             if (reader != null)
             {
                 energyCards = reader.CSVRead(mCreateEnergyAtlas);
                 CardPlayer.AddCards(energyCards);
-                energyPlayer.playerTeam = PlayerTeam.Red;
-                energyPlayer.DeckName = "red";
+                //energyPlayer.playerTeam = PlayerTeam.Red;
+                //energyPlayer.DeckName = "red";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
 
             }
@@ -184,13 +184,13 @@ public class GameManager : MonoBehaviour, IRGObservable
         // TODO: Change PlayerType
         if (playerType==PlayerTeam.Red)
         {
-            actualPlayer = energyPlayer;
+            //actualPlayer = energyPlayer;
             actualPlayer.playerTeam = PlayerTeam.Red;
             actualPlayer.DeckName = "red";
         }
         else if (playerType==PlayerTeam.Blue)
         {
-            actualPlayer = waterPlayer;
+            //actualPlayer = waterPlayer;
             actualPlayer.playerTeam = PlayerTeam.Blue;
             actualPlayer.DeckName = "blue";
         }
@@ -549,14 +549,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                 mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
                 opponentType = RGNetworkPlayerList.instance.playerTypes[0];
             }
+            // TODO: Probably needs rewrite when more players added
             if (opponentType == PlayerTeam.Red)
             {
-                opponentPlayer = energyPlayer;
+                //opponentPlayer = energyPlayer;
+                opponentPlayer.playerTeam = PlayerTeam.Red;
                 opponentPlayer.DeckName = "red";
             }
             else
             {
-                opponentPlayer = waterPlayer;
+                //opponentPlayer = waterPlayer;
+                opponentPlayer.playerTeam = PlayerTeam.Blue;
                 opponentPlayer.DeckName = "blue";
             }
             opponentPlayer.InitializeCards();

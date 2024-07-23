@@ -635,7 +635,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Red
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2105,10 +2105,10 @@ RectTransform:
   m_Father: {fileID: 707036246}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 68.5, y: -43}
+  m_SizeDelta: {x: 121, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &300410073
 MonoBehaviour:
@@ -3846,7 +3846,7 @@ GameObject:
   - component: {fileID: 545910553}
   - component: {fileID: 545910554}
   m_Layer: 0
-  m_Name: WaterCardReader
+  m_Name: BlueCardReader
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4820,7 +4820,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -160, y: 20}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 137, y: 86}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &707036247
 MonoBehaviour:
@@ -6393,7 +6393,7 @@ GameObject:
   - component: {fileID: 839994436}
   - component: {fileID: 839994437}
   m_Layer: 0
-  m_Name: EnergyCardReader
+  m_Name: RedCardReader
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10213,9 +10213,9 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: 
+    - m_Text: Red
       m_Image: {fileID: 0}
-    - m_Text: Water and Waste Water
+    - m_Text: Blue
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -13060,16 +13060,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8f6d54f3722f524290f07c6e2695f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyDeckReader: {fileID: 839994437}
-  waterDeckReader: {fileID: 545910554}
+  redDeckReader: {fileID: 839994437}
+  blueDeckReader: {fileID: 545910554}
   mCreateEnergyAtlas: 0
   mCreateWaterAtlas: 0
   energyCards: []
   waterCards: []
   playerDeckList: {fileID: 1570887177}
   gameStarted: 0
-  energyPlayer: {fileID: 1125198114}
-  waterPlayer: {fileID: 680164116}
   actualPlayer: {fileID: 1125198114}
   opponentPlayer: {fileID: 680164116}
   opponentPlayedZone: {fileID: 1445810747}
@@ -13420,7 +13418,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2788043409255644737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13641,7 +13639,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090281167011, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -5.1088257
+      value: -5.1088867
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090281167011, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -13693,27 +13691,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 1135.1808
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 241.61679
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 587.5904
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -140.8084
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946392, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_text
@@ -13801,11 +13799,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 136
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 86
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_LocalPosition.z
@@ -13885,27 +13883,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 70
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 68
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -43
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091767085940, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_IsActive
