@@ -126,7 +126,7 @@ public class CardPlayer : MonoBehaviour
                         DeckIDs.Add(card.data.cardID);
                     }
 
-                }
+                }/*
                 else if (card.DeckName.Equals(DeckName))
                 {
                     Debug.Log("adding facility " + card.name + " with id " + card.data.cardID + " to deck " + DeckName);
@@ -134,7 +134,7 @@ public class CardPlayer : MonoBehaviour
                     {
                         FacilityIDs.Add(card.data.cardID);
                     }
-                }
+                }*/
                 else
                 {
                     // they don't match and it's ok.
@@ -336,7 +336,7 @@ public class CardPlayer : MonoBehaviour
                 {
                     // set the text number for cost
                     tempTexts[i].enabled = true;
-                    tempTexts[i].text = tempCard.data.cost + "";
+                    tempTexts[i].text = tempCard.data.blueCost + "";
                 }
                 else
                 {
@@ -714,7 +714,7 @@ public class CardPlayer : MonoBehaviour
                         {
                             case GamePhase.Vulnerability:
                                 if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
-                                    ((mValueSpentOnVulnerabilities + card.data.cost) <= mTotalFacilityValue))
+                                    ((mValueSpentOnVulnerabilities + card.data.blueCost) <= mTotalFacilityValue))
                                 {
                                     GameObject selected = opponentPlayer.GetHighlightedStation();
                                     Card selectedCard = selected.GetComponent<Card>();
@@ -740,7 +740,7 @@ public class CardPlayer : MonoBehaviour
                                         playCount = 1;
                                         playKey = card.UniqueID;
                                         selectedCard.OutlineImage.SetActive(false);
-                                        mValueSpentOnVulnerabilities += card.data.cost;
+                                        mValueSpentOnVulnerabilities += card.data.blueCost;
                                         Debug.Log("Amount spent on vuln is " + mValueSpentOnVulnerabilities + " with total facility worth of " + mTotalFacilityValue);
 
                                     }

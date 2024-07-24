@@ -101,37 +101,31 @@ public class CardReader : MonoBehaviour
                     // columns in the spreadsheet: changes depending on game
                     //  0:  Team of the card // TODO: Split ; in Team
                     //  1:  How many cards of this type in the deck
-                    //  2:  Method called
+                    //  2:  Method(s) called
                     //  3:  Target Type
                     //  4:  Played on (some cards are only played on a specific infrastructure type)
                     //  5:  Amount of targets
                     //  6:  Title
-                    //  7:  Background color
-                    //  8:  Card image
-                    //  9:  col
-                    // 10:  row
-                    // 11:  Background image
-                    // 12:  col
-                    // 13:  row
-                    // 14:  Meeple type changed
-                    // 15:  Number of Meeples changed
-                    // 16:  Meeple cost
-                    // 17:  Blue cost
-                    // 18:  Black cost
-                    // 19:  Purple cost
-                    // 20:  Network damage
-                    // 21:  Physical damage
-                    // 22:  Financial damage
-                    // 23:  Cards drawn
-                    // 24:  Cards discarded
-                    // 25:  Cards shuffled
-                    // 26:  Effect placed
-                    // 27:  Effect removed
-                    // 28:  Duration
-                    // 29:  Amount playable on a turn
-                    // 30:  Effect during doom clock
-                    // 31:  Dice roll minimum
-                    // 32:  Text description
+                    //  7:  Image altas column
+                    //  8:  Image atlas row
+                    //  9:  Background atlas column
+                    // 10:  Background atlas row
+                    // 11:  Meeple color changed
+                    // 12:  Number of Meeples changed
+                    // 13:  Blue cost
+                    // 14:  Black cost
+                    // 15:  Purple cost
+                    // 16:  Damage/Heal
+                    // 17:  Cards drawn
+                    // 18:  Cards removed
+                    // 19:  Effect
+                    // 20:  Number of Effects
+                    // 21:  Prereq Effect
+                    // 22:  Duration
+                    // 23:  Doom Effect
+                    // 24:  Dice roll minimum
+                    // 25:  Flavor Text
+                    // 26:  Text description
 
                     // 0: Read only cards of the correct team
                     if (individualCSVObjects[0].Trim().ToLower() != DeckName.ToLower())
@@ -264,7 +258,7 @@ public class CardReader : MonoBehaviour
 
                         // 8: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        string imageFilename = individualCSVObjects[8].Trim();
+                        string imageFilename = individualCSVObjects[8].Trim(); // TODO: Set to single image Atlas
                         //Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
 
                         if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
@@ -283,7 +277,7 @@ public class CardReader : MonoBehaviour
                         // 11: card background 12/13
                         // we're currently ignoring this as it's set inside
                         // the unity editor
-                        // TODO: If needed set programmatically
+                        // TODO: If needed set programmatically // TODO: Set to single image Atlas
 
                         // 14:  Meeple type changed
                         // 15:  Number of Meeples changed

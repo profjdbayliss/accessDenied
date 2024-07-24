@@ -22,8 +22,10 @@ public struct CardData
     public CardType cardType;
     public float percentSuccess;
     public int cardID;
-    public int teamID;
-    public int cost; // TODO: 3 for meeples
+    public int teamID; // TODO: Use for SD
+    public int blueCost;
+    public int blackCost;
+    public int purpleCost;
     public int worth;
     public PlayerTeam onlyPlayedOn;
 }
