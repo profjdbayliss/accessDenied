@@ -310,6 +310,7 @@ public class CardPlayer : MonoBehaviour
         TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
         {
+            // TODO: add flavor text and meeples
             if (tempTexts[i].name.Equals("Title Text"))
             {
                 tempTexts[i].text = tempCard.front.title;

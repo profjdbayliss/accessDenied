@@ -231,94 +231,98 @@ public class CardReader : MonoBehaviour
                         tempCardObj.name = individualCSVObjects[6];
                         tempCardFront.title = tempCardObj.name;
 
-                        // 7: set up the title color, which also 
-                        // determines the card type in this game
-                        // NOTE: the format required by the physical card game program
-                        // is a bit different than Unity's format, which requires the 
-                        // # sign rather than just straight hex code.
-                        // so we change it appropriately
-
-                        // TODO: check this effect
-                        string[] htmlColorInfo = individualCSVObjects[7].Trim().Split("x");
-                        string htmlColor="";
-                        if (htmlColorInfo.Length == 2)
+                        // Set up the card color. Could be done using csv
+                        switch (DeckName.ToLower())
                         {
-                            htmlColor = "#" + htmlColorInfo[1];
-                        }
-                        Color titleColor;
-                        bool success = ColorUtility.TryParseHtmlString(htmlColor, out titleColor);
-                        if (success)
-                        {
-                            tempCardFront.titleColor = titleColor;
-                        } else
-                        {
-                            Debug.Log("title color wasn't parsed " + individualCSVObjects[4].Trim());
+                            case "blue":
+                                tempCardFront.titleColor = new Color(106/255,137/255,220/255);
+                                break;
+                            case "red":
+                                tempCardFront.titleColor = new Color(222/255,0,0);
+                                break;
+                            case "white":
+                                tempCardFront.titleColor = Color.white;
+                                break;
                         }
                         
 
-                        // 8: card image
-                        Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        string imageFilename = individualCSVObjects[8].Trim(); // TODO: Set to single image Atlas
-                        //Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
+                        // 7/8: card image
+                        /*Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        //string imageFilename = individualCSVObjects[8].Trim(); // TODO: Set to single image Atlas
 
-                        if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
+                        if (individualCSVObjects[7] != "")
                         {
-                            int col = int.Parse(individualCSVObjects[9].Trim());
-                            int row = int.Parse(individualCSVObjects[10].Trim());
+                            int col = int.Parse(individualCSVObjects[7].Trim());
+                            int row = int.Parse(individualCSVObjects[8].Trim());
                             //Debug.Log("col is " + col + " row is " + row);
 
                             Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
                             tex3.SetPixels(tempColors);
                             tex3.Apply();
-
                         }
-                        tempCardFront.img = tex3;
+                        //tempCardFront.img = tex3;
 
-                        // 11: card background 12/13
-                        // we're currently ignoring this as it's set inside
-                        // the unity editor
-                        // TODO: If needed set programmatically // TODO: Set to single image Atlas
-
-                        // 14:  Meeple type changed
-                        // 15:  Number of Meeples changed
-                        // 16:  Meeple cost
-                        // 17:  Blue cost
-                        // 18:  Black cost
-                        // 19:  Purple cost
-                        // 20:  Network damage
-                        // 21:  Physical damage
-                        // 22:  Financial damage
-                        // 23:  Cards drawn
-                        // 24:  Cards discarded
-                        // 25:  Cards shuffled
-                        // 26:  Effect placed
-                        // 27:  Effect removed
-                        // 28:  Duration
-                        // 29:  Amount playable on a turn
-                        // 30:  Effect during doom clock
-                        // 31:  Dice roll minimum
-
-                        // 32: text description
-
-
-
-                        // pick up any extra things with commas in them that got incorrectly separated
-                        tempCardFront.description = individualCSVObjects[29]; // TODO: OOI err
-
-                        if (individualCSVObjects.Length > 29)
+                        // 9/10: card background // TODO: Set to single image Atlas
+                        tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        
+                        if (individualCSVObjects[9] != "")
                         {
-                            // means the text description itself contains commas, which are our
-                            // separator. So now put these pieces together!
-                            StringBuilder fullDescription = new StringBuilder(tempCardFront.description);
+                            int col = int.Parse(individualCSVObjects[9].Trim());
+                            int row = int.Parse(individualCSVObjects[10].Trim());
+                            //Debug.Log("col is " + col + " row is " + row);*/
 
-                            int extras = individualCSVObjects.Length - 14; // this is one more than the # we have
-                                                                           //Debug.Log("Extra commas: length should be " + individualCSVObjects.Length + " with extras as " + extras);
-                            for (int j = 0; j < extras; j++)
-                            {
-                                fullDescription.Append("," + individualCSVObjects[14 + j]);
-                            }
-                            tempCardFront.description = fullDescription.ToString();
-                        }
+                            //Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                            //tex3.SetPixels(tempColors);
+                            //tex3.Apply();
+                        //}
+                        // TODO: Uncomment when the above is done
+                        //tempCardFront.background = tex3;
+
+                        // 11:  Meeple type changed
+
+
+                        // 12:  Number of Meeples changed
+
+
+                        // 13:  Blue cost
+                        // 14:  Black cost
+                        // 15:  Purple cost
+
+
+                        // 16:  Damage/Heal
+
+
+                        // 17:  Cards drawn
+
+
+                        // 18:  Cards removed
+
+
+                        // 19:  Effect
+
+
+                        // 20:  Number of Effects
+
+
+                        // 21:  Prereq Effect
+
+
+                        // 22:  Duration
+
+
+                        // 23:  Doom Effect
+
+
+                        // 24:  Dice roll minimum
+
+                        // 25:  Flavor Text
+                        // Replace csv semi-colons with appropiate commas
+                        tempCardFront.flavor = individualCSVObjects[25];
+                        tempCardFront.flavor.Replace(';', ',');
+
+                        // 26:  Text description
+                        tempCardFront.description = individualCSVObjects[26]; 
+                        tempCardFront.description.Replace(';', ',');
 
                         /*
                         // 8:  does it have a worth circle?

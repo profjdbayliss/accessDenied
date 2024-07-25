@@ -7607,7 +7607,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &791040123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18625,6 +18625,7 @@ MonoBehaviour:
   titleColor: {r: 0, g: 0, b: 0, a: 0}
   title: 
   description: 
+  flavor: 
   background: {fileID: 0}
   img: {fileID: 0}
 --- !u!114 &3395120114322209512
