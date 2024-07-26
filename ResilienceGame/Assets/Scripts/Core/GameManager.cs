@@ -62,8 +62,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     List<IRGObserver> mObservers = new List<IRGObserver>(20);
 
     // player types
-    //public CardPlayer energyPlayer;
-    //public CardPlayer waterPlayer;
+    public CardPlayer energyPlayer;
+    public CardPlayer waterPlayer;
 
     // var's we use so we don't have to switch between
     // the player types for generic stuff
@@ -134,8 +134,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // TODO: Set with csv
                 blueCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
                 CardPlayer.AddCards(blueCards);
-                //waterPlayer.playerTeam = PlayerTeam.Blue;
-                //waterPlayer.DeckName = "blue";
+                waterPlayer.playerTeam = PlayerTeam.Blue;
+                waterPlayer.DeckName = "blue";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
             }
             else
@@ -151,8 +151,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 redCards = reader.CSVRead(mCreateEnergyAtlas);
                 CardPlayer.AddCards(redCards);
-                //energyPlayer.playerTeam = PlayerTeam.Red;
-                //energyPlayer.DeckName = "red";
+                energyPlayer.playerTeam = PlayerTeam.Red;
+                energyPlayer.DeckName = "red";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
 
             }
@@ -184,13 +184,13 @@ public class GameManager : MonoBehaviour, IRGObservable
         // TODO: Change PlayerType
         if (playerType==PlayerTeam.Red)
         {
-            //actualPlayer = energyPlayer;
+            actualPlayer = energyPlayer;
             actualPlayer.playerTeam = PlayerTeam.Red;
             actualPlayer.DeckName = "red";
         }
         else if (playerType==PlayerTeam.Blue)
         {
-            //actualPlayer = waterPlayer;
+            actualPlayer = waterPlayer;
             actualPlayer.playerTeam = PlayerTeam.Blue;
             actualPlayer.DeckName = "blue";
         }
@@ -552,14 +552,14 @@ public class GameManager : MonoBehaviour, IRGObservable
             // TODO: Probably needs rewrite when more players added
             if (opponentType == PlayerTeam.Red)
             {
-                //opponentPlayer = energyPlayer;
-                opponentPlayer.playerTeam = PlayerTeam.Red;
+                opponentPlayer = energyPlayer;
+                //opponentPlayer.playerTeam = PlayerTeam.Red;
                 opponentPlayer.DeckName = "red";
             }
             else
             {
-                //opponentPlayer = waterPlayer;
-                opponentPlayer.playerTeam = PlayerTeam.Blue;
+                opponentPlayer = waterPlayer;
+                //opponentPlayer.playerTeam = PlayerTeam.Blue;
                 opponentPlayer.DeckName = "blue";
             }
             opponentPlayer.InitializeCards();

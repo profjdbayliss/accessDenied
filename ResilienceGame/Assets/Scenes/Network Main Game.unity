@@ -863,7 +863,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 92073674}
   delay: 0.5
   maxHeightOffset: 100
   highlight: 1
@@ -5218,7 +5217,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 520008979}
   delay: 0.5
   maxHeightOffset: 100
   highlight: 1
@@ -7647,7 +7645,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &791040123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17672,7 +17670,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 2097464030}
   delay: 0.5
   maxHeightOffset: 100
   highlight: 1
@@ -18139,6 +18136,8 @@ MonoBehaviour:
   blueCards: []
   playerDeckList: {fileID: 1570887177}
   gameStarted: 0
+  energyPlayer: {fileID: 1125198114}
+  waterPlayer: {fileID: 680164116}
   actualPlayer: {fileID: 1125198114}
   opponentPlayer: {fileID: 680164116}
   opponentPlayedZone: {fileID: 1445810747}
@@ -19544,7 +19543,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1397, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 640, y: 480}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6847185274260524990
