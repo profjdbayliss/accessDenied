@@ -19,25 +19,7 @@ public class ActionAddDefenseWorthToStation : ICardAction
             }         
         }
     }
-    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
-    {
-        cardActedUpon.DefenseHealth -= card.data.worth;
-      
-        TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
-        for (int i = 0; i < tempTexts.Length; i++)
-        {
-            if (cardActedUpon.DefenseHealth > 0 && tempTexts[i].name.Equals("Description Text"))
-            {
-                tempTexts[i].color = Color.red;
-                tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
-            }
-            else
-            {
-                tempTexts[i].text = "";
-            }
-        }
-        
-    }
+ 
 }
 
 public class ActionMitigateCard : ICardAction
@@ -88,11 +70,6 @@ public class ActionMitigateCard : ICardAction
         }
 
     }
-    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
-    {
-       // we never cancel mitigations
-       // if we had to we'd have to cache the info for the card in this class
-    }
 }
 
 public class ActionImpactFacilityWorth : ICardAction
@@ -101,6 +78,11 @@ public class ActionImpactFacilityWorth : ICardAction
     {
         Debug.Log("card " + card.front.title + " played to attack the selected station.");
         cardActedUpon.DefenseHealth += card.data.worth;
+        player.AddAttackUpdateToList(new AttackUpdate
+        {
+            UniqueFacilityID=cardActedUpon.UniqueID,
+            ChangeInValue=card.data.worth
+        });
         card.state = CardState.CardNeedsToBeDiscarded;
         TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
@@ -108,22 +90,7 @@ public class ActionImpactFacilityWorth : ICardAction
             if (tempTexts[i].name.Equals("Description Text"))
             {
                 tempTexts[i].color = Color.red;
-                tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
-            }
-        }
-    }
-
-    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
-    {
-        Debug.Log("card " + card.front.title + " attack undone.");
-        cardActedUpon.DefenseHealth -= card.data.worth;      
-        TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
-        for (int i = 0; i < tempTexts.Length; i++)
-        {
-            if (tempTexts[i].name.Equals("Description Text"))
-            {
-                tempTexts[i].color = Color.blue;
-                tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
+                tempTexts[i].text = "<size=600%>" + cardActedUpon.DefenseHealth;
             }
         }
     }
@@ -154,8 +121,4 @@ public class ActionLateralMovement: ICardAction
          
     }
 
-    public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
-    {
-       // can lateral movement cards be undone?????
-    }
 }

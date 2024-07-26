@@ -13,6 +13,7 @@ public class RGNetworkLoginUI : MonoBehaviour
     [SerializeField] internal Button clientButton;
 
     public static RGNetworkLoginUI s_instance;
+    private static bool mHasLoadedScene = false;
 
     void Awake()
     {
@@ -26,10 +27,13 @@ public class RGNetworkLoginUI : MonoBehaviour
         clientButton.interactable = !string.IsNullOrWhiteSpace(username);
     }
 
-    //public void LoadScene(int index)
-    //{
-    //    Debug.Log("loading scene in rg login ui");
-    //    SceneManager.LoadScene(index);
-        
-    //}
+    public void LoadScene(int index)
+    {
+        if (!mHasLoadedScene)
+        {
+            mHasLoadedScene = true;
+            Debug.Log("loading scene in rg login ui " + index);
+            SceneManager.LoadScene(index);
+        }
+    }
 }

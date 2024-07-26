@@ -16,6 +16,7 @@ public enum CardMessageType
     SendCardUpdates,  
     SendPlayedFacility,
     AddConnections,
+    AttackUpdates,
     EndGame,
     None
 }

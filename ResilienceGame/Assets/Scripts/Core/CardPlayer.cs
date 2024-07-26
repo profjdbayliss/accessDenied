@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Xml;
 using TMPro;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 using static UnityEngine.PlayerLoop.PreUpdate;
 using Image = UnityEngine.UI.Image;
@@ -28,6 +29,12 @@ public struct Updates
     public AddOrRem WhatToDo;
     public int UniqueFacilityID;
     public int CardID;
+};
+
+public struct AttackUpdate
+{
+    public int UniqueFacilityID;
+    public int ChangeInValue;
 };
 
 public struct FacilityConnectionInfo
@@ -81,6 +88,7 @@ public class CardPlayer : MonoBehaviour
     int mValueSpentOnVulnerabilities = 0;
     int mFinalScore = 0;
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
+    List<AttackUpdate> mAttackUpdates = new List<AttackUpdate>(6);
     int mMaxFacilities = 0;
     int mDrawnFacilityZone = -1;
     List<int> mNewConnectionUniqueIDs = new List<int>();
@@ -467,10 +475,62 @@ public class CardPlayer : MonoBehaviour
         mValueSpentOnVulnerabilities = 0;
     }
 
+    void RemoveExtraLateralMovementCards(CardPlayer opponent)
+    {
+        // for all active facilities
+        foreach (GameObject facilityGameObject in ActiveFacilities.Values)
+        {
+            Card facilityCard = facilityGameObject.GetComponent<Card>();
+            
+            // for all attacking cards on those facilities
+            for (int i = 0; i < facilityCard.AttackingCards.Count; i++)
+            {
+                CardIDInfo cardInfo = facilityCard.AttackingCards[i];
+                // get the card
+                GameObject opponentAttackObject = opponent.GetActiveCardObject(cardInfo);
+                // run the attack effects
+                if (opponentAttackObject != null)
+                {
+
+                    Card opponentCard = opponentAttackObject.GetComponent<Card>();
+                    
+                    // set all lateral movement cards in slot 0 to discard
+                    if (i==0 && opponentCard.front.title.Equals("Lateral Movement"))
+                    {
+                        opponentCard.state = CardState.CardNeedsToBeDiscarded;
+                        mUpdatesThisPhase.Add(new Updates
+                        {
+                            WhatToDo = AddOrRem.Remove,
+                            UniqueFacilityID = facilityCard.UniqueID,
+                            CardID = opponentCard.data.cardID
+                        });
+                    } else if (i == facilityCard.AttackingCards.Count-1 && opponentCard.front.title.Equals("Lateral Movement"))
+                    {
+                        opponentCard.state = CardState.CardNeedsToBeDiscarded;
+                        mUpdatesThisPhase.Add(new Updates
+                        {
+                            WhatToDo = AddOrRem.Remove,
+                            UniqueFacilityID = facilityCard.UniqueID,
+                            CardID = opponentCard.data.cardID
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    public void AddAttackUpdateToList(AttackUpdate update)
+    {
+        mAttackUpdates.Add(update);
+    }
+
+
     public void HandleAttackPhase(CardPlayer opponent)
     {
         List<int> facilitiesToRemove = new List<int>(8);
         bool lateralMovementUsed = false;
+
+        RemoveExtraLateralMovementCards(opponent);
 
         // for all active facilities
         foreach (GameObject facilityGameObject in ActiveFacilities.Values)
@@ -488,7 +548,8 @@ public class CardPlayer : MonoBehaviour
                 {
 
                     Card opponentCard = opponentAttackObject.GetComponent<Card>();
-                    if (!opponentCard.front.title.Equals("Lateral Movement"))
+                    
+                    if (!opponentCard.front.title.Equals("Lateral Movement") && opponentCard.state != CardState.CardNeedsToBeDiscarded)
                     {
                         // run the effects of the card, but only if we roll between 11-20 on a d20 does the attack happen
                         // This is the same as 50-99 on a 0-100 random roll
@@ -497,7 +558,7 @@ public class CardPlayer : MonoBehaviour
                         {
                             Debug.Log("attacking card with value : " + opponentCard.data.worth);
                             opponentCard.Play(this, opponent, facilityCard);
-
+                            
                             mUpdatesThisPhase.Add(new Updates
                             {
                                 WhatToDo = AddOrRem.Remove,
@@ -508,7 +569,9 @@ public class CardPlayer : MonoBehaviour
                             if (i + 1 <= facilityCard.AttackingCards.Count - 1)
                             {
                                 // check to see if the next card is for lateral movement
+                                Debug.Log("checking next card for lateral movement");
                                 CardIDInfo cardInfoNext = facilityCard.AttackingCards[i + 1];
+                                Debug.Log("card i+1 obtained");
                                 // get the card
                                 GameObject opponentAttackObject2 = opponent.GetActiveCardObject(cardInfoNext);
                                 if (opponentAttackObject2 != null)
@@ -546,6 +609,9 @@ public class CardPlayer : MonoBehaviour
             if (facilityCard.data.worth+facilityCard.DefenseHealth <= 0)
             {
                 Debug.Log("we need to get rid of this facility");
+
+                // remove the worth of this facility since it's no longer there
+                mTotalFacilityValue -= facilityCard.data.worth;
                 // get rid of all potential connectors from both sides
                 int whichFacilityZone = facilityCard.WhichFacilityZone;
                 GameObject facilityZoneHolder = facilityCard.CanvasHolder;
@@ -555,17 +621,25 @@ public class CardPlayer : MonoBehaviour
                 {
                     int zoneToTurnOff = connectionInfo.WhichFacilityZone;
                     // turn off this facility's possible connection to the other
+                    Debug.Log("turning off a specific zone " + zoneToTurnOff);
                     connections.connections[zoneToTurnOff].SetActive(false);
-
+                    Debug.Log("turned off");
                     // turn off the other facility's possible connection to this one
                     // and delete this facility from its active connections list
-                    GameObject otherFacility = ActiveFacilities[connectionInfo.UniqueFacilityID];
+                    Debug.Log("getting facility with id " + connectionInfo.UniqueFacilityID);
+                    
+                    GameObject otherFacility;
+                    ActiveFacilities.TryGetValue(connectionInfo.UniqueFacilityID, out otherFacility);
+                    Debug.Log("got facility");
+
                     if (otherFacility != null)
                     {
                         Card otherFacilityCard = otherFacility.GetComponent<Card>();
                         GameObject otherFacilityZone = otherFacilityCard.CanvasHolder;
                         Connections otherConnections = otherFacilityZone.GetComponent<Connections>();
+                        Debug.Log("other connection zone setting to false");
                         otherConnections.connections[whichFacilityZone].SetActive(false);
+                        Debug.Log("done");
                         int indexToRemove = otherFacilityCard.ConnectionList.FindIndex(x => x.WhichFacilityZone == whichFacilityZone);
                         if (indexToRemove >= 0)
                         {
@@ -605,7 +679,7 @@ public class CardPlayer : MonoBehaviour
                 foreach (GameObject cardObject in ActiveCards.Values)
                 {
                     Card card = cardObject.GetComponent<Card>();
-                    if (card.CanvasHolder.Equals(facilityCard.CanvasHolder))
+                    if (card.WhichFacilityZone == facilityCard.WhichFacilityZone)
                     {
                         Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
                         card.state = CardState.CardNeedsToBeDiscarded;
@@ -647,6 +721,9 @@ public class CardPlayer : MonoBehaviour
                     (facilityCard.state != CardState.CardNeedsToBeDiscarded))
                 {
                     Debug.Log("we need to get rid of this facility");
+                    // remove the worth of this facility since it's no longer there
+                    mTotalFacilityValue -= facilityCard.data.worth;
+
                     // get rid of all potential connectors from both sides
                     int whichFacilityZone = facilityCard.WhichFacilityZone;
                     GameObject facilityZoneHolder = facilityCard.CanvasHolder;
@@ -683,6 +760,8 @@ public class CardPlayer : MonoBehaviour
                             Debug.Log("Error finding facility " + connectionInfo.UniqueFacilityID + " to turn its connection off");
                         }
                     }
+
+                    Debug.Log("second for loop for getting rid of facilities done");
                     // now clear all the connection info
                     facilityCard.ConnectionList.Clear();
 
@@ -709,7 +788,7 @@ public class CardPlayer : MonoBehaviour
                     foreach (GameObject cardObject in ActiveCards.Values)
                     {
                         Card card = cardObject.GetComponent<Card>();
-                        if (card.CanvasHolder.Equals(facilityCard.CanvasHolder))
+                        if (card.WhichFacilityZone == facilityCard.WhichFacilityZone)
                         {
                             Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
                             card.state = CardState.CardNeedsToBeDiscarded;
@@ -778,7 +857,7 @@ public class CardPlayer : MonoBehaviour
         {
             //GameObject activeCardObject = ActiveCardList[i];
             Card card = activeCardObject.GetComponent<Card>();
-
+            
             if (card.state == CardState.CardNeedsToBeDiscarded)
             {
                 // it's possible we just tried to put the discard in the pile
@@ -897,7 +976,12 @@ public class CardPlayer : MonoBehaviour
                     break;
                 }
             }
-        } else
+        }
+        else if (ActiveFacilities.Count == 1)
+        {
+            mNewFacilityConnected = true;
+        }
+        else
         {
             // if two facilities are selected then they become connected
             int howManySelected = 0;
@@ -986,7 +1070,7 @@ public class CardPlayer : MonoBehaviour
                     
                 }
             }
-        }
+        } 
     }
 
     public bool GetNewFacilityConnected()
@@ -1040,6 +1124,7 @@ public class CardPlayer : MonoBehaviour
                                     Card selectedCard = selected.GetComponent<Card>();
                                     StackCards(selected, gameObjectCard, playerDropZone, GamePhase.Defense);
                                     card.state = CardState.CardInPlay;
+                                    card.WhichFacilityZone = selectedCard.WhichFacilityZone;
                                     ActiveCards.Add(card.UniqueID, gameObjectCard);
                                     
                                     selectedCard.ModifyingCards.Add(card.UniqueID);
@@ -1563,7 +1648,7 @@ public class CardPlayer : MonoBehaviour
                         foreach (GameObject cardObject in ActiveCards.Values)
                         {
                             Card card = cardObject.GetComponent<Card>();
-                            if (card.CanvasHolder.Equals(facilityCard.CanvasHolder))
+                            if (card.WhichFacilityZone == facilityCard.WhichFacilityZone)
                             {
                                 Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
                                 card.state = CardState.CardNeedsToBeDiscarded;
@@ -1612,7 +1697,6 @@ public class CardPlayer : MonoBehaviour
         {
             GameObject facility;
             Card selectedCard = null;
-            int index = -1;
             Debug.Log("number of active facilities are " + ActiveFacilities.Count);
 
             // find unique facility in facilities list
@@ -1703,15 +1787,31 @@ public class CardPlayer : MonoBehaviour
        
     }
 
-    void CalculateScore()
+    public int GetFacilityScores()
     {
-        mFinalScore = 42;
+        int score = 0;
+        foreach(GameObject facilityObj in ActiveFacilities.Values)
+        {
+            Card facilityCard = facilityObj.GetComponent<Card>();
+            score += (facilityCard.data.worth + facilityCard.DefenseHealth);
+        }
+
+        return score;
     }
 
-    public int GetScore()
+    public int GetConnectionScores()
     {
-        CalculateScore();
-        return mFinalScore;
+        int score = 0;
+        foreach (GameObject facilityObj in ActiveFacilities.Values)
+        {
+            Card facilityCard = facilityObj.GetComponent<Card>();
+            if (facilityCard.ConnectionList.Count >= facilityCard.data.worth)
+            {
+                score += 1;
+            }   
+        }
+
+        return score;
     }
 
     public bool HasUpdates()
@@ -1741,7 +1841,26 @@ public class CardPlayer : MonoBehaviour
         mUpdatesThisPhase.Clear();
     }
 
-    // an update message consists of:
+    // an attack update message consists of:
+    // a. count of updates - 1 per facility
+    // b. the list of updates in the order of: unique facility id, change in value
+    public void GetAttackUpdatesInMessageFormat(ref List<int> playsForMessage)
+    {
+        playsForMessage.Add(mAttackUpdates.Count);
+       
+        foreach (AttackUpdate update in mAttackUpdates)
+        {
+            playsForMessage.Add(update.UniqueFacilityID);
+            playsForMessage.Add(update.ChangeInValue);
+            //Debug.Log("adding update to send to opponent: " + update.UniqueFacilityID + " and card id " + update.CardID + " for phase " + phase);
+        }
+
+        // we've given the updates away, so let's make sure to 
+        // clear the list
+        mAttackUpdates.Clear();
+    }
+
+    // new connection messages consists of:
     // a. count of new connections to be attached to chosen facility for connections this round
     // b. unique facility id of facility these connections come from
     // c. list of zone and unique id for all new connections
@@ -1780,6 +1899,34 @@ public class CardPlayer : MonoBehaviour
         }
     }
 
+    public void DisplayAttackUpdates(ref List<AttackUpdate> updates)
+    {
+        int uniqueFacilityID;
+        GameObject facilityObj;
+
+        foreach (AttackUpdate update in updates)
+        {
+            uniqueFacilityID = update.UniqueFacilityID;
+            if (ActiveFacilities.TryGetValue(uniqueFacilityID, out facilityObj))
+            {
+                // the facility exists and we need to get the card and update the value
+                Card facilityCard = facilityObj.GetComponent<Card>();
+                facilityCard.DefenseHealth += update.ChangeInValue;
+
+                TextMeshProUGUI[] tempTexts = facilityCard.GetComponentsInChildren<TextMeshProUGUI>(true);
+                for (int i = 0; i < tempTexts.Length; i++)
+                {
+                    if (tempTexts[i].name.Equals("Description Text"))
+                    {
+                        tempTexts[i].color = Color.red;
+                        tempTexts[i].text = "<size=600%>" + facilityCard.DefenseHealth;
+                    }
+                }
+            }
+        }
+
+        updates.Clear();
+    }
 
     // Reset the variables in this class to allow for a new
     // game to happen.

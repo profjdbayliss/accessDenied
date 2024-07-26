@@ -32,7 +32,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     public int localPlayerID;
     public string localPlayerName;
     public List<int> playerIDs = new List<int>();
-    private GameManager manager;
+    public GameManager manager;
 
     private List<bool> playerNetworkReadyFlags = new List<bool>();
     private List<bool> playerTurnTakenFlags = new List<bool>();
@@ -48,9 +48,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
     public void Start()
     {
-        manager = GameObject.FindObjectOfType<GameManager>();
         Debug.Log("start run on RGNetworkPlayerList.cs");
     }
+
+    public void SetupGameManager(GameManager man)
+    {
+        manager = man;
+    }
+
     public void AddPlayer(int id, string name)
     {
         if (isServer)
@@ -325,6 +330,30 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     {
                         NetworkClient.Send(msg);
                         Debug.Log("CLIENT SENT ADD CONNECTIONS");
+                    }
+                }
+                break;
+            case CardMessageType.AttackUpdates:
+                {
+                    RGNetworkLongMessage msg = new RGNetworkLongMessage
+                    {
+                        indexId = (uint)localPlayerID,
+                        type = (uint)data.Type,
+                        count = (uint)data.arguments.Count,
+                        payload = data.arguments.SelectMany<int, byte>(BitConverter.GetBytes).ToArray()
+                    };
+                    Debug.Log("update observer called share updates");
+
+                    if (isServer)
+                    {
+                        // send to all
+                        NetworkServer.SendToAll(msg);
+                        Debug.Log("SERVER SENT ATTACK UPDATES");
+                    }
+                    else
+                    {
+                        NetworkClient.Send(msg);
+                        Debug.Log("CLIENT SENT ATTACK UPDATES");
                     }
                 }
                 break;
@@ -652,6 +681,33 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 
                     }
                     break;
+                case CardMessageType.AttackUpdates:
+                    {
+                        int element = 0;
+                        List<AttackUpdate> updates = new List<AttackUpdate>(6);
+
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        Debug.Log("number of updates received is " + numberOfUpdates);
+                        element += 4;
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+                            int amountChanged = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+
+                            updates.Add(new AttackUpdate
+                            {
+                              
+                                UniqueFacilityID = facilityId,
+                                ChangeInValue = amountChanged,
+                            });
+                            Debug.Log("client received update message from opponent containing : " + facilityId + " and attackchange " + amountChanged);
+                        }
+                        manager.AddAttackUpdatesFromOpponent(ref updates);
+
+                    }
+                    break;
                 default:
                     break;
             }
@@ -801,6 +857,33 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             Debug.Log("client received connection message from opponent containing : " + facilityId + " and zone " + facilityZone);
                         }
                         manager.AddConnectionsFromOpponent(ref updates, originalFacilityUniqueID);
+
+                    }
+                    break;
+                case CardMessageType.AttackUpdates:
+                    {
+                        int element = 0;
+                        List<AttackUpdate> updates = new List<AttackUpdate>(6);
+
+                        int numberOfUpdates = GetIntFromByteArray(element, msg.payload);
+                        Debug.Log("number of updates received is " + numberOfUpdates);
+                        element += 4;
+                        for (int i = 0; i < numberOfUpdates; i++)
+                        {
+                            int facilityId = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+                            int amountChanged = GetIntFromByteArray(element, msg.payload);
+                            element += 4;
+
+                            updates.Add(new AttackUpdate
+                            {
+
+                                UniqueFacilityID = facilityId,
+                                ChangeInValue = amountChanged,
+                            });
+                            Debug.Log("client received update message from opponent containing : " + facilityId + " and attackchange " + amountChanged);
+                        }
+                        manager.AddAttackUpdatesFromOpponent(ref updates);
 
                     }
                     break;

@@ -1,17 +1,11 @@
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
-using System.Text;
 using System;
-using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 using UnityEngine.Networking;
-using Mirror;
-using System.Net;
-using System.Threading.Tasks;
-using System.Net.Http;
 
-public class CardReader : MonoBehaviour
+public class WebCardReader : MonoBehaviour
 {
     // are we done reading the file yet?
     public bool IsDone = false;
@@ -36,7 +30,7 @@ public class CardReader : MonoBehaviour
     // conflicting card id's for different deck files.
     protected static int sCardID = 0;
     protected bool isRunning = false;
-   
+
     protected string allCardText = "";
 
     // card info
@@ -45,60 +39,31 @@ public class CardReader : MonoBehaviour
     // should we create an atlas?
     public bool CreateAtlas = false;
 
+    bool mFileRead = false;
+    bool mImageFileRead = false;
+    byte[] mImageBytes = null;
+
     public void CSVRead(bool createAtlas)
     {
-        if (File.Exists(fileLocation))
-        {
+        Texture2D tex = new Texture2D(1, 1);
+        
 
-            FileStream stream = File.OpenRead(fileLocation);
-            TextReader reader = new StreamReader(stream);
-            Texture2D tex = new Texture2D(1, 1);
-            allCardText = reader.ReadToEnd();
-
-            // Split the read in CSV file into seperate objects at the new line character
-            string[] allCSVObjects = allCardText.Split("\n");
-            Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
+        // Split the read in CSV file into seperate objects at the new line character
+        string[] allCSVObjects = allCardText.Split("\n");
+            //Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
 
             // get all the image elements in the csv file
-            if (createAtlas)
-            {
+            // the web version doesn't allow the creation of an image atlas and 
+            // ignores the var
+            if (!tex.LoadImage(mImageBytes))
+        {
+            Debug.Log("atlas image wasn't properly loaded!");
+        }
+        
 
-                // Make sure to get the atlas first, as we only need to query it once. 
-                TextureAtlas currentAtlas = new TextureAtlas();
-
-                // make a list of all filenames
-                List<string> filenames = new List<string>(50);
-                for (int i = 1; i < allCSVObjects.Length; i++)
-                {
-                    string[] singleLineCSVObjects = allCSVObjects[i].Split(",");
-                    if (singleLineCSVObjects.Length > 1) // excel adds an empty line at the end
-                    {
-                        Debug.Log("number of items in a line is: " + singleLineCSVObjects.Length);
-                        if (!singleLineCSVObjects[5].Equals(string.Empty) && !singleLineCSVObjects[5].Equals(""))
-                        {
-                            filenames.Add(singleLineCSVObjects[5].Trim());
-                        }
-                        else
-                        {
-                            filenames.Add(string.Empty);
-                        }
-                    }
-                }
-
-                // create atlas and load back in from image
-                currentAtlas.CreateAtlasFromFilenameList("images/", outputAtlasName, filenames);
-                byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
-                tex.LoadImage(tempBytes);
-            }
-            else
-            {
-                byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
-                tex.LoadImage(tempBytes);
-            }
-
-            // get all the textual elements in the csv file
-            // NOTE: row 0 is always headings and not data
-            for (int i = 1; i < allCSVObjects.Length; i++)
+        // get all the textual elements in the csv file
+        // NOTE: row 0 is always headings and not data
+        for (int i = 1; i < allCSVObjects.Length; i++)
             {
                 // Then in each of the lines of csv data, split them based on commas to get the different pieces of information on each object
                 // and instantiate a base card object to then fill in with data.
@@ -220,19 +185,19 @@ public class CardReader : MonoBehaviour
                         // 5: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
                         string imageFilename = individualCSVObjects[5].Trim();
-                        //Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
+                    Debug.Log("image name is :" + imageFilename + " col and row are " + individualCSVObjects[11] + ":" + individualCSVObjects[12]);
 
-                        if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
-                        {
-                            int col = int.Parse(individualCSVObjects[11].Trim());
-                            int row = int.Parse(individualCSVObjects[12].Trim());
-                            //Debug.Log("col is " + col + " row is " + row);
+                    if (!imageFilename.Equals(string.Empty) && !imageFilename.Equals(""))
+                    {
+                        int col = int.Parse(individualCSVObjects[11].Trim());
+                        int row = int.Parse(individualCSVObjects[12].Trim());
+                        //Debug.Log("col is " + col + " row is " + row);
 
-                            Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                            tex3.SetPixels(tempColors);
-                            tex3.Apply();
+                        Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        tex3.SetPixels(tempColors);
+                        tex3.Apply();
 
-                        }
+                    }
                         tempCardFront.img = tex3;
 
                         // 6: card background
@@ -310,15 +275,7 @@ public class CardReader : MonoBehaviour
                 }
 
             }
-            // Close at the end
-            reader.Close();
-            stream.Close();
-        }
-        else
-        {
-            Debug.Log("file doesn't exist at the proper location.");
-        }
-
+            
         IsDone = true;
     }
 
@@ -328,16 +285,80 @@ public class CardReader : MonoBehaviour
         {
             // most likely case for the whole game
 
-        } else 
+        }
+        else
         if (!isRunning)
         {
             isRunning = true;
             // Check to see if the file exists
             fileLocation = Application.streamingAssetsPath + "/" + cardFileName;
             Debug.Log("trying to read file at location: " + fileLocation);
+            StartCoroutine(GetRequest(fileLocation));
+            StartCoroutine(GetImageAtlasRequest(Application.streamingAssetsPath + "/" + outputAtlasName));
+        }
+        else if (mFileRead && mImageFileRead)
+        {
             CSVRead(CreateAtlas);
-            IsDone = true;
+            // make sure we don't read the file multiple times
+            mFileRead = false;
+            mImageFileRead = false;
         }
     }
 
+    IEnumerator GetRequest(string uri)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Debug.Log(pages[page] + ":\nReceived");
+                    allCardText = webRequest.downloadHandler.text;
+                    mFileRead = true;
+                    break;
+            }
+        }
+    }
+
+    IEnumerator GetImageAtlasRequest(string uri)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            switch (webRequest.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    Debug.Log(pages[page] + ":\nReceived");
+                    mImageBytes = webRequest.downloadHandler.nativeData.ToArray();
+                    Debug.Log("number of bytes in image is: " + mImageBytes.Length);
+                    mImageFileRead = true;
+                    break;
+            }
+        }
+    }
 }

@@ -117,15 +117,6 @@ public class Card : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    // Cancel this card
-    public void Cancel(CardPlayer player, CardPlayer opponent, Card cardActedUpon)
-    {
-        foreach (ICardAction action in ActionList)
-        {
-            action.Canceled(player, opponent, cardActedUpon, this);
-        }
-    }
-
     public bool CanMitigate(string attackName)
     {
         bool canMitigate = false;

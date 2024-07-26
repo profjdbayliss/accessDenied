@@ -6103,7 +6103,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 545910552}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2403c2ce18016fb4fa5fea33776ebb3a, type: 3}
+  m_Script: {fileID: 11500000, guid: 533dccb5c23b50b45bd140f53f1985ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   IsDone: 0
@@ -9118,7 +9118,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 839994435}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2403c2ce18016fb4fa5fea33776ebb3a, type: 3}
+  m_Script: {fileID: 11500000, guid: 533dccb5c23b50b45bd140f53f1985ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   IsDone: 0
@@ -9468,7 +9468,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 22.391327, w: 0}
+  m_margin: {x: 0, y: 0, z: 31.963806, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -9499,7 +9499,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 12, y: 96}
+  m_AnchoredPosition: {x: 16, y: 82}
   m_SizeDelta: {x: 800, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &907936593
