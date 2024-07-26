@@ -15,8 +15,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     public CardReader blueDeckReader;
     public bool mCreateEnergyAtlas = false;
     public bool mCreateWaterAtlas = false;
-    public List<Card> energyCards;
-    public List<Card> waterCards;
+    public List<Card> redCards;
+    public List<Card> blueCards;
 
     // where are we in game phases?
     GamePhase mGamePhase = GamePhase.Start;
@@ -132,15 +132,15 @@ public class GameManager : MonoBehaviour, IRGObservable
             if (reader != null)
             {
                 // TODO: Set with csv
-                waterCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
-                CardPlayer.AddCards(waterCards);
+                blueCards = reader.CSVRead(mCreateWaterAtlas); // TODO: Remove var, single atlas
+                CardPlayer.AddCards(blueCards);
                 //waterPlayer.playerTeam = PlayerTeam.Blue;
                 //waterPlayer.DeckName = "blue";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
             }
             else
             {
-                Debug.Log("Water deck reader is null.");
+                Debug.Log("Blue deck reader is null.");
             }
 
 
@@ -149,8 +149,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             reader = redDeckReader.GetComponent<CardReader>();
             if (reader != null)
             {
-                energyCards = reader.CSVRead(mCreateEnergyAtlas);
-                CardPlayer.AddCards(energyCards);
+                redCards = reader.CSVRead(mCreateEnergyAtlas);
+                CardPlayer.AddCards(redCards);
                 //energyPlayer.playerTeam = PlayerTeam.Red;
                 //energyPlayer.DeckName = "red";
                 Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
@@ -164,7 +164,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             // Set dialogue runner for tutorial
             runner = yarnSpinner.GetComponent<DialogueRunner>();
             background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
-            Debug.Log(background);
+            //Debug.Log(background);
             hasStartedAlready = true;
         } else
         {
@@ -255,7 +255,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             phaseJustChanged = true;
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
-            SkipTutorial();
+            //SkipTutorial();
         }
 
         switch (phase)
@@ -267,14 +267,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // handled with specialty code outside of this
                 break;
             case GamePhase.DrawAndDiscard:
-                if (phaseJustChanged && !skip)
+                /*if (phaseJustChanged && !skip)
                 {
                     //runner.StartDialogue("DrawAndDiscard"); // TODO: NULL REF
                     //background.SetActive(true);
-                }
+                }*/
 
                 if (phaseJustChanged)
-                {                   
+                {
                     mIsDiscardAllowed = true;
                     // draw cards if necessary
                     actualPlayer.DrawCards(); // TODO: Source of display error?
@@ -527,10 +527,10 @@ public class GameManager : MonoBehaviour, IRGObservable
        
      
         // make sure to show all our cards
-        //foreach (GameObject gameObjectCard in actualPlayer.HandCards.Values)
-        //{
-        //    gameObjectCard.SetActive(true);
-        //}
+        foreach (GameObject gameObjectCard in actualPlayer.HandCards.Values)
+        {
+            gameObjectCard.SetActive(true);
+        }
 
         // set up the opponent name text
         if (RGNetworkPlayerList.instance.playerIDs.Count > 0)
