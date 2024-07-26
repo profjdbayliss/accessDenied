@@ -758,6 +758,7 @@ GameObject:
   - component: {fileID: 92073678}
   - component: {fileID: 92073677}
   - component: {fileID: 92073676}
+  - component: {fileID: 92073679}
   m_Layer: 5
   m_Name: Distribution Facility Box
   m_TagString: Untagged
@@ -850,6 +851,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 92073674}
   m_CullTransparentMesh: 1
+--- !u!114 &92073679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 92073674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 92073674}
+  delay: 0.5
+  maxHeightOffset: 100
+  highlight: 1
+  highlightObject: {fileID: 912450320}
+  scale: 0
+  scaleObject: {fileID: 0}
 --- !u!1 &92478569
 GameObject:
   m_ObjectHideFlags: 0
@@ -5093,6 +5113,7 @@ GameObject:
   - component: {fileID: 520008983}
   - component: {fileID: 520008982}
   - component: {fileID: 520008981}
+  - component: {fileID: 520008984}
   m_Layer: 5
   m_Name: Transmission Facility Box
   m_TagString: Untagged
@@ -5185,6 +5206,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 520008979}
   m_CullTransparentMesh: 1
+--- !u!114 &520008984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520008979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 520008979}
+  delay: 0.5
+  maxHeightOffset: 100
+  highlight: 1
+  highlightObject: {fileID: 2138288040}
+  scale: 0
+  scaleObject: {fileID: 0}
 --- !u!1 &522352602
 GameObject:
   m_ObjectHideFlags: 0
@@ -7607,7 +7647,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &791040123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9225,7 +9265,7 @@ GameObject:
   - component: {fileID: 912450323}
   - component: {fileID: 912450322}
   m_Layer: 5
-  m_Name: DistributionHighlight
+  m_Name: Highlight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17515,6 +17555,7 @@ GameObject:
   - component: {fileID: 2097464033}
   - component: {fileID: 2097464032}
   - component: {fileID: 2097464035}
+  - component: {fileID: 2097464036}
   m_Layer: 5
   m_Name: FacilityBox
   m_TagString: Untagged
@@ -17619,6 +17660,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a410b213209442fb15a69799f0240a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2097464036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2097464030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca1089fb8f2e0624d82940eb60cee511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 2097464030}
+  delay: 0.5
+  maxHeightOffset: 100
+  highlight: 1
+  highlightObject: {fileID: 180503385}
+  scale: 0
+  scaleObject: {fileID: 0}
 --- !u!1 &2102207273
 GameObject:
   m_ObjectHideFlags: 0
