@@ -8,7 +8,7 @@ public class CardFront : MonoBehaviour
     public CardType cardType;
     public bool worthCircle;
     public bool costCircle; // TODO: Needs three, one for each meeple color
-    public Color titleColor; // TODO: Change name if needed
+    public Color color; // TODO: Change name if needed
     public string title;
     public string description;
     public string flavor;

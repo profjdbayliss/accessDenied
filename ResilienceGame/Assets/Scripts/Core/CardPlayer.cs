@@ -111,33 +111,16 @@ public class CardPlayer : MonoBehaviour
     public void InitializeCards()
     {
         DeckIDs.Clear();
-        FacilityIDs.Clear(); // TODO: Remove facility card
         manager = GameObject.FindObjectOfType<GameManager>();
         Debug.Log("card count is: " + cards.Count);
         foreach (Card card in cards.Values)
         {
-            if (card != null)
+            if (card != null && card.DeckName.Equals(DeckName))
             {
-                if (card.DeckName.Equals(DeckName) && card.data.cardType != CardType.Station)
+                Debug.Log("adding card " + card.name + " with id " + card.data.cardID + " to deck " + DeckName);
+                for (int j = 0; j < card.data.numberInDeck; j++)
                 {
-                    Debug.Log("adding card " + card.name + " with id " + card.data.cardID + " to deck " + DeckName);
-                    for (int j = 0; j < card.data.numberInDeck; j++)
-                    {
-                        DeckIDs.Add(card.data.cardID);
-                    }
-
-                }/*
-                else if (card.DeckName.Equals(DeckName))
-                {
-                    Debug.Log("adding facility " + card.name + " with id " + card.data.cardID + " to deck " + DeckName);
-                    for (int j = 0; j < card.data.numberInDeck; j++)
-                    {
-                        FacilityIDs.Add(card.data.cardID);
-                    }
-                }*/
-                else
-                {
-                    // they don't match and it's ok.
+                    DeckIDs.Add(card.data.cardID);
                 }
 
             }
@@ -161,48 +144,6 @@ public class CardPlayer : MonoBehaviour
                 }
             }
         }
-    }
-
-    // TODO: Remove or rewrite
-    public virtual Card DrawFacility(bool isRandom, int worth)
-    {
-        Card card = null;
-        if (FacilityIDs.Count > 0)
-        {
-            if (isRandom)
-            {
-                card = DrawCard(true, 0, -1, ref FacilityIDs, playerDropZone, false,
-                    ref ActiveFacilities);
-                mTotalFacilityValue += card.data.worth;
-            } else
-            {
-                // need to draw the 2 pt facility according to rules
-                // at the beginning!
-                for (int i = 0; i < FacilityIDs.Count; i++)
-                {
-                    if (cards[FacilityIDs[i]].data.worth == worth)
-                    {
-                        card = DrawCard(false, FacilityIDs[i], -1, ref FacilityIDs, playerDropZone, false,
-                            ref ActiveFacilities);
-                        mTotalFacilityValue += card.data.worth;
-                        break;
-                    }
-                }
-            }
-
-            Debug.Log("facility was drawn and its unique id is: " + card.UniqueID + " with total worth climbing to " + mTotalFacilityValue);
-            Debug.Log("total active facilities are: " + ActiveFacilities.Count);
-            // always turn slippy off for facilities as we can't move them
-            slippy theSlippy = card.GetComponent<slippy>();
-            if (theSlippy != null)
-            {
-                theSlippy.enabled = false;
-            }
-        }
-
-       
-
-        return card;
     }
 
     public virtual Card DrawCard(bool random, int cardId, int uniqueId, ref List<int> deckToDrawFrom,
@@ -268,13 +209,15 @@ public class CardPlayer : MonoBehaviour
         RawImage[] tempRaws = tempCardObj.GetComponentsInChildren<RawImage>();
         for (int i = 0; i < tempRaws.Length; i++)
         {
+            Debug.Log(tempRaws[i]);
             if (tempRaws[i].name == "Image")
             {
                 tempRaws[i].texture = tempCard.front.img;
             }
             else if (tempRaws[i].name == "Background")
             {
-                tempRaws[i].color = tempCard.front.titleColor;
+                tempRaws[i].color = tempCard.front.color;
+                Debug.Log(tempCard.front.color);
             } 
         }
 

@@ -235,13 +235,13 @@ public class CardReader : MonoBehaviour
                         switch (DeckName.ToLower())
                         {
                             case "blue":
-                                tempCardFront.titleColor = new Color(106/255,137/255,220/255);
+                                tempCardFront.color = new Color(106f/255f,137f/255f,220f/255f);
                                 break;
                             case "red":
-                                tempCardFront.titleColor = new Color(222/255,0,0);
+                                tempCardFront.color = new Color(222f/255f,0,0);
                                 break;
-                            case "white":
-                                tempCardFront.titleColor = Color.white;
+                            default:
+                                tempCardFront.color = Color.white;
                                 break;
                         }
                         
