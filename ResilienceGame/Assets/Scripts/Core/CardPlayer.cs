@@ -17,6 +17,27 @@ public enum PlayerTeam
     Any
 };
 
+public enum PlayerSector
+{
+    Chemical,
+    Commercial,
+    Communications,
+    Manufacturing,
+    Dams,
+    Defense,
+    Emergency,
+    Energy,
+    Financial,
+    Agriculture,
+    Government,
+    Healthcare,
+    Information,
+    Nuclear,
+    Transportation,
+    Water,
+    Any
+};
+
 public enum AddOrRem
 {
     Add,
@@ -286,27 +307,11 @@ public class CardPlayer : MonoBehaviour
                 else { tempTexts[i].enabled = false; }
             }
         }
-
-        switch (tempCard.data.cardType)
-        {
-            // TODO: Change card types
-            case CardType.Defense:
-                tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
-                break;
-            case CardType.Mitigation:
-                tempCard.ActionList.Add(new ActionMitigateCard());
-                break;
-            case CardType.Vulnerability:
-                tempCard.ActionList.Add(new ActionImpactFacilityWorth());
-                break;
-            default:
-                break;
-        }
-
+        /*
         foreach(string mitigation in cards[tempCard.data.cardID].MitigatesWhatCards)
         {
             tempCard.MitigatesWhatCards.Add(mitigation);
-        }
+        }*/
 
  
         tempCardObj.GetComponent<slippy>().DraggableObject = tempCardObj;
@@ -572,7 +577,7 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Defense:
-                                if (card.data.cardType==CardType.Defense && CheckHighlightedStations())
+                                /*if (card.data.cardType==CardType.Defense && CheckHighlightedStations())
                                 {
                                     GameObject selected = GetHighlightedStation();
                                     Card selectedCard = selected.GetComponent<Card>();
@@ -598,10 +603,10 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     card.state = CardState.CardDrawn;
                                     manager.DisplayGameStatus("Please select a single facility you own and play a defense card type.");
-                                }
+                                }*/
                                 break;
                             case GamePhase.Mitigate:
-                                if (card.data.cardType == CardType.Mitigation && CheckHighlightedStations())
+                                /*if (card.data.cardType == CardType.Mitigation && CheckHighlightedStations())
                                 {
                                     Debug.Log("trying to mitigate");
                                     GameObject selected = GetHighlightedStation();
@@ -634,7 +639,7 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     card.state = CardState.CardDrawn;
                                     manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card.");
-                                }
+                                }*/
                                 break;
                             default:
                                 // we're not in the right phase, so
@@ -654,7 +659,7 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Vulnerability:
-                                if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
+                               /* if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
                                     ((mValueSpentOnVulnerabilities + card.data.blueCost) <= mTotalFacilityValue))
                                 {
                                     GameObject selected = opponentPlayer.GetHighlightedStation();
@@ -696,7 +701,7 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     card.state = CardState.CardDrawn;
                                     manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card less than the total worth of your facility cards.");
-                                }
+                                }*/
                                 break;
                             default:
                                 // we're not in the right phase, so

@@ -61,7 +61,7 @@ public class ActionMitigateCard : ICardAction
             {
                 Debug.Log("opponent card object obtained!");
                 Card tmpCard = tmpCardObject.GetComponent<Card>();
-                if (card.CanMitigate(tmpCard.front.title))
+                /*if (card.CanMitigate(tmpCard.front.title))
                 {
                     canMitigate = true;
                     Debug.Log(attackName + " can be mitigated by " + card.front.title);
@@ -73,7 +73,7 @@ public class ActionMitigateCard : ICardAction
                         opponentCard = tmpCard;
                         cardValue = tmpCard.data.worth;
                     }
-                }
+                }*/
             }
            
         }

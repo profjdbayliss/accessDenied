@@ -5,7 +5,6 @@ using UnityEngine;
 // Visual parts of the card
 public class CardFront : MonoBehaviour
 {
-    public CardType cardType;
     public bool blueCircle;
     public bool blackCircle;
     public bool purpleCircle; // TODO: Needs three, one for each meeple color

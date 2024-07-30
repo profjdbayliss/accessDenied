@@ -152,40 +152,58 @@ public class CardReader : MonoBehaviour
                         // 2: which type of card is this?
                         // NOTE: here is where we add appropriate card actions
                         // WORK: just add appropriate action to the actions list
-                        string type = individualCSVObjects[2].Trim();
-                        switch (type)
+                        //string type = individualCSVObjects[2].Trim();
+                        string[] methods = individualCSVObjects[2].Split(';');
+                        foreach (string type in methods)
                         {
-                            // TODO: Should be used to assign method called on played
-                            // TODO: Should be converted to match card player line 350
-                            /*case "Defense":
-                                tempCard.data.cardType = CardType.Defense;
-                                tempCardFront.cardType = CardType.Defense;
-                                break;
-                            case "Mitigation":
-                                tempCard.data.cardType = CardType.Mitigation;
-                                tempCardFront.cardType = CardType.Mitigation;
-                                break;
-                            case "Vulnerability":
-                                tempCard.data.cardType = CardType.Vulnerability;
-                                tempCardFront.cardType = CardType.Vulnerability;
-                                break;
-                            case "Station":
-                                tempCard.data.cardType = CardType.Station;
-                                tempCardFront.cardType = CardType.Station;
-                                break;
-                            case "Instant":
-                                tempCard.data.cardType = CardType.Instant;
-                                tempCardFront.cardType = CardType.Instant;
-                                break;
-                            case "Special":
-                                tempCard.data.cardType = CardType.Special;
-                                tempCardFront.cardType = CardType.Special;
-                                break;*/
-                            default:
-                                tempCard.data.cardType = CardType.None;
-                                tempCardFront.cardType = CardType.None;
-                                break;
+                            switch (type)
+                            {
+                                case "DrawAndDiscardCards":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ShuffleAndDrawCards":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ReduceCardCost":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ChangePoints":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "AddEffect":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "RemoveEffectByTeam":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "NegateEffect":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ChangeFinancialPoints":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "RemoveEffect":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "SpreadEffect":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ChangeMeepleAmount":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "IncreaseOvertimeAmount":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+                                case "ShuffleCardsFromDiscard":
+                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    break;
+
+                                default:
+                                    tempCard.data.cardType = CardType.None;
+                                    break;
+                            }
                         }
+                        
 
                         // 3: Target type
                         string target = individualCSVObjects[3].Trim();
@@ -228,8 +246,7 @@ public class CardReader : MonoBehaviour
 
                         // 6: set up the card title
                         // WORK: do we really need to set both of these?
-                        tempCardObj.name = individualCSVObjects[6];
-                        tempCardFront.title = tempCardObj.name;
+                        tempCardFront.title = tempCardObj.name = individualCSVObjects[6];
 
                         // Set up the card color. Could be done using csv
                         switch (DeckName.ToLower())
@@ -247,7 +264,7 @@ public class CardReader : MonoBehaviour
 
 
                         // 7/8: card image
-                        /*Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
                         //string imageFilename = individualCSVObjects[8].Trim(); // TODO: Set to single image Atlas
 
                         if (individualCSVObjects[7] != "")
@@ -260,7 +277,7 @@ public class CardReader : MonoBehaviour
                             tex3.SetPixels(tempColors);
                             tex3.Apply();
                         }
-                        //tempCardFront.img = tex3;
+                        tempCardFront.img = tex3;
 
                         // 9/10: card background // TODO: Set to single image Atlas
                         tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
@@ -269,13 +286,13 @@ public class CardReader : MonoBehaviour
                         {
                             int col = int.Parse(individualCSVObjects[9].Trim());
                             int row = int.Parse(individualCSVObjects[10].Trim());
-                            //Debug.Log("col is " + col + " row is " + row);*/
+                            //Debug.Log("col is " + col + " row is " + row);
 
-                        //Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        //tex3.SetPixels(tempColors);
-                        //tex3.Apply();
-                        //}
-                        // TODO: Uncomment when the above is done
+                            Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                            tex3.SetPixels(tempColors);
+                            tex3.Apply();
+                        }
+                        // TODO: Uncomment when a background Atlas is created
                         //tempCardFront.background = tex3;
 
                         // 11:  Meeple type changed

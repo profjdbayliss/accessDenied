@@ -45,7 +45,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     
     // NOTE: this is a string currently because mitigations are for 
     // cards from the other player's deck.
-    public List<string> MitigatesWhatCards = new List<string>(10);
+    //public List<string> MitigatesWhatCards = new List<string>(10);
     Vector2 mDroppedPosition;
     GameManager mManager; 
     public List<ICardAction> ActionList = new List<ICardAction>(6);
@@ -61,15 +61,16 @@ public class Card : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-       
         Debug.Log("click happened on card");
-        if (this.state == CardState.CardDrawn && data.cardType != CardType.Station)
+        if (this.state == CardState.CardDrawn)
         {
             // note that click consumes the release of most drag and release motions
             Debug.Log("potentially card dropped.");
             state = CardState.CardDrawnDropped;
             mDroppedPosition = new Vector2(this.transform.position.x, this.transform.position.y);
         }
+        // TODO: Update or remove
+        /*
         else if (this.data.cardType == CardType.Station && mManager.CanStationsBeHighlighted())
         {
             // only station type cards can be highlighted and played on
@@ -84,7 +85,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
             {
                 OutlineImage.SetActive(true);
             }
-        }
+        }*/
     }
 
     public bool OutlineActive()
@@ -114,21 +115,5 @@ public class Card : MonoBehaviour, IPointerClickHandler
         {
             action.Canceled(player, opponent, cardActedUpon, this);
         }
-    }
-
-    // TODO: Remove
-
-    public bool CanMitigate(string attackName)
-    {
-        bool canMitigate = false;
-
-        foreach(string mitigation in MitigatesWhatCards)
-        {
-            if (attackName.Equals(mitigation)) {
-                canMitigate = true;
-                break;
-            }
-        }
-        return canMitigate;
     }
 }

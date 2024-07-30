@@ -321,7 +321,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     mIsDefenseAllowed = false;
                     DisplayGameStatus(mPlayerName.text + " has played the maximum number of defense cards. Please hit end phase to continue.");
-                }
+                }/*
                 else
                 if (!actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandCards))
                 {
@@ -333,7 +333,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else  if (mIsDefenseAllowed)
                 { 
                     mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
-                }
+                }*/
                 break;
             case GamePhase.Vulnerability:
                 if (phaseJustChanged && !skip) 
@@ -356,8 +356,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                     } else
                     {
                         actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
-                    }         
-                }
+                    }
+                }/*
                 else
                 if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
@@ -367,8 +367,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 } else if (phaseJustChanged)
                 {
                     mAllowVulnerabilitiesPlayed = true;
-                }
-              
+                }*/
+
                 break;
             case GamePhase.Mitigate:
                 if (phaseJustChanged && !skip) 
@@ -384,7 +384,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                         actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
                     }
                 }
-                if (phaseJustChanged
+                /*if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
                 {
                     mAllowMitigationPlayed = false;
@@ -395,7 +395,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else if (phaseJustChanged)
                 {
                     mAllowMitigationPlayed = true;
-                }
+                }*/
                 
                 break;
             case GamePhase.Attack:
