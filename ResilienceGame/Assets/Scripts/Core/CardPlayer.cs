@@ -224,36 +224,23 @@ public class CardPlayer : MonoBehaviour
         Image[] tempImage = tempCardObj.GetComponentsInChildren<Image>();
         for (int i = 0; i < tempImage.Length; i++)
         {
-          if (tempImage[i].name.Equals("LeftCardSlot"))
+            if (tempImage[i].name.Equals("BlackCardSlot"))
             {
-                if (tempCard.front.worthCircle)
-                {
-                    // enable circle
-                    tempImage[i].enabled = true;
-                }
-                else
-                {
-                    tempImage[i].enabled = false;
-                }
+                tempImage[i].enabled = tempCard.front.blackCircle;
             }
-            else if (tempImage[i].name.Equals("RightCardSlot"))
+            else if (tempImage[i].name.Equals("BlueCardSlot"))
             {
-                if (tempCard.front.costCircle)
-                {
-                    // enable circle
-                    tempImage[i].enabled = true;
-                }
-                else
-                {
-                    tempImage[i].enabled = false;
-                }
+                tempImage[i].enabled = tempCard.front.blueCircle;
+            }
+            else if (tempImage[i].name.Equals("PurpleCardSlot"))
+            {
+                tempImage[i].enabled = tempCard.front.purpleCircle;
             }
         }
 
         TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
         {
-            // TODO: add flavor text and meeples
             if (tempTexts[i].name.Equals("Title Text"))
             {
                 tempTexts[i].text = tempCard.front.title;
@@ -261,32 +248,42 @@ public class CardPlayer : MonoBehaviour
             else if (tempTexts[i].name.Equals("Description Text"))
             {
                 tempTexts[i].text = tempCard.front.description;
-            } else if (tempTexts[i].name.Equals("LeftCardNumber") )
+            }
+            else if (tempTexts[i].name.Equals("Flavor Text"))
             {
-                if (tempCard.front.worthCircle)
-                {
-                    // set the text number for worth
-                    tempTexts[i].enabled = true;
-                    tempTexts[i].text = tempCard.data.worth + "";
-                } else
-                {
-                    // turn off the text box
-                    tempTexts[i].enabled = false;
-                }
-                
-            } else if (tempTexts[i].name.Equals("RightCardNumber"))
+                tempTexts[i].text = tempCard.front.flavor;
+            }
+            else if (tempTexts[i].name.Equals("BlackCardNumber"))
             {
-                if (tempCard.front.costCircle)
+                if (tempCard.front.blackCircle)
                 {
                     // set the text number for cost
                     tempTexts[i].enabled = true;
-                    tempTexts[i].text = tempCard.data.blueCost + "";
+                    tempTexts[i].text = tempCard.data.blackCost + "";
                 }
                 else
                 {
                     // turn off the text box
                     tempTexts[i].enabled = false;
                 }
+            }
+            else if (tempTexts[i].name.Equals("BlueCardNumber"))
+            {
+                if (tempCard.front.blueCircle)
+                {
+                    tempTexts[i].enabled = true;
+                    tempTexts[i].text = tempCard.data.blueCost + "";
+                }
+                else { tempTexts[i].enabled = false; }
+            }
+            else if (tempTexts[i].name.Equals("PurpleCardNumber"))
+            {
+                if (tempCard.front.purpleCircle)
+                {
+                    tempTexts[i].enabled = true;
+                    tempTexts[i].text = tempCard.data.purpleCost + "";
+                }
+                else { tempTexts[i].enabled = false; }
             }
         }
 

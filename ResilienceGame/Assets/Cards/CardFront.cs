@@ -6,8 +6,9 @@ using UnityEngine;
 public class CardFront : MonoBehaviour
 {
     public CardType cardType;
-    public bool worthCircle;
-    public bool costCircle; // TODO: Needs three, one for each meeple color
+    public bool blueCircle;
+    public bool blackCircle;
+    public bool purpleCircle; // TODO: Needs three, one for each meeple color
     public Color color; // TODO: Change name if needed
     public string title;
     public string description;

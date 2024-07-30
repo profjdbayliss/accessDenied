@@ -244,7 +244,7 @@ public class CardReader : MonoBehaviour
                                 tempCardFront.color = Color.white;
                                 break;
                         }
-                        
+
 
                         // 7/8: card image
                         /*Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
@@ -271,9 +271,9 @@ public class CardReader : MonoBehaviour
                             int row = int.Parse(individualCSVObjects[10].Trim());
                             //Debug.Log("col is " + col + " row is " + row);*/
 
-                            //Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                            //tex3.SetPixels(tempColors);
-                            //tex3.Apply();
+                        //Color[] tempColors = tex.GetPixels((col * TextureAtlas.SIZE), (row * TextureAtlas.SIZE), TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
+                        //tex3.SetPixels(tempColors);
+                        //tex3.Apply();
                         //}
                         // TODO: Uncomment when the above is done
                         //tempCardFront.background = tex3;
@@ -285,8 +285,14 @@ public class CardReader : MonoBehaviour
 
 
                         // 13:  Blue cost
+                        tempCard.data.blueCost = int.Parse(individualCSVObjects[13]);
+                        tempCardFront.blueCircle = (tempCard.data.blueCost != 0);
                         // 14:  Black cost
+                        tempCard.data.blackCost = int.Parse(individualCSVObjects[14]);
+                        tempCardFront.blackCircle = (tempCard.data.blackCost != 0);
                         // 15:  Purple cost
+                        tempCard.data.purpleCost = int.Parse(individualCSVObjects[15]);
+                        tempCardFront.purpleCircle = (tempCard.data.purpleCost != 0);
 
 
                         // 16:  Damage/Heal
