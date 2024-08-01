@@ -8,6 +8,7 @@ using System.Linq;
 using Yarn.Unity;
 using System.Xml;
 using UnityEngine.PlayerLoop;
+using System.ComponentModel;
 
 public class GameManager : MonoBehaviour, IRGObservable
 {
@@ -56,7 +57,11 @@ public class GameManager : MonoBehaviour, IRGObservable
     bool mAllowConnections = false;
     bool mReceivedEndGame = false;
     bool mStartGameRun = false;
-    
+    bool mWaitingForInstantCardResolution = false;
+    public GameObject PlayHaltButton;
+    Card mCacheInstantCard = null;
+    Updates mCacheInstantCardPlayInfo;
+
     // has everything been set?
     bool isInit = false;
 
@@ -102,6 +107,8 @@ public class GameManager : MonoBehaviour, IRGObservable
 
     // end game info
     public GameObject endGameCanvas;
+    public GameObject InstantCardAlert;
+
     public TMP_Text endGameText;
 
     public int activePlayerNumber;
@@ -362,34 +369,39 @@ public class GameManager : MonoBehaviour, IRGObservable
                     //runner.StartDialogue("Vulnerability");
                     //background.SetActive(true);
                 }
-
-                if (!phaseJustChanged)
+                if (!mWaitingForInstantCardResolution)
                 {
-                    if (!mAllowVulnerabilitiesPlayed)
+                    if (!phaseJustChanged)
                     {
-                        // do nothing - most common scenario
-                    } 
+                        if (!mAllowVulnerabilitiesPlayed)
+                        {
+                            // do nothing - most common scenario
+                        }
+                        else
+                        if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                        {
+                            mAllowVulnerabilitiesPlayed = false;
+                            DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
+                        }
+                        else
+                        {
+                            actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                        }
+                    }
                     else
-                    if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                    if (phaseJustChanged
+                        && !(actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards)||
+                        actualPlayer.CheckForCardsOfType(CardType.LateralMovement, actualPlayer.HandCards) ||
+                        actualPlayer.CheckForCardsOfType(CardType.Instant, actualPlayer.HandCards)))
                     {
                         mAllowVulnerabilitiesPlayed = false;
-                        DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
-                    } else
+                        DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");
+                    }
+                    else if (phaseJustChanged)
                     {
-                        actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
-                    }         
+                        mAllowVulnerabilitiesPlayed = true;
+                    }
                 }
-                else
-                if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
-                {
-                    mAllowVulnerabilitiesPlayed = false;
-                    DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");   
-                } else if (phaseJustChanged)
-                {
-                    mAllowVulnerabilitiesPlayed = true;
-                }
-              
                 break;
             case GamePhase.Mitigate:
                 if (phaseJustChanged && !skip) 
@@ -865,13 +877,64 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // This phase is more painful since it's an opponent card on top of a player facility
                     foreach (Updates update in updates)
                     {
-                        // draw opponent card to place on player facility
-                        // create card to be displayed
-                        Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCards);
-                        Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
-                        Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
-                        GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
-                        actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
+                        if (update.WhatToDo == AddOrRem.Add)
+                        {
+                            // draw opponent card to place on player facility
+                            // create card to be displayed
+                            Card card = opponentPlayer.DrawCard(false, update.CardID, -1, ref opponentPlayer.DeckIDs, opponentPlayer.playerDropZone, true, ref opponentPlayer.ActiveCards);
+                            Debug.Log("phase vuln opponent card with id : " + update.CardID + " should be in active opponent list.");
+                            Debug.Log("opponent active list size is : " + opponentPlayer.ActiveCards.Count);
+                            GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
+                            actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
+
+                            if (card.data.cardType == CardType.Instant)
+                            {
+                                // cache info for whenever we make a decision
+                                mCacheInstantCard = card;
+                                mCacheInstantCardPlayInfo = update;
+
+                                // pop up the window for resolution and wait for a button to be selected
+                                mWaitingForInstantCardResolution = true;
+                                PlayHaltButton.SetActive(false);
+                                mEndPhaseButton.SetActive(false);
+                                foreach (GameObject cardObj in actualPlayer.HandCards.Values)
+                                {
+                                    Card potentialHaltCard = cardObj.GetComponent<Card>();
+                                    if (potentialHaltCard.data.cardType == CardType.Halt)
+                                    {
+                                        PlayHaltButton.SetActive(true);
+                                        break;
+                                    }
+                                }
+                                InstantCardAlert.SetActive(true);
+                            }
+                        }
+                        else
+                        {
+                            bool getRidOfFacility = false;
+                            // first get card type for each update
+                            foreach (GameObject facility in opponentPlayer.ActiveFacilities.Values)
+                            {
+                                Card facilityCard = facility.GetComponent<Card>();
+                                if (facilityCard.data.cardID == update.CardID)
+                                {
+                                    getRidOfFacility = true;
+                                    break;
+                                }
+                            }
+                            if (getRidOfFacility)
+                            {
+                                Debug.Log("should be getting rid of facility");
+                                opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, GamePhase.Attack, true);
+                            }
+                            else
+                            {
+                                // this card is owned by the player
+                                // NOTE: if facility died then this won't actually do anything except tell
+                                // us the facility isn't there in a debug message
+                                opponentPlayer.AddUpdate(update, null, actualPlayer.playerDropZone, GamePhase.Attack, false);
+                            }
+                        }
                     }
                     break;
                 case GamePhase.Mitigate:
@@ -927,6 +990,31 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         Debug.Log("ending opponent update method");
 
+    }
+
+    public void HandleInstantPhasePlay()
+    {
+        mWaitingForInstantCardResolution = false;
+        mEndPhaseButton.SetActive(true);
+        InstantCardAlert.SetActive(false);
+
+        // play card out of sequence
+        actualPlayer.HandleInstantAttack(mCacheInstantCard, mCacheInstantCardPlayInfo, opponentPlayer);
+        // we fake an attack phase since this will cause attack update messages
+        SendUpdatesToOpponent(GamePhase.Attack, actualPlayer);
+        
+    }
+
+    public void HandlePlayHalt()
+    {
+        Debug.Log("halt card played!");
+        mWaitingForInstantCardResolution = false;
+        mEndPhaseButton.SetActive(true);
+        InstantCardAlert.SetActive(false);
+
+        // mitigate card immediately
+        actualPlayer.MitigateInstantAttack(mCacheInstantCardPlayInfo, opponentPlayer);
+        SendUpdatesToOpponent(GamePhase.Mitigate, opponentPlayer);
     }
 
     public void AddAttackUpdatesFromOpponent(ref List<AttackUpdate> updates)

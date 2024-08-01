@@ -72,6 +72,7 @@ public class ActionMitigateCard : ICardAction
     }
 }
 
+
 public class ActionImpactFacilityWorth : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)

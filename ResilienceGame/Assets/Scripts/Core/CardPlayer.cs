@@ -290,7 +290,7 @@ public class CardPlayer : MonoBehaviour
             indexForCard = deckToDrawFrom.FindIndex(x => x == cardId);
             if (indexForCard == -1)
             {
-                Debug.Log("didn't find a card of this type to draw : " + cardId + " to card deck with number " + deckToDrawFrom.Count);
+                Debug.Log("didn't find a card of this type to draw : " + cardId + " to card deck " + DeckName + " with number " + deckToDrawFrom.Count);
                 return null;
             }
         }
@@ -402,26 +402,30 @@ public class CardPlayer : MonoBehaviour
             }
         }
 
-        switch (tempCard.data.cardType)
+        foreach(ICardAction action in actualCard.ActionList)
         {
-            case CardType.Defense:
-                tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
-                break;
-            case CardType.Mitigation:
-                tempCard.ActionList.Add(new ActionMitigateCard());
-                break;
-            case CardType.Vulnerability:
-                if (tempCard.front.title.Equals("Lateral Movement"))
-                {
-                    tempCard.ActionList.Add(new ActionLateralMovement());
-                } else
-                {
-                    tempCard.ActionList.Add(new ActionImpactFacilityWorth());
-                }               
-                break;
-            default:
-                break;
+            tempCard.ActionList.Add(action);
         }
+        //switch (tempCard.data.cardType)
+        //{
+        //    case CardType.Defense:
+        //        tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
+        //        break;
+        //    case CardType.Mitigation:
+        //        tempCard.ActionList.Add(new ActionMitigateCard());
+        //        break;
+        //    case CardType.Vulnerability:
+        //        if (tempCard.front.title.Equals("Lateral Movement"))
+        //        {
+        //            tempCard.ActionList.Add(new ActionLateralMovement());
+        //        } else
+        //        {
+        //            tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+        //        }               
+        //        break;
+        //    default:
+        //        break;
+        //}
 
         foreach(string mitigation in cards[tempCard.data.cardID].MitigatesWhatCards)
         {
@@ -495,7 +499,7 @@ public class CardPlayer : MonoBehaviour
                     Card opponentCard = opponentAttackObject.GetComponent<Card>();
                     
                     // set all lateral movement cards in slot 0 to discard
-                    if (i==0 && opponentCard.front.title.Equals("Lateral Movement"))
+                    if (i==0 && opponentCard.data.cardType==CardType.LateralMovement)
                     {
                         opponentCard.state = CardState.CardNeedsToBeDiscarded;
                         mUpdatesThisPhase.Add(new Updates
@@ -504,7 +508,7 @@ public class CardPlayer : MonoBehaviour
                             UniqueFacilityID = facilityCard.UniqueID,
                             CardID = opponentCard.data.cardID
                         });
-                    } else if (i == facilityCard.AttackingCards.Count-1 && opponentCard.front.title.Equals("Lateral Movement"))
+                    } else if (i == facilityCard.AttackingCards.Count-1 && opponentCard.data.cardType==CardType.LateralMovement)
                     {
                         opponentCard.state = CardState.CardNeedsToBeDiscarded;
                         mUpdatesThisPhase.Add(new Updates
@@ -549,7 +553,7 @@ public class CardPlayer : MonoBehaviour
 
                     Card opponentCard = opponentAttackObject.GetComponent<Card>();
                     
-                    if (!opponentCard.front.title.Equals("Lateral Movement") && opponentCard.state != CardState.CardNeedsToBeDiscarded)
+                    if (!(opponentCard.data.cardType==CardType.LateralMovement) && opponentCard.state != CardState.CardNeedsToBeDiscarded)
                     {
                         // run the effects of the card, but only if we roll between 11-20 on a d20 does the attack happen
                         // This is the same as 50-99 on a 0-100 random roll
@@ -577,7 +581,7 @@ public class CardPlayer : MonoBehaviour
                                 if (opponentAttackObject2 != null)
                                 {
                                     Card possibleLateralMovement = opponentAttackObject2.GetComponent<Card>();
-                                    if (possibleLateralMovement.front.title.Equals("Lateral Movement"))
+                                    if (possibleLateralMovement.data.cardType==CardType.LateralMovement)
                                     {
                                         // we need to play the lateral movement card too
                                         possibleLateralMovement.Play(this, opponent, facilityCard, opponentCard);
@@ -1201,7 +1205,10 @@ public class CardPlayer : MonoBehaviour
                         switch (phase)
                         {
                             case GamePhase.Vulnerability:
-                                if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
+                                bool checkHighlightedStations = opponentPlayer.CheckHighlightedStations();
+                                if (((card.data.cardType == CardType.Vulnerability) || 
+                                    (card.data.cardType == CardType.LateralMovement)) && 
+                                    checkHighlightedStations &&
                                     ((mValueSpentOnVulnerabilities + card.data.cost) <= mTotalFacilityValue))
                                 {
                                     GameObject selected = opponentPlayer.GetHighlightedStation();
@@ -1232,17 +1239,45 @@ public class CardPlayer : MonoBehaviour
                                         Debug.Log("Amount spent on vuln is " + mValueSpentOnVulnerabilities + " with total facility worth of " + mTotalFacilityValue);
 
                                     }
-                                    else
-                                    {
-                                        card.state = CardState.CardDrawn;
-                                        manager.DisplayGameStatus("Can't play multiples of the same card on a station.");
+                                }
+                                else if (card.data.cardType == CardType.Instant && checkHighlightedStations &&
+                                ((mValueSpentOnVulnerabilities + card.data.cost) <= mTotalFacilityValue))
+                                {
+                                    GameObject selected = opponentPlayer.GetHighlightedStation();
+                                    Card selectedCard = selected.GetComponent<Card>();
 
-                                    }
+                                    StackCards(selected, gameObjectCard, opponentDropZone, GamePhase.Vulnerability);
+                                    card.state = CardState.CardInPlay;
+                                    ActiveCards.Add(card.UniqueID, gameObjectCard);
+
+                                    selectedCard.AttackingCards.Add(new CardIDInfo
+                                    {
+                                        CardID = card.data.cardID,
+                                        UniqueID = card.UniqueID
+                                    });
+                                    mUpdatesThisPhase.Add(new Updates
+                                    {
+                                        WhatToDo = AddOrRem.Add,
+                                        UniqueFacilityID = selectedCard.UniqueID,
+                                        CardID = card.data.cardID
+                                    });
+
+                                    playCount = 1;
+                                    playKey = card.UniqueID;
+                                    selectedCard.OutlineImage.SetActive(false);
+                                    mValueSpentOnVulnerabilities += card.data.cost;
+                                    Debug.Log("Amount spent on instant is " + mValueSpentOnVulnerabilities + " with total facility worth of " + mTotalFacilityValue);
+                                    
+                                    // send update immediately to opponent rather than waiting for the end of the phase
+                                    // NOTE: it will send all updates rather than just the one
+                                    // WORK: might want to change this in the future
+                                    manager.SendUpdatesToOpponent(GamePhase.Vulnerability, this);
                                 }
                                 else
                                 {
                                     card.state = CardState.CardDrawn;
-                                    manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card less than the total worth of your facility cards.");
+                                    manager.DisplayGameStatus("Can't play multiples of the same card on a station.");
+
                                 }
                                 break;
                             default:
@@ -1288,6 +1323,172 @@ public class CardPlayer : MonoBehaviour
         }
 
         return playCount;
+    }
+
+    public void MitigateInstantAttack(Updates updateInfo, CardPlayer opponent)
+    {
+        // find halt card in active hand
+        GameObject haltGameObj = null;
+        foreach(GameObject potentialGameObj in HandCards.Values)
+        {
+            Card tmp = potentialGameObj.GetComponent<Card>();
+            if (tmp.data.cardType == CardType.Halt)
+            {
+                haltGameObj = potentialGameObj;
+                break;
+            }
+        }
+
+        if (haltGameObj != null)
+        {
+            Debug.Log("found halt card!");
+            Card haltCard = haltGameObj.GetComponent<Card>();
+            GameObject facilityGameObject = null;
+            if (ActiveFacilities.TryGetValue(updateInfo.UniqueFacilityID, out facilityGameObject))
+            {
+                Debug.Log("found facility!");
+                Card facilityCard = facilityGameObject.GetComponent<Card>();
+                haltCard.Play(this, opponent, facilityCard);
+
+                // now discard all facilities annihilated
+                DiscardAllInactiveCards(DiscardFromWhere.Hand, false, -1);
+                opponent.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
+                //opponent.DiscardAllInactiveCards(DiscardFromWhere.MyFacility, true, facilityCard.UniqueID);
+            }
+        }
+    }
+
+    public void HandleInstantAttack(Card instantCard, Updates updateInfo, CardPlayer opponent)
+    {
+        List<int> facilitiesToRemove = new List<int>(8);
+        GameObject facilityGameObject = null;
+        Debug.Log("inside handle instant attack");
+        if (ActiveFacilities.TryGetValue(updateInfo.UniqueFacilityID, out facilityGameObject))
+        {
+            Debug.Log("Instant card: active facility found");
+            Card facilityCard = facilityGameObject.GetComponent<Card>();
+            instantCard.Play(this, opponent, facilityCard);
+
+            mUpdatesThisPhase.Add(new Updates
+            {
+                WhatToDo = AddOrRem.Remove,
+                UniqueFacilityID = facilityCard.UniqueID,
+                CardID = instantCard.data.cardID
+            });
+
+            Debug.Log("facility worth is " + (facilityCard.data.worth + facilityCard.DefenseHealth));
+
+            // now check the total worth of the facility to see if it
+            // and do a removal of all cards that were spent in attacks
+            if (facilityCard.data.worth + facilityCard.DefenseHealth <= 0)
+            {
+                Debug.Log("we need to get rid of this facility");
+
+                // remove the worth of this facility since it's no longer there
+                mTotalFacilityValue -= facilityCard.data.worth;
+                // get rid of all potential connectors from both sides
+                int whichFacilityZone = facilityCard.WhichFacilityZone;
+                GameObject facilityZoneHolder = facilityCard.CanvasHolder;
+                Connections connections = facilityZoneHolder.GetComponent<Connections>();
+
+                foreach (FacilityConnectionInfo connectionInfo in facilityCard.ConnectionList)
+                {
+                    int zoneToTurnOff = connectionInfo.WhichFacilityZone;
+                    // turn off this facility's possible connection to the other
+                    Debug.Log("turning off a specific zone " + zoneToTurnOff);
+                    connections.connections[zoneToTurnOff].SetActive(false);
+                    Debug.Log("turned off");
+                    // turn off the other facility's possible connection to this one
+                    // and delete this facility from its active connections list
+                    Debug.Log("getting facility with id " + connectionInfo.UniqueFacilityID);
+
+                    GameObject otherFacility;
+                    ActiveFacilities.TryGetValue(connectionInfo.UniqueFacilityID, out otherFacility);
+                    Debug.Log("got facility");
+
+                    if (otherFacility != null)
+                    {
+                        Card otherFacilityCard = otherFacility.GetComponent<Card>();
+                        GameObject otherFacilityZone = otherFacilityCard.CanvasHolder;
+                        Connections otherConnections = otherFacilityZone.GetComponent<Connections>();
+                        Debug.Log("other connection zone setting to false");
+                        otherConnections.connections[whichFacilityZone].SetActive(false);
+                        Debug.Log("done");
+                        int indexToRemove = otherFacilityCard.ConnectionList.FindIndex(x => x.WhichFacilityZone == whichFacilityZone);
+                        if (indexToRemove >= 0)
+                        {
+                            otherFacilityCard.ConnectionList.RemoveAt(indexToRemove);
+                        }
+                        else
+                        {
+                            Debug.Log("Error finding facility for zone " + whichFacilityZone + " to remove.");
+                        }
+
+                    }
+                    else
+                    {
+                        Debug.Log("Error finding facility " + connectionInfo.UniqueFacilityID + " to turn its connection off");
+                    }
+                }
+                // now clear all the connection info
+                facilityCard.ConnectionList.Clear();
+
+                // the facility needs to be removed along with all remaining
+                // attack cards on it
+                foreach (CardIDInfo cardInfo in facilityCard.AttackingCards)
+                {
+                    GameObject cardObject = opponent.GetActiveCardObject(cardInfo);
+                    if (cardObject != null)
+                    {
+                        Card cardToDispose = cardObject.GetComponent<Card>();
+                        Debug.Log("handling all attack cards on defunct facility : this one's id is " + cardToDispose.UniqueID);
+                        cardToDispose.state = CardState.CardNeedsToBeDiscarded;
+
+                    }
+                    else
+                    {
+                        Debug.Log("attack card with id " + cardInfo.CardID + " wasn't found in the pile of cards on a defunct facility.");
+                    }
+                    //opponent.HandleDiscard(opponent.ActiveCards, opponent.opponentDropZone, facilityCard.UniqueID, true);
+                }
+
+                // get rid of defense cards on this facility as well
+                foreach (GameObject cardObject in ActiveCards.Values)
+                {
+                    Card card = cardObject.GetComponent<Card>();
+                    if (card.WhichFacilityZone == facilityCard.WhichFacilityZone)
+                    {
+                        Debug.Log("getting rid of defense facility on zone " + card.WhichFacilityZone);
+                        card.state = CardState.CardNeedsToBeDiscarded;
+                        // note that we don't add an update as the opponent's side will delete all cards with the facility card
+                    }
+                }
+
+                // let's discard all the cards on the facility in question
+                //opponent.DiscardAllInactiveCards(DiscardFromWhere.Hand, true, facilityCard.UniqueID);
+                
+
+                facilityCard.AttackingCards.Clear();
+                facilityCard.state = CardState.CardNeedsToBeDiscarded;
+
+                mUpdatesThisPhase.Add(new Updates
+                {
+                    WhatToDo = AddOrRem.Remove,
+                    UniqueFacilityID = facilityCard.UniqueID,
+                    CardID = facilityCard.data.cardID
+                });
+
+            }
+
+            // now discard all facilities annihilated
+            DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, -1);
+            opponent.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
+
+        }
+        else
+        {
+            Debug.Log("This facility doesn't exist: " + updateInfo.UniqueFacilityID);
+        }
     }
 
     public bool DuplicateCardPlayed(Card facilityCard, Card cardToPlay)
@@ -1674,6 +1875,8 @@ public class CardPlayer : MonoBehaviour
                         }
                         // let's discard all the cards on the facility in question
                         manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
+                        manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyFacility, true, facilityCard.UniqueID);
+
                         facilityCard.AttackingCards.Clear();
                         facilityCard.state = CardState.CardNeedsToBeDiscarded;
 

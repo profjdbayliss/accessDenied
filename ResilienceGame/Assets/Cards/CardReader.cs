@@ -146,15 +146,18 @@ public class CardReader : MonoBehaviour
                             case "Defense":
                                 tempCard.data.cardType = CardType.Defense;
                                 tempCardFront.cardType = CardType.Defense;
+                                tempCard.ActionList.Add(new ActionAddDefenseWorthToStation());
                                 break;
                             case "Mitigation":
                                 tempCard.data.cardType = CardType.Mitigation;
                                 tempCardFront.cardType = CardType.Mitigation;
+                                tempCard.ActionList.Add(new ActionMitigateCard());
                                 break;
                             case "Vulnerability":
                                 tempCard.data.cardType = CardType.Vulnerability;
                                 tempCardFront.cardType = CardType.Vulnerability;
-                                break;
+                                tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                break;                          
                             case "Station":
                                 tempCard.data.cardType = CardType.Station;
                                 tempCardFront.cardType = CardType.Station;
@@ -162,6 +165,17 @@ public class CardReader : MonoBehaviour
                             case "Instant":
                                 tempCard.data.cardType = CardType.Instant;
                                 tempCardFront.cardType = CardType.Instant;
+                                tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                break;
+                            case "Halt":
+                                tempCard.data.cardType = CardType.Halt;
+                                tempCardFront.cardType = CardType.Halt;
+                                tempCard.ActionList.Add(new ActionMitigateCard());
+                                break;
+                            case "Lateral Movement":
+                                tempCard.data.cardType = CardType.LateralMovement;
+                                tempCardFront.cardType = CardType.LateralMovement;
+                                tempCard.ActionList.Add(new ActionLateralMovement());
                                 break;
                             case "Special":
                                 tempCard.data.cardType = CardType.Special;

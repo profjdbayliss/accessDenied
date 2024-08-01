@@ -10,6 +10,8 @@ public enum CardType
     Vulnerability,
     Mitigation,
     Instant,
+    Halt,
+    LateralMovement,
     Special,
     None
 }
