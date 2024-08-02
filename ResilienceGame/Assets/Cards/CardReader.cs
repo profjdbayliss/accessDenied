@@ -159,10 +159,16 @@ public class CardReader : MonoBehaviour
                             switch (type)
                             {
                                 case "DrawAndDiscardCards":
-                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    tempCard.ActionList.Add(new DrawAndDiscardCards());
+                                    // 17:  Cards drawn
+                                    tempCard.data.drawAmount = int.Parse(individualCSVObjects[17]);
+                                    // 18:  Cards removed
+                                    tempCard.data.removeAmount = int.Parse(individualCSVObjects[18]);
                                     break;
                                 case "ShuffleAndDrawCards":
-                                    //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
+                                    tempCard.ActionList.Add(new ShuffleAndDrawCards());
+                                    tempCard.data.drawAmount = int.Parse(individualCSVObjects[17]);
+                                    tempCard.data.removeAmount = int.Parse(individualCSVObjects[18]);
                                     break;
                                 case "ReduceCardCost":
                                     //tempCard.ActionList.Add(new ActionImpactFacilityWorth());
@@ -313,12 +319,6 @@ public class CardReader : MonoBehaviour
 
 
                         // 16:  Damage/Heal
-
-
-                        // 17:  Cards drawn
-
-
-                        // 18:  Cards removed
 
 
                         // 19:  Effect

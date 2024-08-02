@@ -26,6 +26,8 @@ public struct CardData
     public int blueCost;
     public int blackCost;
     public int purpleCost;
+    public int drawAmount;
+    public int removeAmount;
     public int worth;
     public PlayerTeam onlyPlayedOn;
 }

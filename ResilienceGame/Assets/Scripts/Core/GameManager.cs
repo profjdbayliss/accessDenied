@@ -277,7 +277,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     mIsDiscardAllowed = true;
                     // draw cards if necessary
-                    actualPlayer.DrawCards(); // TODO: Source of display error?
+                    actualPlayer.DrawCards();
                     // set the discard area to work if necessary
                     actualPlayer.discardDropZone.SetActive(true);
                     mNumberDiscarded = 0;

@@ -4,101 +4,49 @@ using TMPro;
 using UnityEngine;
 
 // TODO: Rewrite card actions for Sector Down
-
-public class ActionAddDefenseWorthToStation : ICardAction
+/*
+ *                                  "DrawAndDiscardCards":
+                                case "ShuffleAndDrawCards":
+                                case "ReduceCardCost":
+                                case "ChangePoints":
+                                case "AddEffect":
+                                case "RemoveEffectByTeam":
+                                case "NegateEffect":
+                                case "ChangeFinancialPoints":
+                                case "RemoveEffect":
+                                case "SpreadEffect":
+                                case "ChangeMeepleAmount":
+                                case "IncreaseOvertimeAmount":
+                                case "ShuffleCardsFromDiscard":*/
+public class DrawAndDiscardCards : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played.");
-        cardActedUpon.DefenseHealth += card.data.worth;
-        TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
-        for (int i = 0; i < tempTexts.Length; i++)
-        {
-          if (tempTexts[i].name.Equals("Description Text"))
-            {
-                tempTexts[i].color = Color.blue;
-                tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
-            }         
-        }
+        // TODO: Get data from card reader to loop
+        player.DrawCard(true, 0, -1, ref player.DeckIDs, player.handDropZone, true, ref player.HandCards);
+        // TODO: Select Card(s) to Discard / reactivate discard box
+        player.DiscardAllInactiveCards(DiscardFromWhere.Hand, false, -1);
     }
     public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
-        cardActedUpon.DefenseHealth -= card.data.worth;
-      
-        TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
-        for (int i = 0; i < tempTexts.Length; i++)
-        {
-            if (cardActedUpon.DefenseHealth > 0 && tempTexts[i].name.Equals("Description Text"))
-            {
-                tempTexts[i].color = Color.red;
-                tempTexts[i].text = "<size=600%>+" + cardActedUpon.DefenseHealth;
-            }
-            else
-            {
-                tempTexts[i].text = "";
-            }
-        }
-        
+        Debug.Log("card " + card.front.title + " canceled.");
     }
 }
 
-public class ActionMitigateCard : ICardAction
+public class ShuffleAndDrawCards : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played to mitigate a card on the selected station.");
-        bool canMitigate = false;
-        string attackName = "";
-        GameObject opponentCardObject = null;
-        Card opponentCard = null;
-        int cardValue = 0;
-
-       foreach (CardIDInfo attackingCardInfo in cardActedUpon.AttackingCards)
-        {
-            Debug.Log("checking for attack card " + attackingCardInfo.CardID);
-            GameObject tmpCardObject = opponent.GetActiveCardObject(attackingCardInfo);
-            if (tmpCardObject != null)
-            {
-                Debug.Log("opponent card object obtained!");
-                Card tmpCard = tmpCardObject.GetComponent<Card>();
-                /*if (card.CanMitigate(tmpCard.front.title))
-                {
-                    canMitigate = true;
-                    Debug.Log(attackName + " can be mitigated by " + card.front.title);
-                    // our goal is to find whichever card is the most negative
-                    // and mitigate that one!
-                    if (tmpCard.data.worth < cardValue)
-                    {
-                        opponentCardObject = tmpCardObject;
-                        opponentCard = tmpCard;
-                        cardValue = tmpCard.data.worth;
-                    }
-                }*/
-            }
-           
-        }
-
-       if (canMitigate)
-        {
-            // get the right card from the station to clear it from the station
-            // and send it to opponent's discard pile
-            opponentCard.state = CardState.CardNeedsToBeDiscarded;
-            //GameManager.instance.DiscardOpponentActiveCard(cardActedUpon.UniqueID, 
-            //    new CardIDInfo {
-            //        CardID = opponentCard.data.cardID,
-            //        UniqueID = opponentCard.UniqueID,
-            //        }, true);
-
-            // put our card in the discard pile as well
-            card.state = CardState.CardNeedsToBeDiscarded;
-
-        }
+        // TODO: Get data from card reader to loop
+        player.DrawCard(true, 0, -1, ref player.DeckIDs, player.handDropZone, true, ref player.HandCards);
+        // TODO: Select Shuffled Card
 
     }
     public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
-       // we never cancel mitigations
-       // if we had to we'd have to cache the info for the card in this class
+        Debug.Log("card " + card.front.title + " canceled.");
     }
 }
 
