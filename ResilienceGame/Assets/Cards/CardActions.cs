@@ -24,7 +24,10 @@ public class DrawAndDiscardCards : ICardAction
     {
         Debug.Log("card " + card.front.title + " played.");
         // TODO: Get data from card reader to loop
-        player.DrawCard(true, 0, -1, ref player.DeckIDs, player.handDropZone, true, ref player.HandCards);
+        for(int i = 0; i < card.data.drawAmount; i++)
+        {
+            player.DrawCard(true, 0, -1, ref player.DeckIDs, player.handDropZone, true, ref player.HandCards);
+        }
         // TODO: Select Card(s) to Discard / reactivate discard box
         player.DiscardAllInactiveCards(DiscardFromWhere.Hand, false, -1);
     }
