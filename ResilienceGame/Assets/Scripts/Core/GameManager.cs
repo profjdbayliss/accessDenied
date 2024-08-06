@@ -303,7 +303,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Defense:
                 if (phaseJustChanged && !skip) 
                 { 
-                    runner.StartDialogue("Defense"); 
+                    //runner.StartDialogue("Defense"); 
                     background.SetActive(true);
                 }
 
@@ -338,7 +338,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Vulnerability:
                 if (phaseJustChanged && !skip) 
                 {
-                    runner.StartDialogue("Vulnerability");
+                    //runner.StartDialogue("Vulnerability");
                     background.SetActive(true);
                 }
 
@@ -373,7 +373,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Mitigate:
                 if (phaseJustChanged && !skip) 
                 { 
-                    runner.StartDialogue("Mitigate");
+                    //runner.StartDialogue("Mitigate");
                     background.SetActive(true);
                 }
 
@@ -401,7 +401,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Attack:
                 if (phaseJustChanged && !skip) 
                 { 
-                    runner.StartDialogue("Attack");
+                    //runner.StartDialogue("Attack");
                     background.SetActive(true);
                 }
 
@@ -415,7 +415,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.AddStation:
                 if (phaseJustChanged && !skip)
                 {
-                    runner.StartDialogue("AddStation");
+                    //runner.StartDialogue("AddStation");
                     background.SetActive(true);
                     skip = true;
                 }
