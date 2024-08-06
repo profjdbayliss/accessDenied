@@ -34,9 +34,10 @@ public enum PlayerSector
     Healthcare,
     Information,
     Nuclear,
-    Transportation,
+    Transport,
     Water,
-    Any
+    Any,
+    All
 };
 
 public enum AddOrRem
@@ -54,7 +55,7 @@ public struct Updates
 
 public enum DiscardFromWhere
 {
-    // TODO: Needs ref to others play zones
+    // TODO: Needs ref to others se
     Hand,
     MyPlayZone,
     MyFacility
@@ -384,7 +385,7 @@ public class CardPlayer : MonoBehaviour
                     {
                         
                         Card opponentCard = opponentAttackObject.GetComponent<Card>();
-                        Debug.Log("attacking card with value : " + opponentCard.data.worth);
+                        Debug.Log("attacking card with value : " + opponentCard.data.facilityAmount);
                         opponentCard.Play(this, opponent, facilityCard);
                         mUpdatesThisPhase.Add(new Updates
                         {
@@ -399,11 +400,11 @@ public class CardPlayer : MonoBehaviour
                 }
             }
 
-            Debug.Log("facility worth is " + (facilityCard.data.worth + facilityCard.DefenseHealth));
+            Debug.Log("facility worth is " + (facilityCard.data.facilityAmount + facilityCard.DefenseHealth));
 
             // now check the total worth of the facility to see if it
             // and do a removal of all cards that were spent in attacks
-            if (facilityCard.data.worth+facilityCard.DefenseHealth <= 0)
+            if (facilityCard.data.facilityAmount+facilityCard.DefenseHealth <= 0)
             {
                 Debug.Log("we need to get rid of this facility");
                 // the facility needs to be removed along with all remaining

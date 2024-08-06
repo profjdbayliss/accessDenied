@@ -128,11 +128,13 @@ public class CardReader : MonoBehaviour
                     // 26:  Text description
 
                     // 0: Read only cards of the correct team
+                    // TODO: If possible use one card reader instead of 3 (1 for each team)
                     if (individualCSVObjects[0].Trim().ToLower() != DeckName.ToLower())
                     {
                         continue;
                     }
 
+                    // TODO: If needed set teamID here
                     Debug.Log(DeckName);
 
                     // 1:if there's one or more cards to be inserted into the deck
@@ -151,8 +153,6 @@ public class CardReader : MonoBehaviour
 
                         // 2: which type of card is this?
                         // NOTE: here is where we add appropriate card actions
-                        // WORK: just add appropriate action to the actions list
-                        //string type = individualCSVObjects[2].Trim();
                         string[] methods = individualCSVObjects[2].Split(';');
                         foreach (string type in methods)
                         {
@@ -215,40 +215,24 @@ public class CardReader : MonoBehaviour
                         string target = individualCSVObjects[3].Trim();
                         switch (target)
                         {
-                            /*case "any":
-                                tempCard.data.onlyPlayedOn = PlayerType.Any;
-                                break;
-                            case "power":
-                                tempCard.data.onlyPlayedOn = PlayerType.Energy;
-                                break;
-                            case "water":
-                                tempCard.data.onlyPlayedOn = PlayerType.Water;
-                                break;*/
+                            // TODO: Enum needed for hand/sector/facility
+                            // Is this needed? Is this handled by just CardActions?
                             default:
-                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
+                                tempCard.data.onlyPlayedOn[0] = PlayerSector.Any;
                                 break;
                         }
 
                         // 4: is this card only played on a specific player type?
-                        string onlyPlayedOn = individualCSVObjects[4].Trim();
-                        switch (onlyPlayedOn)
+                        string[] onlyPlayedOn = individualCSVObjects[4].Trim().Split(';');
+                        for (int j = 0; j<onlyPlayedOn.Length; j++)
                         {
-                            // TODO: This should be sector names
-                            case "any":
-                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
-                                break;
-                            case "energy":
-                                //tempCard.data.onlyPlayedOn = PlayerTeam.Red;
-                                break;
-                            case "water":
-                                //tempCard.data.onlyPlayedOn = PlayerTeam.Water;
-                                break;
-                            default:
-                                tempCard.data.onlyPlayedOn = PlayerTeam.Any;
-                                break;
+                            // TODO: Better to do string[] then TryParse when checking sector being played on?
+                            if (Enum.TryParse(onlyPlayedOn[j], out PlayerSector sector)) { tempCard.data.onlyPlayedOn[j] = sector; }
+                            else { Debug.Log("Parse failed"); }
                         }
 
                         // 5: Amount of possible targets
+                        tempCard.data.targetAmount = int.Parse(individualCSVObjects[5]);
 
                         // 6: set up the card title
                         // WORK: do we really need to set both of these?
@@ -271,7 +255,7 @@ public class CardReader : MonoBehaviour
 
                         // 7/8: card image
                         Texture2D tex3 = new Texture2D(TextureAtlas.SIZE, TextureAtlas.SIZE); // This needs to match the textureatlas pixel width
-                        //string imageFilename = individualCSVObjects[8].Trim(); // TODO: Set to single image Atlas
+                        string imageFilename = individualCSVObjects[27].Trim(); // TODO: Set to single image Atlas
 
                         if (individualCSVObjects[7] != "")
                         {
@@ -302,10 +286,11 @@ public class CardReader : MonoBehaviour
                         //tempCardFront.background = tex3;
 
                         // 11:  Meeple type changed
-
+                        // TODO: May need enum implemented
+                        tempCard.data.meepleType = individualCSVObjects[11].Trim().Split(';');
 
                         // 12:  Number of Meeples changed
-
+                        if (individualCSVObjects[12] != "") { tempCard.data.meepleAmount = float.Parse(individualCSVObjects[12]); }
 
                         // 13:  Blue cost
                         tempCard.data.blueCost = int.Parse(individualCSVObjects[13]);
@@ -319,7 +304,7 @@ public class CardReader : MonoBehaviour
 
 
                         // 16:  Damage/Heal
-
+                        tempCard.data.facilityAmount = int.Parse(individualCSVObjects[16]);
 
                         // 19:  Effect
 
@@ -346,49 +331,6 @@ public class CardReader : MonoBehaviour
                         // 26:  Text description
                         tempCardFront.description = individualCSVObjects[26]; 
                         tempCardFront.description.Replace(';', ',');
-
-                        /*
-                        // 8:  does it have a worth circle?
-                        if (individualCSVObjects[7].Equals(string.Empty) ||
-                            individualCSVObjects[7].Equals(""))
-                        {
-                            tempCardFront.worthCircle = false;
-                            tempCard.data.worth = 0;
-                        }
-                        else
-                        {
-                            //Debug.Log("worth circle is true and will be: " + individualCSVObjects[8].Trim());
-                            tempCardFront.worthCircle = true;
-                            // 8:  what's in the worth circle?
-                            tempCard.data.worth = int.Parse(individualCSVObjects[8].Trim());
-                        }
-
-                        // 9:  cost of card if there is one
-                        if (individualCSVObjects[9].Equals(string.Empty) ||
-                            individualCSVObjects[9].Equals(""))
-                        {
-                            tempCardFront.costCircle = false;
-                            tempCard.data.cost = 0;
-                        }
-                        else
-                        {
-                            tempCardFront.costCircle = true;
-                            // 9:  what's in the worth circle?
-                            tempCard.data.cost = int.Parse(individualCSVObjects[9].Trim());
-                        }*/
-
-                        // 10: the category of the card if there is one
-                        // WORK - not in simpler version of initial game
-
-                        // 14: mitigation list TODO
-                        /*string[] mitigations = individualCSVObjects[14].Trim().Split(";");
-                        foreach(string mitigation in mitigations)
-                        {
-                            if(!mitigation.Equals(""))
-                            {
-                                tempCard.MitigatesWhatCards.Add(mitigation);// TODO: Remove mitigation
-                            }       
-                        }*/
 
                         // now add one copy of this card for every instance in the card game
                         tempCard.data.numberInDeck = numberOfCards;

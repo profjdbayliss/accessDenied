@@ -58,7 +58,7 @@ public class ActionImpactFacilityWorth : ICardAction
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " played to attack the selected station.");
-        cardActedUpon.DefenseHealth += card.data.worth;
+        cardActedUpon.DefenseHealth += card.data.facilityAmount;
         card.state = CardState.CardNeedsToBeDiscarded;
         TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
@@ -74,7 +74,7 @@ public class ActionImpactFacilityWorth : ICardAction
     public void Canceled(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
         Debug.Log("card " + card.front.title + " attack undone.");
-        cardActedUpon.DefenseHealth -= card.data.worth;      
+        cardActedUpon.DefenseHealth -= card.data.facilityAmount;      
         TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
         {

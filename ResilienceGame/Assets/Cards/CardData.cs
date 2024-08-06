@@ -28,6 +28,9 @@ public struct CardData
     public int purpleCost;
     public int drawAmount;
     public int removeAmount;
-    public int worth;
-    public PlayerTeam onlyPlayedOn;
+    public int targetAmount;
+    public int facilityAmount;
+    public string[] meepleType;
+    public float meepleAmount;
+    public PlayerSector[] onlyPlayedOn;
 }
