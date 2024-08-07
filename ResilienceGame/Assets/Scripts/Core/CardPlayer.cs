@@ -556,7 +556,7 @@ public class CardPlayer : MonoBehaviour
                     Vector2 cardPosition = card.getDroppedPosition();
 
                     // DO a AABB collision test to see if the card is on the discard drop
-                    if (phase == GamePhase.DrawAndDiscard && (cardPosition.y < discardDropMax.y &&
+                    if (phase == GamePhase.Draw && (cardPosition.y < discardDropMax.y &&
                        cardPosition.y > discardDropMin.y &&
                        cardPosition.x < discardDropMax.x &&
                        cardPosition.x > discardDropMin.x))
@@ -578,7 +578,7 @@ public class CardPlayer : MonoBehaviour
                         Debug.Log("collision with played area");
                         switch (phase)
                         {
-                            case GamePhase.Defense:
+                            case GamePhase.Action:
                                 /*if (card.data.cardType==CardType.Defense && CheckHighlightedStations())
                                 {
                                     GameObject selected = GetHighlightedStation();
@@ -607,7 +607,7 @@ public class CardPlayer : MonoBehaviour
                                     manager.DisplayGameStatus("Please select a single facility you own and play a defense card type.");
                                 }*/
                                 break;
-                            case GamePhase.Mitigate:
+                            //case GamePhase.Mitigate:
                                 /*if (card.data.cardType == CardType.Mitigation && CheckHighlightedStations())
                                 {
                                     Debug.Log("trying to mitigate");
@@ -642,7 +642,7 @@ public class CardPlayer : MonoBehaviour
                                     card.state = CardState.CardDrawn;
                                     manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card.");
                                 }*/
-                                break;
+                                //break;
                             default:
                                 // we're not in the right phase, so
                                 // reset the dropped state
@@ -660,7 +660,7 @@ public class CardPlayer : MonoBehaviour
                         Debug.Log("card dropped in opponent zone");
                         switch (phase)
                         {
-                            case GamePhase.Vulnerability:
+                            //case GamePhase.Vulnerability:
                                /* if (card.data.cardType == CardType.Vulnerability && opponentPlayer.CheckHighlightedStations() &&
                                     ((mValueSpentOnVulnerabilities + card.data.blueCost) <= mTotalFacilityValue))
                                 {
@@ -704,7 +704,7 @@ public class CardPlayer : MonoBehaviour
                                     card.state = CardState.CardDrawn;
                                     manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card less than the total worth of your facility cards.");
                                 }*/
-                                break;
+                                //break;
                             default:
                                 // we're not in the right phase, so
                                 // reset the dropped state
@@ -733,7 +733,7 @@ public class CardPlayer : MonoBehaviour
 
         if (playCount > 0)
         {
-            if (phase == GamePhase.DrawAndDiscard)
+            if (phase == GamePhase.Draw)
             {
                 // we're not discarding a facility or sharing what we're discarding with the opponent
                 DiscardAllInactiveCards(DiscardFromWhere.Hand, false, -1);
@@ -837,7 +837,7 @@ public class CardPlayer : MonoBehaviour
 
             // set local offset for actual stacking
             stationCard.stackNumber += 1;
-            if (phase == GamePhase.Defense)
+            /*if (phase == GamePhase.Defense)
             {
                 // added cards go at the back
                 addedObject.transform.SetAsFirstSibling();
@@ -851,7 +851,8 @@ public class CardPlayer : MonoBehaviour
             {
                 // added cards go at the front if they're vulnerabilities
                 addedObject.transform.SetAsLastSibling();
-            }
+            }*/
+            addedObject.transform.SetAsLastSibling();
 
             addedObject.GetComponent<slippy>().enabled = false;
             addedObject.GetComponent<HoverScale>().previousScale = Vector2.one;
@@ -891,7 +892,7 @@ public class CardPlayer : MonoBehaviour
             addedObject.transform.SetParent(tempCanvas.transform, false);
             addedObject.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
             stationObject.transform.SetParent(tempCanvas.transform, false);
-            
+            /*
             if (phase == GamePhase.Defense)
             {
                 // added cards go at the back
@@ -905,8 +906,9 @@ public class CardPlayer : MonoBehaviour
             {
                 // added cards go at the front if they're vulnerabilities
                 addedObject.transform.SetAsLastSibling();
-            }
+            }*/
 
+            addedObject.transform.SetAsLastSibling();
             // make sure the station knows if has a canvas with children
             stationCard.HasCanvas = true;
             stationCard.CanvasHolder = tempCanvas;
@@ -1010,7 +1012,7 @@ public class CardPlayer : MonoBehaviour
                 Debug.Log("card add called with phase " + phase);
                 // create card to be displayed
                 Card card = cardGameObject.GetComponent<Card>();
-                if (phase == GamePhase.Vulnerability)
+                if (phase == GamePhase.Action)
                 {
                     Debug.Log("adding attack with card id : " + card.data.cardID);
                     facilityCard.AttackingCards.Add(new CardIDInfo {
@@ -1028,7 +1030,7 @@ public class CardPlayer : MonoBehaviour
             }
             else if (update.WhatToDo == AddOrRem.Remove)
             {
-                if (phase == GamePhase.Mitigate || phase == GamePhase.Attack)
+                if (phase == GamePhase.Action)
                 {
                     if (!getRidOfFacility)
                     {
@@ -1121,7 +1123,7 @@ public class CardPlayer : MonoBehaviour
                     cardGameObject.SetActive(false);
 
                     // add card to its displayed cards
-                    StackCards(facility, cardGameObject, opponentDropZone, GamePhase.Defense);
+                    StackCards(facility, cardGameObject, opponentDropZone, GamePhase.Action);
                     card.state = CardState.CardInPlay;
                     Debug.Log("opponent player updates added " + card.data.cardID + " to the active list of size " + ActiveCards.Count);
                     card.Play(this, opponent, selectedCard);

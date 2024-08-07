@@ -266,7 +266,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // start of game phase
                 // handled with specialty code outside of this
                 break;
-            case GamePhase.DrawAndDiscard:
+            case GamePhase.Draw:
                 /*if (phaseJustChanged && !skip)
                 {
                     //runner.StartDialogue("DrawAndDiscard"); // TODO: NULL REF
@@ -295,12 +295,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                     {
                         if (mIsDiscardAllowed)
                         {
-                            mNumberDiscarded += actualPlayer.HandlePlayCard(GamePhase.DrawAndDiscard, opponentPlayer);
+                            mNumberDiscarded += actualPlayer.HandlePlayCard(GamePhase.Draw, opponentPlayer);
                         }
                     }
                 }
                 break;
-            case GamePhase.Defense:
+            case GamePhase.Action:
                 if (phaseJustChanged && !skip) 
                 { 
                     //runner.StartDialogue("Defense"); 
@@ -335,39 +335,39 @@ public class GameManager : MonoBehaviour, IRGObservable
                     mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
                 }*/
                 break;
-            case GamePhase.Vulnerability:
-                if (phaseJustChanged && !skip) 
-                {
-                    //runner.StartDialogue("Vulnerability");
-                    background.SetActive(true);
-                }
-
-                if (!phaseJustChanged)
-                {
-                    if (!mAllowVulnerabilitiesPlayed)
+                /*case GamePhase.Vulnerability:
+                    if (phaseJustChanged && !skip) 
                     {
-                        // do nothing - most common scenario
-                    } 
+                        //runner.StartDialogue("Vulnerability");
+                        background.SetActive(true);
+                    }
+
+                    if (!phaseJustChanged)
+                    {
+                        if (!mAllowVulnerabilitiesPlayed)
+                        {
+                            // do nothing - most common scenario
+                        } 
+                        else
+                        if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                        {
+                            mAllowVulnerabilitiesPlayed = false;
+                            DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
+                        } else
+                        {
+                            actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                        }
+                    }
                     else
-                    if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                    if (phaseJustChanged
+                        && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
                     {
                         mAllowVulnerabilitiesPlayed = false;
-                        DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
-                    } else
+                        DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");   
+                    } else if (phaseJustChanged)
                     {
-                        actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                        mAllowVulnerabilitiesPlayed = true;
                     }
-                }/*
-                else
-                if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
-                {
-                    mAllowVulnerabilitiesPlayed = false;
-                    DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");   
-                } else if (phaseJustChanged)
-                {
-                    mAllowVulnerabilitiesPlayed = true;
-                }*/
 
                 break;
             case GamePhase.Mitigate:
@@ -384,7 +384,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                         actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
                     }
                 }
-                /*if (phaseJustChanged
+                if (phaseJustChanged
                     && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
                 {
                     mAllowMitigationPlayed = false;
@@ -395,10 +395,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else if (phaseJustChanged)
                 {
                     mAllowMitigationPlayed = true;
-                }*/
+                }
                 
-                break;
-            case GamePhase.Attack:
+                break;*/
+            /*case GamePhase.Attack:
                 if (phaseJustChanged && !skip) 
                 { 
                     //runner.StartDialogue("Attack");
@@ -411,8 +411,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                     opponentPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, -1);
                 }  
                 
-                break;
-            case GamePhase.AddStation:
+                break;*/
+            /*case GamePhase.AddStation:
                 if (phaseJustChanged && !skip)
                 {
                     //runner.StartDialogue("AddStation");
@@ -421,7 +421,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
 
                 if (phaseJustChanged)
-                { 
+                {
                     // we only need one cycle for this particular
                     // phase as it's automated.
                     /*Card card = actualPlayer.DrawFacility(true, 0);
@@ -430,20 +430,20 @@ public class GameManager : MonoBehaviour, IRGObservable
                     {
                         AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
                         DisplayGameStatus("Both players drew a station card. Please push End Phase to continue.");
-                    }*/
+                    }
 
                 }
-                break;
-            case GamePhase.AddConnections:
-                if (phaseJustChanged)
-                {
-                    mAllowConnections = true;
-                } else if (mAllowConnections)
-                {
-                    DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
-                    mAllowConnections = false;
-                }          
-                break;
+                break;*/
+                    /*case GamePhase.AddConnections:
+                        if (phaseJustChanged)
+                        {
+                            mAllowConnections = true;
+                        } else if (mAllowConnections)
+                        {
+                            DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
+                            mAllowConnections = false;
+                        }          
+                        break;*/
             case GamePhase.End:
                 // end of game phase
                 if (phaseJustChanged)
@@ -572,7 +572,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         gameStarted = true;
 
         // go on to the next phase
-        mGamePhase = GamePhase.DrawAndDiscard;
+        mGamePhase = GamePhase.Draw;
 
     }
 
@@ -676,7 +676,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     {
         switch (mGamePhase)
         {
-            case GamePhase.DrawAndDiscard:
+            case GamePhase.Draw:
                 {
                     // make sure we have a full hand
                     actualPlayer.DrawCards();
@@ -697,7 +697,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     AddMessage(msg);
                 }
                 break;
-            case GamePhase.Defense:
+            case GamePhase.Action:
                 {
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     // reset the defense var's for the next turn
@@ -705,7 +705,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     mNumberDefense = 0;
                 }
                 break;
-            case GamePhase.Vulnerability:
+            /*case GamePhase.Vulnerability:
                 {
                     // reset vulnerability allowance
                     mAllowVulnerabilitiesPlayed = false;
@@ -730,7 +730,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
             case GamePhase.AddConnections:
                 // WORK
-                break;
+                break;*/
             case GamePhase.End:
                 break;
             default:
@@ -770,10 +770,10 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         switch (phase)
         {
-            case GamePhase.Defense:
+            case GamePhase.Action:
                 opponentPlayer.AddUpdates(ref updates, phase, actualPlayer);
                 break;
-            case GamePhase.Vulnerability:
+            /*case GamePhase.Vulnerability:
                 // This phase is more painful since it's an opponent card on top of a player facility
                 foreach (Updates update in updates)
                 {
@@ -831,7 +831,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     Debug.Log("player active list size is : " + actualPlayer.ActiveCards.Count);
 
                 }
-                break;
+                break;*/
             default:
                 break;
         }
@@ -852,27 +852,21 @@ public class GameManager : MonoBehaviour, IRGObservable
         switch(mGamePhase)
         {
             case GamePhase.Start:
-                nextPhase = GamePhase.DrawAndDiscard;
+                nextPhase = GamePhase.Draw;
                 break;
-            case GamePhase.DrawAndDiscard:
-                nextPhase = GamePhase.Defense;
+            case GamePhase.Draw:
+                nextPhase = GamePhase.Overtime;
                 break;
-            case GamePhase.Defense:
-                nextPhase = GamePhase.Vulnerability;
+            case GamePhase.Overtime:
+                nextPhase = GamePhase.Action;
                 break;
-            case GamePhase.Vulnerability:
-                nextPhase = GamePhase.Mitigate;
+            case GamePhase.Action:
+                nextPhase = GamePhase.Discard;
                 break;
-            case GamePhase.Mitigate:
-                nextPhase = GamePhase.Attack;
+            case GamePhase.Discard:
+                nextPhase = GamePhase.Donate;
                 break;
-            case GamePhase.Attack:
-                nextPhase = GamePhase.AddStation;
-                break;
-            case GamePhase.AddStation:
-                nextPhase = GamePhase.AddConnections;
-                break;
-            case GamePhase.AddConnections:
+            case GamePhase.Donate:
                 // end the game if we're out of cards or have
                 // no stations left on the board
                 if (actualPlayer.DeckIDs.Count == 0 || (actualPlayer.ActiveFacilities.Count == 0))
@@ -880,7 +874,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     nextPhase = GamePhase.End;
                 } else
                 {
-                    nextPhase = GamePhase.DrawAndDiscard;
+                    nextPhase = GamePhase.Draw;
                 }      
                 break;
             case GamePhase.End:
@@ -931,22 +925,19 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Start:
                 canBe = false;
                 break;
-            case GamePhase.DrawAndDiscard:
+            case GamePhase.Draw:
                 canBe = false;
                 break;
-            case GamePhase.Defense:
+            case GamePhase.Overtime:
                 canBe = true;
                 break;
-            case GamePhase.Vulnerability:
+            case GamePhase.Action:
                 canBe = true;
                 break;
-            case GamePhase.Mitigate:
+            case GamePhase.Discard:
                 canBe = true;
                 break;
-            case GamePhase.Attack:
-                canBe = false;
-                break;
-            case GamePhase.AddStation:
+            case GamePhase.Donate:
                 canBe = false;
                 break;
             case GamePhase.End:
@@ -1004,7 +995,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     {
         if (!yarnSpinner.activeInHierarchy) { return; }
 
-        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.Draw)
             || skipClicked)
         {
             skip = true;
