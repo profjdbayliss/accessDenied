@@ -218,12 +218,13 @@ public class CardReader : MonoBehaviour
                             // TODO: Enum needed for hand/sector/facility
                             // Is this needed? Is this handled by just CardActions?
                             default:
-                                tempCard.data.onlyPlayedOn[0] = PlayerSector.Any;
+                                //tempCard.data.onlyPlayedOn[0] = PlayerSector.Any;
                                 break;
                         }
 
                         // 4: is this card only played on a specific player type?
                         string[] onlyPlayedOn = individualCSVObjects[4].Trim().Split(';');
+                        tempCard.data.onlyPlayedOn = new PlayerSector[4];
                         for (int j = 0; j<onlyPlayedOn.Length; j++)
                         {
                             // TODO: Better to do string[] then TryParse when checking sector being played on?
