@@ -1,4 +1,4 @@
-Team,Duplication,Method,Target,SectorsAffected,TargetAmount,Title,imgCol,imgRow,bgCol,bgRow,MeeplesChanged,MeepleIChange,BlueCost,BlackCost,PurpleCost,FacilityPoint,CardsDrawn,CardsRemoved,Effect,EffectCount,PrerequisiteEffect,Duration,DoomEffect,DiceRoll,FlavourText,Description,imgLocation
+Team,Duplication,Method,Target,SectorsAffected,TargetAmount,Title,imgRow,imgCol,bgCol,bgRow,MeeplesChanged,MeepleIChange,BlueCost,BlackCost,PurpleCost,FacilityPoint,CardsDrawn,CardsRemoved,Effect,EffectCount,PrerequisiteEffect,Duration,DoomEffect,DiceRoll,FlavourText,Description,imgLocation
 Blue,2,DrawAndDiscardCards,Hand,Any,1,Quick Meeting,0,0,,,,,0,0,2,0,2,0,,0,,0,FALSE,-1,You have been attacked! Get everyone on the same page.,Draw 2 cards.,images/QuickMeeting.png
 Blue,2,DrawAndDiscardCards,Hand,Any,1,Virtual Meeting,,,,,,,0,0,1,0,3,1,,0,,0,FALSE,-1,Lets meet to talk about this.,Draw 3 cards and discard 1 of them.,
 Blue,2,ShuffleAndDrawCards,Hand,Any,1,Weekly meeting,,,,,,,0,0,1,0,2,1,,0,,0,FALSE,-1,Lets talk about it during our weekly meeting.,Shuffle 1 card from your hand into the deck. Draw 2 cards.,
