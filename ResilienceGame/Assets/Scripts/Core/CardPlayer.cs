@@ -84,6 +84,11 @@ public class CardPlayer : MonoBehaviour
     public readonly float ORIGINAL_SCALE = 0.2f;
     public string DeckName="";
 
+    //Meeples
+    public int blueMeepleCount, blackMeepleCount, purpleMeepleCount = 0;
+    int mTotalMeepleValue = 0;
+    int mMeeplesSpent = 0;
+
     Vector2 discardDropMin; 
     Vector2 discardDropMax;
     Vector2 playedDropMin;
@@ -93,8 +98,6 @@ public class CardPlayer : MonoBehaviour
     // the var is static to make sure the id's don't overlap between
     // multiple card players
     static int sUniqueIDCount = 0;
-    int mTotalFacilityValue = 0;
-    int mValueSpentOnVulnerabilities = 0;
     int mFinalScore = 0;
     List<Updates> mUpdatesThisPhase = new List<Updates>(6);
 
@@ -352,9 +355,9 @@ public class CardPlayer : MonoBehaviour
         // nothing to update at the moment
     }
 
-    public void ResetVulnerabilityCost()
+    public void ResetMeepleCost()
     {
-        mValueSpentOnVulnerabilities = 0;
+        mMeeplesSpent = 0;
     }
 
     public void HandleAttackPhase(CardPlayer opponent)
@@ -529,14 +532,14 @@ public class CardPlayer : MonoBehaviour
         }
     }
 
-    public int GetAmountSpentOnVulnerabilities()
+    public int GetMeeplesSpent()
     {
-        return mValueSpentOnVulnerabilities;
+        return mMeeplesSpent;
     }
 
-    public int GetTotalFacilityValue()
+    public int GetTotalMeeples()
     {
-        return mTotalFacilityValue;
+        return blueMeepleCount + purpleMeepleCount + blackMeepleCount;
     }
 
     public virtual int HandlePlayCard(GamePhase phase, CardPlayer opponentPlayer)
@@ -556,21 +559,27 @@ public class CardPlayer : MonoBehaviour
                     Vector2 cardPosition = card.getDroppedPosition();
 
                     // DO a AABB collision test to see if the card is on the discard drop
-                    if (phase == GamePhase.Draw && (cardPosition.y < discardDropMax.y &&
+                    if ((cardPosition.y < discardDropMax.y &&
                        cardPosition.y > discardDropMin.y &&
                        cardPosition.x < discardDropMax.x &&
                        cardPosition.x > discardDropMin.x))
                     {
-                        Debug.Log("card dropped in discard zone or needs to be discarded" + card.UniqueID);
+                        switch (phase)
+                        {
+                            case GamePhase.Draw:
+                                Debug.Log("card dropped in discard zone or needs to be discarded" + card.UniqueID);
 
-                        // change parent and rescale
-                        card.state = CardState.CardNeedsToBeDiscarded;
-                        playCount = 1;
+                                // change parent and rescale
+                                card.state = CardState.CardNeedsToBeDiscarded;
+                                playCount = 1;
+                                break;
+                            case GamePhase.Action:
+                                break;
+                        }
                     }
-                    else
-                    // DO a AABB collision test to see if the card is on the player's drop
 
-                    if (cardPosition.y < playedDropMax.y &&
+                    // DO a AABB collision test to see if the card is on the player's drop
+                    else if(cardPosition.y < playedDropMax.y &&
                        cardPosition.y > playedDropMin.y &&
                        cardPosition.x < playedDropMax.x &&
                        cardPosition.x > playedDropMin.x)
@@ -651,8 +660,7 @@ public class CardPlayer : MonoBehaviour
                         }
 
                     }
-                    else
-                    if (cardPosition.y < opponentDropMax.y &&
+                    else if (cardPosition.y < opponentDropMax.y &&
                        cardPosition.y > opponentDropMin.y &&
                        cardPosition.x < opponentDropMax.x &&
                        cardPosition.x > opponentDropMin.x)
@@ -1233,8 +1241,8 @@ public class CardPlayer : MonoBehaviour
         ActiveCards.Clear();
         ActiveFacilities.Clear();
         handSize = 0;
-        mTotalFacilityValue = 0;
-        mValueSpentOnVulnerabilities = 0;
+        mTotalMeepleValue = 0;
+        mMeeplesSpent = 0;
         mFinalScore = 0;
         mUpdatesThisPhase.Clear();
     }

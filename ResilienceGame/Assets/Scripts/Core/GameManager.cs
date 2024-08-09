@@ -41,10 +41,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
     bool mIsDiscardAllowed = false;
-    bool mIsDefenseAllowed = false;
-    bool mAllowVulnerabilitiesPlayed = false;
-    bool mAllowMitigationPlayed = false;
-    bool mAllowConnections = false;
+    bool mIsActionAllowed = false;
     bool mReceivedEndGame = false;
     bool mStartGameRun = false;
 
@@ -260,8 +257,6 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         switch (phase)
         {
-
-            // TODO: Change GamePhase
             case GamePhase.Start:
                 // start of game phase
                 // handled with specialty code outside of this
@@ -300,26 +295,26 @@ public class GameManager : MonoBehaviour, IRGObservable
                     }
                 }
                 break;
-            case GamePhase.Action:
-                if (phaseJustChanged && !skip) 
+            case GamePhase.Overtime:
+                /*if (phaseJustChanged && !skip) 
                 { 
-                    //runner.StartDialogue("Defense"); 
+                    runner.StartDialogue("Defense"); 
                     background.SetActive(true);
-                }
+                }*//*
 
                 if (phaseJustChanged)
                 {
-                    mIsDefenseAllowed = true;
+                    mIsActionAllowed = true;
                 }
 
-                if (!mIsDefenseAllowed)
+                if (!mIsActionAllowed)
                 {
                     // do nothing - most common case
                 } 
                 else
                 if (mNumberDefense >= MAX_DEFENSE)
                 {
-                    mIsDefenseAllowed = false;
+                    mIsActionAllowed = false;
                     DisplayGameStatus(mPlayerName.text + " has played the maximum number of defense cards. Please hit end phase to continue.");
                 }/*
                 else
@@ -333,71 +328,65 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else  if (mIsDefenseAllowed)
                 { 
                     mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
-                }*/
-                break;
-                /*case GamePhase.Vulnerability:
-                    if (phaseJustChanged && !skip) 
-                    {
-                        //runner.StartDialogue("Vulnerability");
-                        background.SetActive(true);
-                    }
-
-                    if (!phaseJustChanged)
-                    {
-                        if (!mAllowVulnerabilitiesPlayed)
-                        {
-                            // do nothing - most common scenario
-                        } 
-                        else
-                        if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
-                        {
-                            mAllowVulnerabilitiesPlayed = false;
-                            DisplayGameStatus(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
-                        } else
-                        {
-                            actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
-                        }
-                    }
-                    else
-                    if (phaseJustChanged
-                        && !actualPlayer.CheckForCardsOfType(CardType.Vulnerability, actualPlayer.HandCards))
-                    {
-                        mAllowVulnerabilitiesPlayed = false;
-                        DisplayGameStatus(mPlayerName.text + " has no vulnerability cards. Please push End Phase to continue.");   
-                    } else if (phaseJustChanged)
-                    {
-                        mAllowVulnerabilitiesPlayed = true;
-                    }
-
-                break;
-            case GamePhase.Mitigate:
-                if (phaseJustChanged && !skip) 
-                { 
-                    //runner.StartDialogue("Mitigate");
-                    background.SetActive(true);
                 }
+                break;*/
+            case GamePhase.Action:
+                /*if (phaseJustChanged && !skip) 
+                {
+                    runner.StartDialogue("Vulnerability");
+                    background.SetActive(true);
+                }*/
 
                 if (!phaseJustChanged)
                 {
-                    if (mAllowMitigationPlayed)
+                    if (!mIsActionAllowed)
                     {
-                        actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                        // do nothing - most common scenario
+                    } 
+                    else
+                    if (actualPlayer.GetMeeplesSpent() >= actualPlayer.GetTotalMeeples())
+                    {
+                        mIsActionAllowed = false;
+                        DisplayGameStatus(mPlayerName.text + " has spent their meeples. Please push End Phase to continue.");
+                    } else
+                    {
+                        actualPlayer.HandlePlayCard(GamePhase.Action, opponentPlayer);
                     }
-                }
-                if (phaseJustChanged
-                    && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
-                {
-                    mAllowMitigationPlayed = false;
-                    // if player has no cards to play
-                    // let them know
-                    DisplayGameStatus(mPlayerName.text + " has no Mitigation cards. Please push End Phase to continue.");
                 }
                 else if (phaseJustChanged)
                 {
-                    mAllowMitigationPlayed = true;
+                    mIsActionAllowed = true;
                 }
-                
-                break;*/
+
+            break;
+        /*case GamePhase.Mitigate:
+            if (phaseJustChanged && !skip) 
+            { 
+                //runner.StartDialogue("Mitigate");
+                background.SetActive(true);
+            }
+
+            if (!phaseJustChanged)
+            {
+                if (mAllowMitigationPlayed)
+                {
+                    actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                }
+            }
+            if (phaseJustChanged
+                && !actualPlayer.CheckForCardsOfType(CardType.Mitigation, actualPlayer.HandCards))
+            {
+                mAllowMitigationPlayed = false;
+                // if player has no cards to play
+                // let them know
+                DisplayGameStatus(mPlayerName.text + " has no Mitigation cards. Please push End Phase to continue.");
+            }
+            else if (phaseJustChanged)
+            {
+                mAllowMitigationPlayed = true;
+            }
+
+            break;*/
             /*case GamePhase.Attack:
                 if (phaseJustChanged && !skip) 
                 { 
@@ -434,16 +423,16 @@ public class GameManager : MonoBehaviour, IRGObservable
 
                 }
                 break;*/
-                    /*case GamePhase.AddConnections:
-                        if (phaseJustChanged)
-                        {
-                            mAllowConnections = true;
-                        } else if (mAllowConnections)
-                        {
-                            DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
-                            mAllowConnections = false;
-                        }          
-                        break;*/
+            /*case GamePhase.AddConnections:
+                if (phaseJustChanged)
+                {
+                    mAllowConnections = true;
+                } else if (mAllowConnections)
+                {
+                    DisplayGameStatus("Connection phase is not yet implemented! Please push End Phase to continue.");
+                    mAllowConnections = false;
+                }          
+                break;*/
             case GamePhase.End:
                 // end of game phase
                 if (phaseJustChanged)
@@ -701,7 +690,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
                     // reset the defense var's for the next turn
-                    mIsDefenseAllowed = false;
+                    mIsActionAllowed = false;
                     mNumberDefense = 0;
                 }
                 break;
@@ -1041,10 +1030,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         mNumberDiscarded = 0;
         mNumberDefense = 0;
         mIsDiscardAllowed = false;
-        mIsDefenseAllowed = false;
-        mAllowVulnerabilitiesPlayed = false;
-        mAllowMitigationPlayed = false;
-        mAllowConnections = false;
+        mIsActionAllowed = false;
         mReceivedEndGame = false;
         mStartGameRun = false;
 
