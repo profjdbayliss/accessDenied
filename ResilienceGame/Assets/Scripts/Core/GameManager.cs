@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 25;
+    public readonly int MAX_DISCARDS = 2;
     public readonly int MAX_DEFENSE = 1;
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
@@ -276,6 +276,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // set the discard area to work if necessary
                     actualPlayer.discardDropZone.SetActive(true);
                     mNumberDiscarded = 0;
+                    DisplayGameStatus("[TEAM COLOR] has drawn " + actualPlayer.HandCards.Count + " cards each."); 
                 } else
                 {
                     // draw cards if necessary

@@ -74,7 +74,7 @@ public class CardPlayer : MonoBehaviour
     public Dictionary<int, GameObject> ActiveCards = new Dictionary<int, GameObject>();
     public Dictionary<int, GameObject> ActiveFacilities = new Dictionary<int, GameObject>();
     public int handSize;
-    public int maxHandSize = 6;
+    public int maxHandSize = 4;
     public GameObject cardPrefab;
     public GameObject discardDropZone;
     public GameObject handDropZone;
@@ -156,7 +156,7 @@ public class CardPlayer : MonoBehaviour
 
     public virtual void DrawCards()
     {
-        if (HandCards.Count < maxHandSize)
+        if (HandCards.Count < maxHandSize) // TODO: Liar???????
         {
             int count = HandCards.Count;
             for (int i = 0; i < maxHandSize - count; i++)
