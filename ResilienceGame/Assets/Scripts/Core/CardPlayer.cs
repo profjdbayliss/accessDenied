@@ -19,6 +19,7 @@ public enum PlayerTeam
 
 public enum PlayerSector
 {
+    // TODO: Move to Sector Interface
     // TODO: Randomly assign to blue players at the start of the game, starting with the core sectors
     Chemical,
     Commercial,
