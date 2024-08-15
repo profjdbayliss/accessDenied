@@ -65,8 +65,9 @@ public enum DiscardFromWhere
 public class CardPlayer : MonoBehaviour
 {
     // Establish necessary fields
-    public PlayerTeam playerTeam = PlayerTeam.Any;
     public GameManager manager;
+    public PlayerTeam playerTeam = PlayerTeam.Any;
+    public Sector playerSector;
     public static Dictionary<int, Card> cards = new Dictionary<int,Card>();
     public List<int> FacilityIDs = new List<int>(10);
     public List<int> DeckIDs = new List<int>(52);
@@ -86,6 +87,7 @@ public class CardPlayer : MonoBehaviour
     public string DeckName="";
 
     //Meeples
+    // TODO: Move to Sector.cs if needed
     public int blueMeepleCount, blackMeepleCount, purpleMeepleCount = 0;
     int mTotalMeepleValue = 0;
     int mMeeplesSpent = 0;

@@ -13,31 +13,12 @@ public class Facility : MonoBehaviour
         Distribution
     };
 
-    public enum SectorProduct
-    {
-        Energy,
-        Water,
-        Agricultural,
-        Transportation,
-        Manufacturing,
-        Government,
-        Defense,
-        Healthcare,
-        EmergencyServices,
-        Information,
-        Technology,
-        Financial,
-        Commercial,
-        Nuclear,
-        Dams,
-        Communications,
-        Chemical,
-    };
-
     public FacilityName facilityName;
-    public SectorProduct[] products;
+    public PlayerSector[] products;
+    public GameObject facilityCanvas;
+
+    private int maxPhysicalPoints, maxFinacialPoints, maxNetworkPoints;
     private int physicalPoints, finacialPoints, networkPoints;
-    [SerializeField] private GameObject facilityCanvas;
     private TextMeshProUGUI[] pointsUI;
 
     // TODO: Effect class and reference here
@@ -48,15 +29,16 @@ public class Facility : MonoBehaviour
     public bool isDown;
 
     // Start is called before the first frame update
-    void Start()
+    public void Initialize()
     {
-        for(int i = 0; i < facilityCanvas.transform.childCount; i++)
+        products = new PlayerSector[3];
+        pointsUI = new TextMeshProUGUI[3];
+
+        for(int i = 0; i < 3; i++)
         {
-            pointsUI[i] = facilityCanvas.transform.GetChild((int)facilityName).Find("Points").GetChild(i).GetComponentInChildren<TextMeshProUGUI>();
+            pointsUI[i] = facilityCanvas.transform.Find("Points").GetChild(i).GetComponentInChildren<TextMeshProUGUI>();
         }
-        pointsUI[0].text = physicalPoints.ToString();
-        pointsUI[1].text = finacialPoints.ToString();
-        pointsUI[2].text = networkPoints.ToString();
+        UpdateUI();
     }
 
     public void ChangeFacilityPoints(string[] targets, int value)
@@ -65,13 +47,52 @@ public class Facility : MonoBehaviour
         {
             switch (target)
             {
-                case "physical": physicalPoints += value;
-                        break;
-                case "finacial": finacialPoints += value;
+                case "physical": 
+                    physicalPoints += value;
+                    physicalPoints = (physicalPoints > maxPhysicalPoints) ? maxPhysicalPoints : (physicalPoints < 0) ? 0 : physicalPoints; //If any problems check here
+                                               // if >max                  //Set to max        //else if <0      //Set to 0  //Else set self
                     break;
-                case "network": networkPoints += value;
+                case "finacial": 
+                    finacialPoints += value;
+                    finacialPoints = (finacialPoints > maxFinacialPoints) ? maxFinacialPoints : (finacialPoints < 0) ? 0 : finacialPoints;
+                    break;
+                case "network": 
+                    networkPoints += value;
+                    networkPoints = (networkPoints > maxNetworkPoints) ? maxNetworkPoints : (networkPoints < 0) ? 0 : networkPoints;
                     break;
             }
+        }
+
+        if (physicalPoints == 0 || finacialPoints == 0 || networkPoints == 0) { isDown = true; }
+        else { isDown = false; }
+
+        UpdateUI();
+    }
+
+    public void SetFacilityPoints(int physical, int finacial, int network)
+    {
+        maxPhysicalPoints = physicalPoints = physical;
+        maxFinacialPoints = finacialPoints = finacial;
+        maxNetworkPoints = networkPoints = network;
+    }
+
+    public void AddOrRemoveEffect(string effectType, bool isAddingEffect)
+    {
+        if(effectType.Trim().ToLower() == "backdoor" && isAddingEffect) { hasBackdoor = true; }
+        else if (effectType.Trim().ToLower() == "backdoor" && !isAddingEffect) { hasBackdoor = false; }
+        else if (effectType.Trim().ToLower() == "fortify" && isAddingEffect) { hasFortify = true; }
+        else if (effectType.Trim().ToLower() == "fortify" && !isAddingEffect) { hasFortify = false; }
+    }
+
+    private void UpdateUI()
+    {
+        pointsUI[0].text = physicalPoints.ToString();
+        pointsUI[1].text = finacialPoints.ToString();
+        pointsUI[2].text = networkPoints.ToString();
+
+        if(isDown)
+        {
+            // TODO: Change UI to show that the facility is down
         }
     }
 }

@@ -3740,6 +3740,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 325979392}
+  - component: {fileID: 325979393}
   m_Layer: 0
   m_Name: TransmissionFacility
   m_TagString: Untagged
@@ -3766,6 +3767,24 @@ Transform:
   m_Father: {fileID: 1871187428}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &325979393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 325979391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c96e5d975e75ac4498ffe45af5a9f2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  facilityName: 0
+  products: 
+  facilityCanvas: {fileID: 0}
+  hasBackdoor: 0
+  hasFortify: 0
+  isDown: 0
 --- !u!1 &327071780
 GameObject:
   m_ObjectHideFlags: 0
@@ -5661,6 +5680,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 510286170}
+  - component: {fileID: 510286171}
   m_Layer: 0
   m_Name: DistributionFacility
   m_TagString: Untagged
@@ -5687,6 +5707,24 @@ Transform:
   m_Father: {fileID: 1871187428}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &510286171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 510286169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c96e5d975e75ac4498ffe45af5a9f2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  facilityName: 0
+  products: 
+  facilityCanvas: {fileID: 0}
+  hasBackdoor: 0
+  hasFortify: 0
+  isDown: 0
 --- !u!1 &520008979
 GameObject:
   m_ObjectHideFlags: 0
@@ -7104,8 +7142,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f279711f1e71d3940932e3969666c8c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTeam: 3
   manager: {fileID: 2133546051}
+  playerTeam: 3
+  playerSector: {fileID: 0}
   FacilityIDs: 
   DeckIDs: 
   handSize: 0
@@ -7117,6 +7156,9 @@ MonoBehaviour:
   playerDropZone: {fileID: 1920413917}
   cardStackingCanvas: {fileID: 2138364093}
   DeckName: 
+  blueMeepleCount: 0
+  blackMeepleCount: 0
+  purpleMeepleCount: 0
 --- !u!1 &689357524
 GameObject:
   m_ObjectHideFlags: 0
@@ -8424,7 +8466,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &791040123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11829,8 +11871,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f279711f1e71d3940932e3969666c8c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTeam: 3
   manager: {fileID: 2133546051}
+  playerTeam: 3
+  playerSector: {fileID: 0}
   FacilityIDs: 
   DeckIDs: 
   handSize: 0
@@ -11842,6 +11885,9 @@ MonoBehaviour:
   playerDropZone: {fileID: 1920413917}
   cardStackingCanvas: {fileID: 2138364093}
   DeckName: 
+  blueMeepleCount: 0
+  blackMeepleCount: 0
+  purpleMeepleCount: 0
 --- !u!1 &1134896414
 GameObject:
   m_ObjectHideFlags: 0
@@ -12921,6 +12967,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1343283883}
+  - component: {fileID: 1343283884}
   m_Layer: 0
   m_Name: ProductionFacility
   m_TagString: Untagged
@@ -12947,6 +12994,24 @@ Transform:
   m_Father: {fileID: 1871187428}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1343283884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1343283882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c96e5d975e75ac4498ffe45af5a9f2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  facilityName: 0
+  products: 
+  facilityCanvas: {fileID: 0}
+  hasBackdoor: 0
+  hasFortify: 0
+  isDown: 0
 --- !u!1 &1358697067
 GameObject:
   m_ObjectHideFlags: 0
@@ -17397,6 +17462,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1871187428}
+  - component: {fileID: 1871187429}
   m_Layer: 0
   m_Name: Facilities
   m_TagString: Untagged
@@ -17422,6 +17488,23 @@ Transform:
   m_Father: {fileID: 1994761816}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1871187429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1871187427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a6f9854109be8045af1189462fd494a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sectorName: 0
+  facilities: []
+  isCore: 0
+  csvFileName: 
+  sectorCanvas: {fileID: 0}
 --- !u!1 &1877610056
 GameObject:
   m_ObjectHideFlags: 0

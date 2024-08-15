@@ -190,6 +190,9 @@ public class GameManager : MonoBehaviour, IRGObservable
             //actualPlayer = waterPlayer;
             actualPlayer.playerTeam = PlayerTeam.Blue;
             actualPlayer.DeckName = "blue";
+
+            // TODO: Set randomly
+            actualPlayer.playerSector.Initialize(PlayerSector.Water);
         }
 
         // Initialize the deck info and set various
