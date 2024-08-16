@@ -18,7 +18,7 @@ public class Sector : MonoBehaviour
     private string fileLocation;
 
     [SerializeField] private GameObject sectorCanvas;
-    private RawImage icon;
+    public RawImage icon;
 
     public void Initialize(PlayerSector sector)
     {
@@ -37,8 +37,8 @@ public class Sector : MonoBehaviour
 
         CSVRead();
 
-        icon = sectorCanvas.transform.parent.Find("Player Box").GetComponentInChildren<RawImage>();
-        icon.texture = (Texture)Resources.Load("Assets/UIArt/Icons/Water.png");
+        // TODO: Replace with Atlas
+        //icon.texture = (Texture)Resources.Load("UIArt/Icons/Water.png");
     }
 
     public Facility[] CheckDownedFacilities()
