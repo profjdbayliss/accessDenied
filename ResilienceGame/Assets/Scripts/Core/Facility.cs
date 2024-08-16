@@ -31,6 +31,7 @@ public class Facility : MonoBehaviour
     // Start is called before the first frame update
     public void Initialize()
     {
+        facilityCanvas = this.transform.gameObject;
         products = new PlayerSector[3];
         pointsUI = new TextMeshProUGUI[3];
 
@@ -38,6 +39,7 @@ public class Facility : MonoBehaviour
         {
             pointsUI[i] = facilityCanvas.transform.Find("Points").GetChild(i).GetComponentInChildren<TextMeshProUGUI>();
         }
+
         UpdateUI();
     }
 
@@ -74,6 +76,8 @@ public class Facility : MonoBehaviour
         maxPhysicalPoints = physicalPoints = physical;
         maxFinacialPoints = finacialPoints = finacial;
         maxNetworkPoints = networkPoints = network;
+
+        UpdateUI();
     }
 
     public void AddOrRemoveEffect(string effectType, bool isAddingEffect)

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
 
 public class Sector : MonoBehaviour
 {
@@ -17,9 +18,11 @@ public class Sector : MonoBehaviour
     private string fileLocation;
 
     [SerializeField] private GameObject sectorCanvas;
+    private RawImage icon;
 
     public void Initialize(PlayerSector sector)
     {
+        sectorCanvas = this.gameObject;
         // TODO: Remove when assigning sectors randomly implemented
         sectorName = sector;
 
@@ -33,6 +36,9 @@ public class Sector : MonoBehaviour
         }
 
         CSVRead();
+
+        icon = sectorCanvas.transform.parent.Find("Player Box").GetComponentInChildren<RawImage>();
+        icon.texture = (Texture)Resources.Load("Assets/UIArt/Icons/Water.png");
     }
 
     public Facility[] CheckDownedFacilities()
@@ -128,7 +134,7 @@ public class Sector : MonoBehaviour
                     }
 
                     // 7: Core Sector?
-                    isCore = bool.Parse(individualCSVObjects[7]);
+                    if(individualCSVObjects[7] != "") { isCore = bool.Parse(individualCSVObjects[7].Trim()); }
                 }
             }
 

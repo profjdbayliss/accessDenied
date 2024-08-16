@@ -192,6 +192,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             actualPlayer.DeckName = "blue";
 
             // TODO: Set randomly
+            actualPlayer.playerSector = gameCanvas.GetComponentInChildren<Sector>();
             actualPlayer.playerSector.Initialize(PlayerSector.Water);
         }
 
