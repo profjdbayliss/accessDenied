@@ -40,38 +40,10 @@ public class Sector : MonoBehaviour
         CSVRead();
 
         Texture2D tex = new Texture2D(1, 1);
-
-        // get all the image elements in the csv file
-        /*if (!File.Exists(Application.streamingAssetsPath + "/" + outputAtlasName))
-        {
-            // Make sure to get the atlas first, as we only need to query it once. 
-            TextureAtlas currentAtlas = new TextureAtlas();
-
-            // make a list of all filenames
-            List<string> filenames = new List<string>(50);
-            foreach (PlayerSector sec in Enum.GetValues(typeof(PlayerSector)))
-            {
-                    //Debug.Log("number of items in a line is: " + singleLineCSVObjects.Length);
-                    if (sec.ToString() != "Any" || sec.ToString() != "All")
-                    {
-                        filenames.Add(sec.ToString() + ".png");
-                    }
-            }
-
-            // create atlas and load back in from image
-            currentAtlas.CreateAtlasFromFilenameList("images/", outputAtlasName, filenames);
-            byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
-            tex.LoadImage(tempBytes);
-        }
-        else
-        {
-            byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + outputAtlasName);
-            tex.LoadImage(tempBytes);
-        }*/
-
-        // TODO: Replace with Atlas
-        //icon.texture = (Texture)Resources.Load(Application.streamingAssetsPath + "/Images/" + sector.ToString() + ".png");
-        Debug.Log(Application.streamingAssetsPath + "/images/" + sector.ToString() + ".png");
+        byte[] tempBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/Images/" + sector.ToString() + ".png");
+        tex.LoadImage(tempBytes);
+        icon.texture = tex;
+        //Debug.Log(Application.streamingAssetsPath + "/images/" + sector.ToString() + ".png");
     }
 
     public Facility[] CheckDownedFacilities()
