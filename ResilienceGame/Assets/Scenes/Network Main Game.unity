@@ -20253,8 +20253,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   energyDeckReader: {fileID: 839994435}
   waterDeckReader: {fileID: 545910552}
-  mCreateEnergyAtlas: 0
-  mCreateWaterAtlas: 0
   energyCards: []
   waterCards: []
   playerDeckList: {fileID: 1570887177}

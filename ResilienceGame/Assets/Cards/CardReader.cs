@@ -62,7 +62,7 @@ public class CardReader : MonoBehaviour
             // get all the image elements in the csv file
             if (createAtlas)
             {
-
+                Debug.Log("Creating an atlas: " + cardFileName);
                 // Make sure to get the atlas first, as we only need to query it once. 
                 TextureAtlas currentAtlas = new TextureAtlas();
 
@@ -275,7 +275,7 @@ public class CardReader : MonoBehaviour
 
                             int extras = individualCSVObjects.Length - 15; // this is one more than the # we have
                                                                            //Debug.Log("Extra commas: length should be " + individualCSVObjects.Length + " with extras as " + extras);
-                            for (int j = 0; j < extras; j++)
+                            for (int j = 1; j < extras; j++)
                             {
                                 fullDescription.Append("," + individualCSVObjects[14 + j]);
                             }

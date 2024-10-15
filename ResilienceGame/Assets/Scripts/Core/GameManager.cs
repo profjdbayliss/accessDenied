@@ -20,8 +20,6 @@ public class GameManager : MonoBehaviour, IRGObservable
     CardReader energyCardReader;
     CardReader waterCardReader;
 
-    public bool mCreateEnergyAtlas = false;
-    public bool mCreateWaterAtlas = false;
     public List<Card> energyCards;
     public List<Card> waterCards;
     private bool mWaterReaderLoaded = false;
