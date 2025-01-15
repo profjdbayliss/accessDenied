@@ -85,7 +85,6 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             playerTypes[localPlayerID] = type;
             if (CheckReadyToStart())
             {
-                Debug.Log("Ready to start server is last!!");
                 manager.RealGameStart();
                 // get the turn taking flags ready to go again
                 for (int i = 0; i < playerTurnTakenFlags.Count; i++)
@@ -543,17 +542,19 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
             {
                 case CardMessageType.StartGame:
                     {
-                        Debug.Log("client received message to start the game");
+                       
                         uint count = msg.count;
+                        Debug.Log("client received message to start the game " + count);
                         int element = 0;
                         for (int i = 0; i < count; i++)
                         {
                             // the id is the order in the list
                             int existingPlayer = playerIDs.FindIndex(x => x == i);
-                            int actualInt = GetIntFromByteArray(element, msg.payload);
-
+                            int actualInt = existingPlayer; 
+                            
                             if (existingPlayer == -1)
                             {
+                                actualInt = GetIntFromByteArray(element, msg.payload);
                                 playerIDs.Add(i);
                                 // then get player type
 
@@ -573,6 +574,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             } else
                             {
                                 // when a game is reset we only need the player type again
+                                Debug.Log("existing player is being reset");
                                 playerTypes[existingPlayer] = (PlayerType)actualInt;
                                 Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
                             }
@@ -717,14 +719,21 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     public bool CheckReadyToStart()
     {
         bool readyToStart = true;
-        for (int i = 0; i < playerIDs.Count; i++)
+        if (playerIDs.Count < 2)
         {
-            if (playerTypes[i] == PlayerType.Any)
+            readyToStart = false;
+        } else
+        {
+            for (int i = 0; i < playerIDs.Count; i++)
             {
-                readyToStart = false;
-                break;
+                if (playerTypes[i] == PlayerType.Any)
+                {
+                    readyToStart = false;
+                    break;
+                }
             }
         }
+       
         return readyToStart;
     }
     public void OnServerReceiveLongMessage(NetworkConnectionToClient client, RGNetworkLongMessage msg)

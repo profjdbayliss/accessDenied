@@ -87,6 +87,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject mEndPhaseButton;
     public GameObject gameCanvas;
     public GameObject startScreen;
+    public GameObject waitingScreen;
     public GameObject tiles;
 
     // game status text
@@ -247,15 +248,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 mRGNetworkPlayerList = RGNetworkPlayerList.instance;
                 if (mRGNetworkPlayerList != null)
                 {
-                    mRGNetworkPlayerList.SetupGameManager(this);
-
-                    // means network init is done
-                    // and we're joined
-                    RegisterObserver(mRGNetworkPlayerList);
-                    isServer = mRGNetworkPlayerList.isServer;
-                    CardPlayer player = GameObject.FindObjectOfType<CardPlayer>();
                     mIsNetworkListReady = true;
-                    
                 }
             }
 
@@ -512,14 +505,22 @@ public class GameManager : MonoBehaviour, IRGObservable
             SetupActors();
 
             // init various objects to be used in the game
-            gameCanvas.SetActive(true);
-            startScreen.SetActive(false); // Start menu isn't necessary now
+            gameCanvas.SetActive(false);
+            waitingScreen.SetActive(true);
             turnTotal = 0;
             mTurnText.text = "Turn: " + GetTurn();
             mPhaseText.text = "Phase: " + mGamePhase.ToString();
             mPlayerName.text = RGNetworkPlayerList.instance.localPlayerName;
             mPlayerDeckType.text = "" + playerType;
 
+
+            mRGNetworkPlayerList.SetupGameManager(this);
+
+            // means network init is done
+            // and we're joined
+            RegisterObserver(mRGNetworkPlayerList);
+            isServer = mRGNetworkPlayerList.isServer;
+            CardPlayer player = GameObject.FindObjectOfType<CardPlayer>();
             // tell everybody else of this player's type
             if (!isServer)
             {
@@ -533,10 +534,17 @@ public class GameManager : MonoBehaviour, IRGObservable
             {
                 RGNetworkPlayerList.instance.SetPlayerType(playerType);
             }
-            
         }
         mStartGameRun = true;
         Debug.Log("start game set!");
+    }
+
+    public void TurnOffWaiting()
+    {
+        mStartGameRun = false;
+        gameCanvas.SetActive(true);
+        startScreen.SetActive(false); // Start menu isn't necessary now
+        waitingScreen.SetActive(false);
     }
 
     public void RealGameStart()
@@ -613,7 +621,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         // go on to the next phase
         mGamePhase = GamePhase.DrawAndDiscard;
-
+        TurnOffWaiting();
     }
 
     // display info about the game's status on the screen
