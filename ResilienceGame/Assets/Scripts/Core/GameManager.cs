@@ -26,6 +26,9 @@ public class GameManager : MonoBehaviour, IRGObservable
     private bool mPowerReaderLoaded = false;
     private bool mIsNetworkListReady = false;
 
+    // UI elements to allow for more animations
+    public UserInterface GameUI;
+
     // where are we in game phases?
     GamePhase mGamePhase = GamePhase.Start;
     GamePhase mPreviousGamePhase = GamePhase.Start;
@@ -33,7 +36,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     // Various turn and game info.
     bool myTurn = false;
     int turnTotal = 0;
-    
+    int mMaxTurn = 30;
 
     // set up the proper player cards and type
     PlayerType playerType = PlayerType.Energy;
@@ -44,7 +47,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 25;
+    public readonly int MAX_DISCARDS = 2;
     public readonly int MAX_DEFENSE = 1;
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
@@ -56,7 +59,9 @@ public class GameManager : MonoBehaviour, IRGObservable
     bool mReceivedEndGame = false;
     bool mStartGameRun = false;
     bool mWaitingForInstantCardResolution = false;
+    bool mRestarted = false;
     public GameObject PlayHaltButton;
+    //public GameObject AllDiscardArea;
     Card mCacheInstantCard = null;
     Updates mCacheInstantCardPlayInfo;
 
@@ -172,11 +177,12 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
 
         // Initialize the deck info and set various
-        // player zones active
+        // player zones active    
         actualPlayer.InitializeCards();
-        actualPlayer.discardDropZone.SetActive(true);
+        //actualPlayer.discardDropZone.SetActive(true);
         actualPlayer.handDropZone.SetActive(true);
         actualPlayer.playerDropZone.SetActive(true);
+        GameUI.AddCommand(UICommandType.ShowDiscard);
     }
 
     // Update is called once per frame
@@ -288,6 +294,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.DrawAndDiscard:
                 if (phaseJustChanged && !skip)
                 {
+                    
                     //runner.StartDialogue("DrawAndDiscard");
                     //background.SetActive(true);
                 }
@@ -295,10 +302,11 @@ public class GameManager : MonoBehaviour, IRGObservable
                 if (phaseJustChanged)
                 {                   
                     mIsDiscardAllowed = true;
+                    GameUI.AddCommand(UICommandType.ShowDiscard);
                     // draw cards if necessary
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
-                    actualPlayer.discardDropZone.SetActive(true);
+                    //actualPlayer.discardDropZone.SetActive(true);
                     mNumberDiscarded = 0;
                 } else
                 {
@@ -631,13 +639,17 @@ public class GameManager : MonoBehaviour, IRGObservable
     }
    
 
-    // WORK: rewrite for this card game
+    // Sets the end game screen active and changes the text to match
+    // the actual scoring.
     public void ShowEndGameCanvas()
     {
         mGamePhase = GamePhase.End;
         endGameCanvas.SetActive(true);
-        endGameText.text = mPlayerName.text + " facility score: " + actualPlayer.GetFacilityScores() +
-            "\r\nExtra connection score of: " + actualPlayer.GetConnectionScores() + "\r\n" + mOpponentName.text + " facility score: " + opponentPlayer.GetFacilityScores() +
+        endGameText.text = mPlayerName.text + "\r\n-----------------------\r\n"+
+            "facility score: " + actualPlayer.GetFacilityScores() +
+            "\r\nExtra connection score of: " + actualPlayer.GetConnectionScores() +
+            "\r\n\r\n" + mOpponentName.text +"\r\n-----------------------\r\n" + 
+            "facility score: " + opponentPlayer.GetFacilityScores() +
             "\r\nExtra connection score of: " + opponentPlayer.GetConnectionScores();
     }
 
@@ -709,14 +721,14 @@ public class GameManager : MonoBehaviour, IRGObservable
     public void ShowPlayUI()
     {
         actualPlayer.handDropZone.SetActive(true);
-        actualPlayer.discardDropZone.SetActive(true);
+        //actualPlayer.discardDropZone.SetActive(true);
     }
 
     // Hide the cards and game UI for the player.
     public void HidePlayUI()
     {
         actualPlayer.handDropZone.SetActive(false);
-        actualPlayer.discardDropZone.SetActive(false);
+        //actualPlayer.discardDropZone.SetActive(false);
     }
 
     // Ends the phase.
@@ -731,7 +743,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // make sure we have a full hand
                     actualPlayer.DrawCards();
                     // set the discard area to work if necessary
-                    actualPlayer.discardDropZone.SetActive(false);
+                    //actualPlayer.discardDropZone.SetActive(false);
+                    GameUI.AddCommand(UICommandType.HideDiscard);
                     mIsDiscardAllowed = false;
 
                     // clear any remaining drops since we're ending the phase now
@@ -1057,6 +1070,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             case GamePhase.Attack:
                 nextPhase = GamePhase.AddStation;
+                if (turnTotal >= mMaxTurn)
+                {
+                        nextPhase = GamePhase.End;
+                }
                 break;
             case GamePhase.AddStation:
                 nextPhase = GamePhase.AddConnections;
@@ -1064,7 +1081,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.AddConnections:
                 // end the game if we're out of cards or have
                 // no stations left on the board
-                if (actualPlayer.DeckIDs.Count == 0 || (actualPlayer.ActiveFacilities.Count == 0))
+                if (actualPlayer.DeckIDs.Count == 0 || 
+                    (actualPlayer.ActiveFacilities.Count == 0))
                 {
                     nextPhase = GamePhase.End;
                 } else
@@ -1260,6 +1278,7 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         // set the network player ready to play again
         RGNetworkPlayerList.instance.ResetAllPlayersToNotReady();
-        RGNetworkPlayerList.instance.SetPlayerType(actualPlayer.playerType);
+
+        mRestarted = true;
     }
 }

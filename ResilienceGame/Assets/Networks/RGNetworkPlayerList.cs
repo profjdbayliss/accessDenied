@@ -575,6 +575,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             {
                                 // when a game is reset we only need the player type again
                                 Debug.Log("existing player is being reset");
+                                actualInt = GetIntFromByteArray(element, msg.payload);
                                 playerTypes[existingPlayer] = (PlayerType)actualInt;
                                 Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
                             }

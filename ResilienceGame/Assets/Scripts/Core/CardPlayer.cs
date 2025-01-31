@@ -2135,14 +2135,17 @@ public class CardPlayer : MonoBehaviour
     // game to happen.
     public void ResetForNewGame()
     {
+        //we'll draw them all again, so reset the id's
+        sUniqueIDCount = 0;
+
         Debug.Log("resetting all game objects on screen - destroying game objects.");
         foreach(GameObject gameObject in HandCards.Values)
         {
             Card card = gameObject.GetComponent<Card>();
-            if (card.CanvasHolder != null)
-            {
-                Destroy(card.CanvasHolder);
-            }
+            //if (card.CanvasHolder != null)
+            //{
+            //    Destroy(card.CanvasHolder);
+            //}
             Destroy(card);
             Destroy(gameObject);
         }
@@ -2150,10 +2153,10 @@ public class CardPlayer : MonoBehaviour
         foreach (GameObject gameObject in Discards.Values)
         {
             Card card = gameObject.GetComponent<Card>();
-            if (card.CanvasHolder != null)
-            {
-                Destroy(card.CanvasHolder);
-            }
+            //if (card.CanvasHolder != null)
+            //{
+            //    Destroy(card.CanvasHolder);
+            //}
             Destroy(card);
             Destroy(gameObject);
         }
@@ -2161,10 +2164,10 @@ public class CardPlayer : MonoBehaviour
         foreach (GameObject gameObject in ActiveCards.Values)
         {
             Card card = gameObject.GetComponent<Card>();
-            if (card.CanvasHolder != null)
-            {
-                Destroy(card.CanvasHolder);
-            }
+            //if (card.CanvasHolder != null)
+            //{
+            //    Destroy(card.CanvasHolder);
+            //}
             Destroy(card);
             Destroy(gameObject);
         }
@@ -2174,7 +2177,19 @@ public class CardPlayer : MonoBehaviour
             Card card = gameObject.GetComponent<Card>();
             if (card.CanvasHolder != null)
             {
-                Destroy(card.CanvasHolder);
+                // now turn on the connection image in the interface
+                Connections connections = card.CanvasHolder.GetComponent<Connections>();
+                if (connections != null)
+                {
+                    foreach(GameObject conn in connections.connections)
+                    {
+                        if (conn != null)
+                        {
+                            conn.SetActive(false);
+                        }
+                    }
+                }
+                //Destroy(card.CanvasHolder); // this would destroy the facilities!
             }
             Destroy(card);
             Destroy(gameObject);
@@ -2188,6 +2203,7 @@ public class CardPlayer : MonoBehaviour
         ActiveFacilities.Clear();
         handSize = 0;
         mTotalFacilityValue = 0;
+        mFacilityNumber = 0;
         mValueSpentOnVulnerabilities = 0;
         mFinalScore = 0;
         mUpdatesThisPhase.Clear();
