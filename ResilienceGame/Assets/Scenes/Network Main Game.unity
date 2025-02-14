@@ -20039,6 +20039,7 @@ GameObject:
   - component: {fileID: 2036154776}
   - component: {fileID: 2036154775}
   - component: {fileID: 2036154774}
+  - component: {fileID: 2036154777}
   m_Layer: 5
   m_Name: Player Hand  Location
   m_TagString: Untagged
@@ -20130,6 +20131,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2036154772}
   m_CullTransparentMesh: 1
+--- !u!114 &2036154777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2036154772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59dd8dbb54bd7344bb4dc656a657164, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cards: []
+  arcRadius: 3300
+  arcAngle: 20
+  cardAngle: 5
+  hoverScale: 1
+  defaultScale: 0.5
+  cardWidth: 120
+  hoverTransitionSpeed: 10
+  CurrentHoveredCard: {fileID: 0}
+  DraggedCard: {fileID: 0}
 --- !u!1 &2046358040
 GameObject:
   m_ObjectHideFlags: 0
@@ -22040,6 +22063,7 @@ GameObject:
   - component: {fileID: 4577432551345143151}
   - component: {fileID: 3327521054683202740}
   - component: {fileID: 6847185274260524990}
+  - component: {fileID: 8846991115935471387}
   m_Layer: 0
   m_Name: BaseCard
   m_TagString: Untagged
@@ -22086,7 +22110,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameCanvas: {fileID: 1994761812}
-  cam: {fileID: 1515608158}
   DraggableObject: {fileID: 4414296152829722398}
   maxScale: 3
   minScale: 0.15
@@ -22111,6 +22134,8 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   playerInput: {fileID: 1887695112}
+  dragScale: {x: 0.5, y: 0.5}
+  dragSmoothTime: 0.1
 --- !u!1 &5095766208849916539
 GameObject:
   m_ObjectHideFlags: 0
@@ -22507,6 +22532,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4414296152829722398}
   m_CullTransparentMesh: 1
+--- !u!114 &8846991115935471387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4414296152829722398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!222 &9039042618621111309
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -75,15 +75,15 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
 
         Vector2 tempScale = targetObject.transform.localScale;
-        //Vector3 offset = targetObject.transform.localPosition;
+        Vector3 offset = targetObject.transform.localPosition;
         
         previousScale = tempScale;
         tempScale.x = (float)(targetObject.transform.localScale.x + scaleAmount);
         tempScale.y = (float)(targetObject.transform.localScale.y + scaleAmount);
-        //offset.y = offset.y + scaleAmount * 200;
+        offset.y = offset.y + maxHeightOffset;
         
         targetObject.transform.localScale = tempScale;
-        //targetObject.transform.localPosition = offset;
+        targetObject.transform.localPosition = offset;
 
         isScaled = !isScaled;
     }
@@ -101,8 +101,8 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        isHovering = true; 
-        timer = 0;     
+        isHovering = true;
+        timer = 0;
     }
 
     public void OnPointerExit(PointerEventData eventData)

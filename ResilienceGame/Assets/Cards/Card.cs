@@ -53,6 +53,8 @@ public class Card : MonoBehaviour, IPointerClickHandler
     GameManager mManager; 
     public List<ICardAction> ActionList = new List<ICardAction>(6);
 
+    public int HandPosition { get; set; } = 0;
+
     // Start is called before the first frame update
     void Start()
     {

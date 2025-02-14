@@ -735,6 +735,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public void EndPhase()
     {
         bool allowNextPhase = true;
+        actualPlayer.ReturnCardsToHand();
 
         switch (mGamePhase)
         {
@@ -824,7 +825,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         if (myTurn && allowNextPhase)
         {
             Debug.Log("ending the game phase in gamemanager!");
-            //HidePlayUI();
             mEndPhaseButton.SetActive(false);
             AddMessage(new Message(CardMessageType.EndPhase));
             myTurn = false;
