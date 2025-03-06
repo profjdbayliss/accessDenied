@@ -101,6 +101,11 @@ public class HandPositioner : MonoBehaviour
 
     public void DiscardCard(GameObject card)
     {
+        HoverScale scaleObj = card.GetComponent<HoverScale>();
+        if (scaleObj != null)
+        {
+            scaleObj.enabled = true;
+        }
         cards.Remove(card.GetComponent<Card>());
         LayoutElement element = card.GetComponent<LayoutElement>();
         element.ignoreLayout = false;
@@ -130,6 +135,11 @@ public class HandPositioner : MonoBehaviour
         element.ignoreLayout = true;
 
         // add new card and update positions
+        HoverScale scaleObj = card.gameObject.GetComponent<HoverScale>();
+        if (scaleObj != null)
+        {
+            scaleObj.enabled = false;
+        }
         cards.Add(card);
         UpdateCardPositions();
     }

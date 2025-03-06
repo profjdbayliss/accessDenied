@@ -604,7 +604,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             //NetworkServer.SendToAll(msg);
 
                             // let the game manager display the new info
-                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] +
+                            manager.DisplayGameStatusOpponent("Player " + playerNames[playerIndex] +
                                 " discarded " + discardCount + " cards.");
                         }
                     }
@@ -792,7 +792,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             //NetworkServer.SendToAll(msg);
 
                             // let the game manager display the new info
-                            manager.DisplayGameStatus("Player " + playerNames[playerIndex] + 
+                            manager.DisplayGameStatusOpponent("Player " + playerNames[playerIndex] + 
                                 " discarded " + discardCount + " cards.");
                         }
                     }

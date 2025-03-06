@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     public GameObject targetObject;
+    public float scale = 10.0f;
     public float delay = 0.5f; 
     public float maxHeightOffset = 100;
     public bool SlippyOff = false;
@@ -29,24 +30,29 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             if (isHovering && !isScaled)
             {
                
-                ScaleCard(2.0f);
+                ScaleCard(scale);
+                
             }
             else if (isScaled && !isHovering)
             {
                 ResetScale();
+                
             }
         }
         else
         // always scale a dragged card to make it easier to get to where you're going
         if (mPointerDown && !SlippyOff)
         {
-            if (!isScaled) ScaleCard(.5f);
+            if (!isScaled) ScaleCard(scale);
         } 
       
         else
         if (isHovering && !mPointerDown)
         {
-            if (!isScaled) ScaleCard(.5f);
+            if (!isScaled)
+            {
+                ScaleCard(scale);
+            }
 
             // current card game has no extra info, so this isn't used
             //timer += Time.deltaTime;
@@ -61,7 +67,7 @@ public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
         //toggles the scaling effect to scale it back to its original size
         else if (isScaled && wasDropped) { ResetScale(); wasDropped = false; }
-        else if (isScaled && !mPointerDown) { ResetScale(); }
+        else if (isScaled && !mPointerDown) { ResetScale();  }
         //else if (isScaled) { ResetScale(); ResetPosition(originalPosition); }
     }
 

@@ -445,7 +445,15 @@ public class CardPlayer : MonoBehaviour
             tempCard.MitigatesWhatCards.Add(mitigation);
         }
 
-
+        HoverScale tempScale = tempCardObj.GetComponent<HoverScale>();
+        if (tempScale != null)
+        {
+            tempScale.targetObject = tempCardObj;
+        }
+        else
+        {
+            Debug.Log("card couldn't be assigned as hover doesn't exist!");
+        }
         tempCardObj.GetComponent<slippy>().DraggableObject = tempCardObj;
         if (!allowSlippy)
         {
@@ -921,11 +929,11 @@ public class CardPlayer : MonoBehaviour
                     slippyObject.ResetScale();
                 }
 
-                hoverScale = activeCardObject.GetComponent<HoverScale>();
-                if (hoverScale != null)
-                {
-                    hoverScale.enabled = false;
-                }
+                //hoverScale = activeCardObject.GetComponent<HoverScale>();
+                //if (hoverScale != null)
+                //{
+                //    hoverScale.enabled = false;
+                //}
 
                 slippyObject = activeCardObject.GetComponent<slippy>();
                 if (slippyObject != null)
@@ -1183,7 +1191,7 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     card.state = CardState.CardDrawn;
                                     handPositioner.ReturnCardToHand(card);
-                                    manager.DisplayGameStatus("Please select a single facility you own and play a defense card type.");
+                                    manager.DisplayGameStatusPlayer("Please select a single facility you own and play a defense card type.");
                                 }
                                 break;
                             case GamePhase.Mitigate:
@@ -1214,14 +1222,14 @@ public class CardPlayer : MonoBehaviour
                                         ActiveCards.Remove(card.UniqueID);
                                         card.state = CardState.CardDrawn;
                                         handPositioner.ReturnCardToHand(card);
-                                        manager.DisplayGameStatus("Please select a card that can mitigate a vulnerability card on a chosen facility.");
+                                        manager.DisplayGameStatusPlayer("Please select a card that can mitigate a vulnerability card on a chosen facility.");
                                     }
                                 }
                                 else
                                 {
                                     card.state = CardState.CardDrawn;
                                     handPositioner.ReturnCardToHand(card);
-                                    manager.DisplayGameStatus("Please select a single opponent facility and play a vulnerability card.");
+                                    manager.DisplayGameStatusPlayer("Please select a single opponent facility and play a vulnerability card.");
                                 }
                                 break;
                             default:
@@ -1315,7 +1323,7 @@ public class CardPlayer : MonoBehaviour
                                 {
                                     card.state = CardState.CardDrawn;
                                     handPositioner.ReturnCardToHand(card);
-                                    manager.DisplayGameStatus("Can't play multiples of the same card on a station.");
+                                    manager.DisplayGameStatusPlayer("Can't play multiples of the same card on a station.");
 
                                 }
                                 break;
