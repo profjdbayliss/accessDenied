@@ -21,8 +21,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     CardReader energyCardReader;
     CardReader waterCardReader;
 
-    public List<Card> energyCards;
-    public List<Card> waterCards;
+    public List<ReadInCardData> energyCards;
+    public List<ReadInCardData> waterCards;
     private bool mWaterReaderLoaded = false;
     private bool mPowerReaderLoaded = false;
     private bool mIsNetworkListReady = false;
@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 20;
+    public readonly int MAX_DISCARDS = 2;
     public readonly int MAX_DEFENSE = 1;
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
@@ -104,8 +104,8 @@ public class GameManager : MonoBehaviour, IRGObservable
     public Color activePlayerColor;
 
     // Tutorial 
-    //public GameObject yarnSpinner;
-    //private DialogueRunner runner;
+    public GameObject yarnSpinner;
+    private DialogueRunner runner;
     private GameObject background;
     private bool skip;
     private bool skipClicked;
@@ -149,8 +149,8 @@ public class GameManager : MonoBehaviour, IRGObservable
 
 
             // Set dialogue runner for tutorial
-            //runner = yarnSpinner.GetComponent<DialogueRunner>();
-            //background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+            runner = yarnSpinner.GetComponent<DialogueRunner>();
+            background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
            // Debug.Log(background);
             hasStartedAlready = true;
         } else
@@ -181,7 +181,6 @@ public class GameManager : MonoBehaviour, IRGObservable
         // Initialize the deck info and set various
         // player zones active    
         actualPlayer.InitializeCards();
-        //actualPlayer.discardDropZone.SetActive(true);
         actualPlayer.handDropZone.SetActive(true);
         actualPlayer.playerDropZone.SetActive(true);
         GameUI.AddCommand(UICommandType.ShowDiscard);
@@ -213,14 +212,16 @@ public class GameManager : MonoBehaviour, IRGObservable
             // read water deck
             if (!mWaterReaderLoaded)
             {
-                if (webWaterCardReader != null && webWaterCardReader.IsDone)
-                {
-                    waterCards = webWaterCardReader.Cards;
-                    CardPlayer.AddCards(waterCards);
-                    Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
-                    mWaterReaderLoaded = true;
-                }
-                else if (waterCardReader != null && waterCardReader.IsDone)
+                // WORK: comment web version out for now
+                //if (webWaterCardReader != null && webWaterCardReader.IsDone)
+                //{
+                //    waterCards = webWaterCardReader.Cards;
+                //    CardPlayer.AddCards(waterCards);
+                //    Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
+                //    mWaterReaderLoaded = true;
+                //}
+                //else 
+                if (waterCardReader != null && waterCardReader.IsDone)
                 {
                     waterCards = waterCardReader.Cards;
                     CardPlayer.AddCards(waterCards);
@@ -232,15 +233,15 @@ public class GameManager : MonoBehaviour, IRGObservable
           
             if (!mPowerReaderLoaded)
             {
-                if (webEnergyCardReader != null && webEnergyCardReader.IsDone)
-                {
-                    energyCards = webEnergyCardReader.Cards;
-                    CardPlayer.AddCards(energyCards);
-                    Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
-                    mPowerReaderLoaded = true;
-                }
-
-                else if (energyCardReader != null && energyCardReader.IsDone)
+                //if (webEnergyCardReader != null && webEnergyCardReader.IsDone)
+                //{
+                //    energyCards = webEnergyCardReader.Cards;
+                //    CardPlayer.AddCards(energyCards);
+                //    Debug.Log("number of cards in all cards is: " + CardPlayer.cards.Count);
+                //    mPowerReaderLoaded = true;
+                //}
+                //else
+                if (energyCardReader != null && energyCardReader.IsDone)
                 {
                     energyCards = energyCardReader.Cards;
                     CardPlayer.AddCards(energyCards);
@@ -285,7 +286,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
 
-            //SkipTutorial();
+            SkipTutorial();
         }
 
         switch (phase)
@@ -298,8 +299,8 @@ public class GameManager : MonoBehaviour, IRGObservable
                 if (phaseJustChanged && !skip)
                 {
 
-                    //runner.StartDialogue("DrawAndDiscard");
-                    //background.SetActive(true);
+                    runner.StartDialogue("DrawAndDiscard");
+                    background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -335,8 +336,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Defense:
                 if (phaseJustChanged && !skip)
                 {
-                    //runner.StartDialogue("Defense"); 
-                    //background.SetActive(true);
+                    runner.StartDialogue("Defense"); 
+                    background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -371,8 +372,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Vulnerability:
                 if (phaseJustChanged && !skip)
                 {
-                    //runner.StartDialogue("Vulnerability");
-                    //background.SetActive(true);
+                    runner.StartDialogue("Vulnerability");
+                    background.SetActive(true);
                 }
                 if (!mWaitingForInstantCardResolution)
                 {
@@ -413,8 +414,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Mitigate:
                 if (phaseJustChanged && !skip)
                 {
-                    //runner.StartDialogue("Mitigate");
-                    //background.SetActive(true);
+                    runner.StartDialogue("Mitigate");
+                    background.SetActive(true);
                 }
 
                 if (!phaseJustChanged)
@@ -443,8 +444,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Attack:
                 if (phaseJustChanged && !skip)
                 {
-                    // runner.StartDialogue("Attack");
-                    //background.SetActive(true);
+                    runner.StartDialogue("Attack");
+                    background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -458,9 +459,8 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.AddStation:
                 if (phaseJustChanged && !skip)
                 {
-                    // runner.StartDialogue("AddStation");
-                    //background.SetActive(true);
-                    // skip = true;
+                    runner.StartDialogue("AddStation");
+                    background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -471,7 +471,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                     // send message about what facility got drawn                 
                     if (card != null)
                     {
-                        AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
+                        AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.data.cardID));
                         DisplayGameStatusPlayer("Both players drew a station card. Please push End Phase to continue.");
                     }
                     else
@@ -482,6 +482,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.AddConnections:
+                if (phaseJustChanged && !skip)
+                {
+                    runner.StartDialogue("AddConnections");
+                    background.SetActive(true);
+                    skip = true;
+                }
                 if (!phaseJustChanged)
                 {
                     actualPlayer.HandleConnections(false);
@@ -591,7 +597,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             // send message about what facility got drawn
             if (card != null)
             {
-                AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.cardID));
+                AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.data.cardID));
             }
             else
             {
@@ -907,11 +913,11 @@ public class GameManager : MonoBehaviour, IRGObservable
         else if (updates.Count == 1 && phase != GamePhase.Attack)
         {
             Updates update = updates[0];
-            Card card;
+            ReadInCardData card;
             CardFront front;
             if (CardPlayer.cards.TryGetValue(update.CardID, out card))
             {
-                front = card.GetComponent<CardFront>();
+                front = card.front;
                 if (front != null)
                 {
                     DisplayGameStatusOpponent("Opponent played one card in phase " + phase + ". The card was " +
@@ -933,10 +939,10 @@ public class GameManager : MonoBehaviour, IRGObservable
             for (int i = 0; i < count; i++)
             {
                 Updates update = updates[i];
-                Card card;
+                ReadInCardData card;
                 if (CardPlayer.cards.TryGetValue(update.CardID, out card))
                 {
-                    CardFront front = card.GetComponent<CardFront>();
+                    CardFront front = card.front;
                     if (front != null)
                     {
                         if (i < count - 1)
@@ -976,7 +982,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                             GameObject cardGameObject = opponentPlayer.ActiveCards[card.UniqueID];
                             actualPlayer.AddUpdate(update, cardGameObject, actualPlayer.playerDropZone, phase, false);
 
-                            if (card.data.cardType == CardType.Instant)
+                            if (card.data.data.cardType == CardType.Instant)
                             {
                                 // cache info for whenever we make a decision
                                 mCacheInstantCard = card;
@@ -990,7 +996,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                                 foreach (GameObject cardObj in actualPlayer.HandCards.Values)
                                 {
                                     Card potentialHaltCard = cardObj.GetComponent<Card>();
-                                    if (potentialHaltCard.data.cardType == CardType.Halt)
+                                    if (potentialHaltCard.data.data.cardType == CardType.Halt)
                                     {
                                         PlayHaltButton.SetActive(true);
                                         break;
@@ -1006,7 +1012,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                             foreach (GameObject facility in opponentPlayer.ActiveFacilities.Values)
                             {
                                 Card facilityCard = facility.GetComponent<Card>();
-                                if (facilityCard.data.cardID == update.CardID)
+                                if (facilityCard.data.data.cardID == update.CardID)
                                 {
                                     getRidOfFacility = true;
                                     break;
@@ -1048,7 +1054,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                         foreach (GameObject facility in opponentPlayer.ActiveFacilities.Values)
                         {
                             Card facilityCard = facility.GetComponent<Card>();
-                            if (facilityCard.data.cardID == update.CardID)
+                            if (facilityCard.data.data.cardID == update.CardID)
                             {
                                 getRidOfFacility = true;
                                 break;
@@ -1280,39 +1286,39 @@ public class GameManager : MonoBehaviour, IRGObservable
         }
     }
     //Sets dialogue to inactive
-    //private void SkipTutorial()
-    //{
-    //    if (!yarnSpinner.activeInHierarchy) { return; }
+    private void SkipTutorial()
+    {
+        if (!yarnSpinner.activeInHierarchy) { return; }
 
-    //    if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
-    //        || skipClicked)
-    //    {
-    //        skip = true;
-    //        runner.Stop();
-    //        yarnSpinner.SetActive(false);
-    //        background.SetActive(false);
-    //    }
-    //}
-    
-    //public void SkipClick()
-    //{
-    //    skipClicked = true;
-    //    SkipTutorial();
-    //}
+        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+            || skipClicked)
+        {
+            skip = true;
+            runner.Stop();
+            yarnSpinner.SetActive(false);
+            background.SetActive(false);
+        }
+    }
 
-    //public void ViewTutorial()
-    //{
-    //    if (yarnSpinner.activeInHierarchy) { return; }
+    public void SkipClick()
+    {
+        skipClicked = true;
+        SkipTutorial();
+    }
 
-    //    runner.Stop();
+    public void ViewTutorial()
+    {
+        if (yarnSpinner.activeInHierarchy) { return; }
 
-    //    yarnSpinner.SetActive(true);
-    //    background.SetActive(true);
-    //    skipClicked = false;
-    //    skip = false;
-    //    Debug.Log(mGamePhase.ToString());
-    //    runner.StartDialogue(mGamePhase.ToString());
-    //}
+        runner.Stop();
+
+        yarnSpinner.SetActive(true);
+        background.SetActive(true);
+        skipClicked = false;
+        skip = false;
+        Debug.Log(mGamePhase.ToString());
+        runner.StartDialogue(mGamePhase.ToString());
+    }
 
     public void ResetForNewGame()
     {

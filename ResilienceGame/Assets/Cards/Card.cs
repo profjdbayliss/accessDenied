@@ -24,14 +24,27 @@ public struct CardIDInfo
     public int CardID;
 };
 
-public class Card : MonoBehaviour, IPointerClickHandler
+public class ReadInCardData
 {
     public CardData data;
+    public CardFront front;
+    public string DeckName;
+    // NOTE: this is a string currently because mitigations are for 
+    // cards from the other player's deck.
+    public List<string> MitigatesWhatCards = new List<string>(10);
+    public List<ICardAction> ActionList = new List<ICardAction>(6);
+}
+
+public class Card : MonoBehaviour, IPointerClickHandler
+{
+
+    [HideInInspector]
+    public ReadInCardData data;
+
     // this card needs a unique id since multiples of the same card can be played
     public int UniqueID; 
-    public CardFront front;
-    public CardState state;
-    public string DeckName;
+    //public CardFront front;
+    public CardState state;   
     public int WhichFacilityZone = 0;
     public GameObject cardZone;
     public GameObject originalParent;
@@ -46,17 +59,13 @@ public class Card : MonoBehaviour, IPointerClickHandler
     public List<FacilityConnectionInfo> ConnectionList = new List<FacilityConnectionInfo>(3);
 
 
-    // NOTE: this is a string currently because mitigations are for 
-    // cards from the other player's deck.
-    public List<string> MitigatesWhatCards = new List<string>(10);
     Vector2 mDroppedPosition;
     GameManager mManager; 
-    public List<ICardAction> ActionList = new List<ICardAction>(6);
 
     public int HandPosition { get; set; } = 0;
 
     // Start is called before the first frame update
-    void Start()
+    public void Start()
     {
         originalPosition = this.gameObject.transform.position;
         mManager = GameObject.FindObjectOfType<GameManager>();
@@ -67,14 +76,14 @@ public class Card : MonoBehaviour, IPointerClickHandler
     {
        
         Debug.Log("click happened on card");
-        if (this.state == CardState.CardDrawn && data.cardType != CardType.Station)
+        if (this.state == CardState.CardDrawn && data.data.cardType != CardType.Station)
         {
             // note that click consumes the release of most drag and release motions
             Debug.Log("potentially card dropped.");
             state = CardState.CardDrawnDropped;
             mDroppedPosition = new Vector2(this.transform.position.x, this.transform.position.y);
         }
-        else if (this.data.cardType == CardType.Station && mManager.CanStationsBeHighlighted())
+        else if (data.data.cardType == CardType.Station && mManager.CanStationsBeHighlighted())
         {
             // only station type cards can be highlighted and played on
             // for this game
@@ -104,7 +113,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // Play all of a cards actions
     public void Play(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card cardForAttack)
     {
-        foreach (ICardAction action in ActionList)
+        foreach (ICardAction action in data.ActionList)
         {
             action.Played(player, opponent, cardActedUpon, cardForAttack);
         }
@@ -113,7 +122,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     // Play all of a cards actions
     public void Play(CardPlayer player, CardPlayer opponent, Card cardActedUpon)
     {
-        foreach(ICardAction action in ActionList)
+        foreach(ICardAction action in data.ActionList)
         {
             action.Played(player, opponent, cardActedUpon, this);
         }
@@ -123,7 +132,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
     {
         bool canMitigate = false;
 
-        foreach(string mitigation in MitigatesWhatCards)
+        foreach(string mitigation in data.MitigatesWhatCards)
         {
             if (attackName.Equals(mitigation)) {
                 canMitigate = true;

@@ -2,14 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Text;
-using System;
-using UnityEngine.UI;
-using System.Collections;
-using UnityEngine.Networking;
-using Mirror;
-using System.Net;
-using System.Threading.Tasks;
-using System.Net.Http;
 
 public class CardReader : MonoBehaviour
 {
@@ -40,7 +32,7 @@ public class CardReader : MonoBehaviour
     protected string allCardText = "";
 
     // card info
-    public List<Card> Cards = new List<Card>(50);
+    public List<ReadInCardData> Cards = new List<ReadInCardData>(50);
 
     // should we create an atlas?
     public bool CreateAtlas = false;
@@ -57,7 +49,7 @@ public class CardReader : MonoBehaviour
 
             // Split the read in CSV file into seperate objects at the new line character
             string[] allCSVObjects = allCardText.Split("\n");
-            Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
+            //Debug.Log("Number of lines in csv file is: " + allCSVObjects.Length);
 
             // get all the image elements in the csv file
             if (createAtlas)
@@ -126,14 +118,16 @@ public class CardReader : MonoBehaviour
                     int numberOfCards = int.Parse(individualCSVObjects[0].Trim());
                     if (numberOfCards > 0)
                     {
-
+                        // NOTE: gameobject is not necessary unless you need to see the card data!
                         // get appropriate game objects to set up
-                        GameObject tempCardObj = Instantiate(cardPrefab);
+                        //GameObject tempCardObj = Instantiate(cardPrefab);
 
                         // Get a reference to the Card component on the card gameobject.
-                        Card tempCard = tempCardObj.GetComponent<Card>();
+                        //Card tempCard = tempCardObj.GetComponent<Card>();
+                        //CardFront tempCardFront = tempCard.GetComponent<CardFront>();
+                        ReadInCardData tempCard = new ReadInCardData();
+                        CardFront tempCardFront = new CardFront();
                         tempCard.DeckName = DeckName;
-                        CardFront tempCardFront = tempCard.GetComponent<CardFront>();
                         tempCard.data.cardID = sCardID;
                         sCardID++;
 
@@ -204,8 +198,8 @@ public class CardReader : MonoBehaviour
 
                         // 3: set up the card title
                         // WORK: do we really need to set both of these?
-                        tempCardObj.name = individualCSVObjects[3];
-                        tempCardFront.title = tempCardObj.name;
+                        //tempCardObj.name = individualCSVObjects[3];
+                        tempCardFront.title = individualCSVObjects[3];
 
                         // 4: set up the title color, which also 
                         // determines the card type in this game
@@ -318,7 +312,7 @@ public class CardReader : MonoBehaviour
                         tempCard.data.numberInDeck = numberOfCards;
 
                         // now add to the deck of single types of cards
-
+                        tempCard.front = tempCardFront;
                         Cards.Add(tempCard);
                     }
                 }

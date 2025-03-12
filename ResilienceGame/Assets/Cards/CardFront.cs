@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Visual parts of the card
-public class CardFront : MonoBehaviour
+public class CardFront
 {
     public CardType cardType;
     public bool worthCircle;

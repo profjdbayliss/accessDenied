@@ -69,7 +69,7 @@ public class HandPositioner : MonoBehaviour
     public void ReturnCardToHand(Card card)
     {
         //card.SetCardState(CardState.CardDrawn);
-        Debug.Log($"Sending {card.front.title} to hand");
+        Debug.Log($"Sending {card.data.front.title} to hand");
         card.transform.SetParent(transform, false);
         card.transform.SetSiblingIndex(card.HandPosition);
         ResetCardSiblingIndices();
@@ -90,12 +90,12 @@ public class HandPositioner : MonoBehaviour
 
         //}
         //else {
-        //    //reset scale and reset sibling index to position it correctly in the hand
-        //    card.transform.localScale = Vector3.one * defaultScale;
-        //    var tCard = card.GetComponent<Card>();
-        //    // Debug.Log($"returning {tCard.data.front.title} to position {tCard.HandPosition}");
-        //    card.transform.SetSiblingIndex(tCard.HandPosition);
-        //    ArrangeCards(); // Rearrange cards when dragging ends
+        //reset scale and reset sibling index to position it correctly in the hand
+        //card.transform.localScale = Vector3.one * defaultScale;
+        //var tCard = card.GetComponent<Card>();
+        //// Debug.Log($"returning {tCard.data.front.title} to position {tCard.HandPosition}");
+        //card.transform.SetSiblingIndex(tCard.HandPosition);
+        //ArrangeCards(); // Rearrange cards when dragging ends
         //}
     }
 

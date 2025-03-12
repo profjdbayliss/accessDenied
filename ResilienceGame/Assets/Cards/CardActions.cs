@@ -7,8 +7,8 @@ public class ActionAddDefenseWorthToStation : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
-        Debug.Log("card " + card.front.title + " played.");
-        cardActedUpon.DefenseHealth += card.data.worth;
+        Debug.Log("card " + card.data.front.title + " played.");
+        cardActedUpon.DefenseHealth += card.data.data.worth;
         TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);
         for (int i = 0; i < tempTexts.Length; i++)
         {
@@ -26,7 +26,7 @@ public class ActionMitigateCard : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
-        Debug.Log("card " + card.front.title + " played to mitigate a card on the selected station.");
+        Debug.Log("card " + card.data.front.title + " played to mitigate a card on the selected station.");
         bool canMitigate = false;
         string attackName = "";
         GameObject opponentCardObject = null;
@@ -41,17 +41,17 @@ public class ActionMitigateCard : ICardAction
             {
                 Debug.Log("opponent card object obtained!");
                 Card tmpCard = tmpCardObject.GetComponent<Card>();
-                if (card.CanMitigate(tmpCard.front.title))
+                if (card.CanMitigate(tmpCard.data.front.title))
                 {
                     canMitigate = true;
-                    Debug.Log(attackName + " can be mitigated by " + card.front.title);
+                    Debug.Log(attackName + " can be mitigated by " + card.data.front.title);
                     // our goal is to find whichever card is the most negative
                     // and mitigate that one!
-                    if (tmpCard.data.worth <= cardValue)
+                    if (tmpCard.data.data.worth <= cardValue)
                     {
                         opponentCardObject = tmpCardObject;
                         opponentCard = tmpCard;
-                        cardValue = tmpCard.data.worth;
+                        cardValue = tmpCard.data.data.worth;
                     }
                 }
             }
@@ -77,12 +77,12 @@ public class ActionImpactFacilityWorth : ICardAction
 {
     public void Played(CardPlayer player, CardPlayer opponent, Card cardActedUpon, Card card)
     {
-        Debug.Log("card " + card.front.title + " played to attack the selected station.");
-        cardActedUpon.DefenseHealth += card.data.worth;
+        Debug.Log("card " + card.data.front.title + " played to attack the selected station.");
+        cardActedUpon.DefenseHealth += card.data.data.worth;
         player.AddAttackUpdateToList(new AttackUpdate
         {
             UniqueFacilityID=cardActedUpon.UniqueID,
-            ChangeInValue=card.data.worth
+            ChangeInValue=card.data.data.worth
         });
         card.state = CardState.CardNeedsToBeDiscarded;
         TextMeshProUGUI[] tempTexts = cardActedUpon.GetComponentsInChildren<TextMeshProUGUI>(true);

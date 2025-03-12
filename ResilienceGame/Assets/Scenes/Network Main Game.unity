@@ -3258,10 +3258,10 @@ RectTransform:
   m_Father: {fileID: 707036246}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 68.5, y: -43}
-  m_SizeDelta: {x: 121, y: 70}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &300410073
 MonoBehaviour:
@@ -6317,7 +6317,6 @@ MonoBehaviour:
   cardFileName: waterCards.csv
   outputAtlasName: waterAtlas.png
   cardPrefab: {fileID: 4414296152829722398}
-  Cards: []
   CreateAtlas: 0
 --- !u!1 &567374783
 GameObject:
@@ -7450,7 +7449,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -160, y: 20}
-  m_SizeDelta: {x: 137, y: 86}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &707036247
 MonoBehaviour:
@@ -9769,7 +9768,6 @@ MonoBehaviour:
   cardFileName: powerCards.csv
   outputAtlasName: energyAtlas.png
   cardPrefab: {fileID: 4414296152829722398}
-  Cards: []
   CreateAtlas: 0
 --- !u!1 &842196070
 GameObject:
@@ -21126,8 +21124,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   energyDeckReader: {fileID: 839994435}
   waterDeckReader: {fileID: 545910552}
-  energyCards: []
-  waterCards: []
   GameUI: {fileID: 1026219723}
   playerDeckList: {fileID: 1570887177}
   gameStarted: 0
@@ -21150,6 +21146,7 @@ MonoBehaviour:
   opponentStatusText: {fileID: 1395385048}
   activePlayerText: {fileID: 0}
   activePlayerColor: {r: 0, g: 0, b: 0, a: 0}
+  yarnSpinner: {fileID: 2753718019496694862}
   endGameCanvas: {fileID: 1756113746}
   InstantCardAlert: {fileID: 1706979507}
   endGameText: {fileID: 894850864}
@@ -21560,7 +21557,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2788043409255644737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21595,26 +21592,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3327521054683202740
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4414296152829722398}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0164fa3f67e3c844b4657610799a7ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cardType: 0
-  worthCircle: 0
-  costCircle: 0
-  titleColor: {r: 0, g: 0, b: 0, a: 0}
-  title: 
-  description: 
-  background: {fileID: 0}
-  img: {fileID: 0}
 --- !u!114 &3395120114322209512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21833,27 +21810,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 1135.1808
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 241.61679
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 587.5904
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946391, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -140.8084
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090305946392, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_text
@@ -21941,11 +21918,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 136
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 86
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123090415912067, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_LocalPosition.z
@@ -22025,27 +22002,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 120
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 70
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 68
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091569765588, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -43
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4935123091767085940, guid: 67dde1b92175d4745aaea386e7555d40, type: 3}
       propertyPath: m_IsActive
@@ -22198,7 +22175,6 @@ GameObject:
   - component: {fileID: 8382252198568707509}
   - component: {fileID: 8846991115935471386}
   - component: {fileID: 4577432551345143151}
-  - component: {fileID: 3327521054683202740}
   - component: {fileID: 8846991115935471387}
   - component: {fileID: 8846991115935471388}
   m_Layer: 0
@@ -22482,9 +22458,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UniqueID: 0
-  front: {fileID: 0}
   state: 0
-  DeckName: 
   WhichFacilityZone: 0
   cardZone: {fileID: 0}
   originalParent: {fileID: 1994761812}
@@ -22495,7 +22469,6 @@ MonoBehaviour:
   OutlineImage: {fileID: 6945917863268426752}
   DefenseHealth: 0
   ModifyingCards: 
-  MitigatesWhatCards: []
 --- !u!114 &8428484966745356290
 MonoBehaviour:
   m_ObjectHideFlags: 0

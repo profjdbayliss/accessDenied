@@ -6,40 +6,44 @@ Text: Welcome
 title: DrawAndDiscard
 ---
 Text: Every round starts with six cards per player unless it’s the end of the game where somebody has run out of cards.
-Text: You can discard 1 or 2 cards into your discard pile. Once a card is discarded draw a new card from the deck.
+Text: You can discard 1 or 2 cards. Once a card is discarded, a new card is automatically drawn from your deck.
 <<stop>>
 ===
 
 title: Defense
 ---
-Text: You can place up to 1 defense card on each facility per round. Both defense and station cards have a blue background.
-Text: If neither player has any defense cards to play, this phase will be skipped.
+Text: You can place up to 1 defense card on each facility per round. Defense cards have a green shield background.
+Text: If you do not have any defense cards, click End Phase to end that phase.
 ===
 
 title: Vulnerability
 ---
-Text: Spend your points to let other players know the vulnerabilities you’ve discovered on their stations.
+Text: Spend the summation of points in the upper left corner of your facilities to let other players know the vulnerabilities you’ve discovered on their stations.
 Text: Any players without vulnerabilities to play must wait for all other players to play their vulnerabilities before going into the Mitigation phase.
-Text: More than one vulnerability can be played on a station, however, only 1 of any type can be placed. Vulnerability cards have a red background.
+Text: More than one vulnerability can be played on a station, however, only 1 of any type can be placed. Vulnerability cards have a red virus particle background.
 Text: Instant negative cards should be played in this phase to allow for instant counters. Note: instant cards ARE NOT spread by the Lateral Movement card.
 Text: Waiting for the mitigation phase to counter ALL vulnerabilities except for instant cards means that you will be able to choose which cards to counter.
 ===
 
 title: Mitigate
 ---
-Text: Remove vulnerabilities from your stations by countering them with mitigation cards from your hand. Mitigation cards have a yellow background. 
+Text: Remove vulnerabilities from your stations by selecting the station and placing a countering mitigation card on that station. Mitigation cards have an empty yellow background. 
 Text: Countered vulnerabilities go into the discard player of whomever played the cards. Mitigation cards go into your discard pile.
 ===
 
 title: Attack
 ---
-Text: For each vulnerability cards that cannot be countered, there is a 50/50 chance of it being used to attack that facility.
-Text: For successful attacks, points are lost for that facility AND vulnerability card is discarded. 
-Text: Once a facility lost all points it’s removed from play and those points are lost permanently. 
+Text: For each vulnerability cards that cannot be countered, there is a 50% chance of it being used to attack that facility. Dice are rolled for you.
+Text: For successful attacks, points are lost for that facility AND the vulnerability card is discarded. 
+Text: Once a facility has lost all points, it’s removed from play and those points are lost permanently. 
 ===
 
 title: AddStation
 ---
-Text: Draw a new station from the facility card pile every round until the facility card pile is empty. 
-Text: Place cards in the agreed upon network configuration. If you lose a facility, it is all right to place a new facility where the old one was located. 
+Text: A new station is automatically drawn from the facility card pile every round until there are no more stations to draw.
+===
+
+title: AddConnections
+---
+Text: When a new station is drawn, it must be connected to at least one other station. The optimal number of connections is at least the number of points for that facility. So a 2pt facility would optimally have 2+ connections. More connections may be added in later turns.
 ===
