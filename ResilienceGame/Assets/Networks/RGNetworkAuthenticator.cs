@@ -125,7 +125,7 @@ public class RGNetworkAuthenticator : NetworkAuthenticator
 
         // Reject the unsuccessful authentication
         ServerReject(conn);
-
+        Debug.Log("server is rejecting connection");
         yield return null;
 
         // remove conn from pending connections
@@ -160,6 +160,7 @@ public class RGNetworkAuthenticator : NetworkAuthenticator
     {
         // unregister the handler for the authentication response
         NetworkClient.UnregisterHandler<AuthResponseMessage>();
+       
     }
 
     /// <summary>
@@ -185,13 +186,13 @@ public class RGNetworkAuthenticator : NetworkAuthenticator
         }
         else
         {
-            Debug.LogError($"Authentication Response: {msg.code} {msg.message}");
-
             // Authentication has been rejected
             // StopHost works for both host client and remote clients
             NetworkManager.singleton.StopHost();
-
             // Do this AFTER StopHost so it doesn't get cleared / hidden by OnClientDisconnect
+            Debug.LogError($"Authentication Response: {msg.code} {msg.message}");
+            MessageInfo.ShouldDisplayMessage = true;
+            MessageInfo.Message = msg.message;
         }
     }
 

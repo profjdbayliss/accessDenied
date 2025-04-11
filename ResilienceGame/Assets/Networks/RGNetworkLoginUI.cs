@@ -11,15 +11,25 @@ public class RGNetworkLoginUI : MonoBehaviour
     [SerializeField] internal TMP_InputField playernameInput;
     [SerializeField] internal Button hostButton;
     [SerializeField] internal Button clientButton;
+    public GameObject messageBox;
+    public TextMeshProUGUI messageBoxText;
 
     public static RGNetworkLoginUI s_instance;
-    private static bool mHasLoadedScene = false;
-
+    public static bool HasLoadedScene = false;
+    
     void Awake()
     {
         s_instance = this;
     }
 
+    public void Update()
+    {
+        if (MessageInfo.ShouldDisplayMessage && !messageBox.activeSelf)
+        {
+            Debug.Log("displaying message");
+            DisplayMessageBox(MessageInfo.Message);
+        }
+    }
     // Called by UI element UsernameInput.OnValueChanged
     public void ToggleButtons(string username)
     {
@@ -29,11 +39,25 @@ public class RGNetworkLoginUI : MonoBehaviour
 
     public void LoadScene(int index)
     {
-        if (!mHasLoadedScene)
+        if (!HasLoadedScene)
         {
-            mHasLoadedScene = true;
+            HasLoadedScene = true;
             Debug.Log("loading scene in rg login ui " + index);
             SceneManager.LoadScene(index);
         }
+    }
+
+    public void DisplayMessageBox(string msg)
+    {
+        messageBoxText.text = msg;
+        messageBox.SetActive(true);
+        Debug.Log("showing message box");
+    }
+
+    public void HideMessageBox()
+    {
+        messageBox.SetActive(false);
+        Debug.Log("hiding message box");
+        MessageInfo.ShouldDisplayMessage = false;
     }
 }

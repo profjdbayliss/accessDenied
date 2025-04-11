@@ -25,19 +25,29 @@ public struct RGNetworkLongMessage : NetworkMessage
     public ArraySegment<byte> payload;
 }
 
+public struct PlayerInfo
+{
+    public int playerID;
+    public bool playerNetworkReadyFlag;
+    public bool playerTurnTakenFlag;
+    public PlayerType playerType;
+}
+
 public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
 {
     public static RGNetworkPlayerList instance;
 
     public int localPlayerID;
     public string localPlayerName;
-    public List<int> playerIDs = new List<int>();
+    public Dictionary<string, PlayerInfo> players = new Dictionary<string, PlayerInfo>(10);
+    Dictionary<int, string> playerConnectionToName = new Dictionary<int, string>(10);
+    //public List<int> playerIDs = new List<int>();
     public GameManager manager;
 
-    private List<bool> playerNetworkReadyFlags = new List<bool>();
-    private List<bool> playerTurnTakenFlags = new List<bool>();
-    public List<PlayerType> playerTypes = new List<PlayerType>();
-    public List<string> playerNames = new List<string>();
+    //private List<bool> playerNetworkReadyFlags = new List<bool>();
+    //private List<bool> playerTurnTakenFlags = new List<bool>();
+    //public List<PlayerType> playerTypes = new List<PlayerType>();
+    //public List<string> playerNames = new List<string>();
 
     private void Awake()
     {
@@ -61,36 +71,104 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
         if (isServer)
         {
             Debug.Log("adding player to server : " + id);
-            playerIDs.Add(id);
-            playerNetworkReadyFlags.Add(true);
-            playerTurnTakenFlags.Add(false);
-            playerTypes.Add(PlayerType.Any);
-            playerNames.Add(name);
+            
+            if (!players.ContainsKey(name))
+            {
+                players.TryAdd(name, new PlayerInfo
+                {
+                    playerID = id,
+                    playerNetworkReadyFlag = true,
+                    playerTurnTakenFlag = false,
+                    playerType = PlayerType.Any,
+                });
+                playerConnectionToName.TryAdd(id, name);
+            } else
+            {
+                // update the id because this is a reconnection
+                PlayerInfo player;
+                if(players.TryGetValue(name, out player))
+                {
+                    int priorID = player.playerID;
+                    player.playerID = id;
+                    players[name] = player;
+                    if(playerConnectionToName.ContainsKey(priorID))
+                    {
+                        playerConnectionToName.Remove(priorID);
+                        playerConnectionToName.TryAdd(id,name);
+                    } else
+                    {
+                        Debug.Log("Error: connection wasn't in player conn dictionary.");
+                    }
+                } else
+                {
+                    Debug.Log("Error in setting new id value for existing player " + name);
+                }
+                
+            }
+            
+            //playerIDs.Add(id);
+            //playerNetworkReadyFlags.Add(true);
+            //playerTurnTakenFlags.Add(false);
+            //playerTypes.Add(PlayerType.Any);
+            //playerNames.Add(name);
             
         } 
     }
 
     public void ResetAllPlayersToNotReady()
     {
-        for (int i = 0; i < playerIDs.Count; i++)
+        PlayerInfo player;
+        if (players.Count > 1)
         {
-            playerTypes[i] = PlayerType.Any;
+            foreach (string key in players.Keys.ToList<string>())
+            {
+                if (players.TryGetValue(key, out player))
+                {
+                    player.playerType = PlayerType.Any;
+                    players[key] = player;
+                }
+            }
         }
+       
+        //for (int i = 0; i < playerIDs.Count; i++)
+        //{
+        //    playerTypes[i] = PlayerType.Any;
+        //}
     }
 
     public void SetPlayerType(PlayerType type)
     {
         if (isServer)
         {
-            playerTypes[localPlayerID] = type;
+            PlayerInfo player;
+            if (players.TryGetValue(localPlayerName, out player))
+            {
+                Debug.Log("player type for local player set to: " + type);
+                player.playerType = type;
+                players[localPlayerName] = player;
+            }
+            //playerTypes[localPlayerID] = type;
             if (CheckReadyToStart())
             {
                 manager.RealGameStart();
+
                 // get the turn taking flags ready to go again
-                for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                if (players.Count > 1)
                 {
-                    playerTurnTakenFlags[i] = false;
+                    foreach (string key in players.Keys.ToList<string>())
+                    {
+                        if (players.TryGetValue(key, out player))
+                        {
+                            player.playerTurnTakenFlag = false;
+                            players[key] = player;
+                        }
+                    }
                 }
+               
+                //for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                //{
+                //    playerTurnTakenFlags[i] = false;
+                //}
             } else
             {
                 Debug.Log("not ready to start!");
@@ -102,19 +180,25 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     {
         Message msg;
         List<byte> data = new List<byte>(100);
-        int messageCount = playerIDs.Count;
-        for (int i=0; i<messageCount; i++)
+        //int messageCount = players.Count;
+        //for (int i=0; i<messageCount; i++)
+        if (players.Count > 0)
         {
-            // note that the player id is actually its order in this
-            // message
-            byte[] type = BitConverter.GetBytes((int)playerTypes[i]);
-            int nameSize = playerNames[i].Length;
-            byte[] nameSizeBytes = BitConverter.GetBytes(nameSize);
-            byte[] name = Encoding.ASCII.GetBytes(playerNames[i]);
-            data.AddRange(type);
-            data.AddRange(nameSizeBytes);
-            data.AddRange(name);
+            foreach (string key in players.Keys)
+            {
+                // note that the player id is actually its order in this
+                // message
+                PlayerInfo player = players[key];
+                byte[] type = BitConverter.GetBytes((int)player.playerType);
+                int nameSize = key.Length;
+                byte[] nameSizeBytes = BitConverter.GetBytes(nameSize);
+                byte[] name = Encoding.ASCII.GetBytes(key);
+                data.AddRange(type);
+                data.AddRange(nameSizeBytes);
+                data.AddRange(name);
+            }
         }
+      
         msg = new Message(CardMessageType.StartGame, data);
         return (msg);
     }
@@ -122,17 +206,20 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     public void RemovePlayer(int id)
     {
         if (!isServer) return;
-
-        // get the index of the id
-        int index = playerIDs.FindIndex(x => x == id);
-        if (index != -1)
+        if(playerConnectionToName.ContainsKey(id))
         {
-            playerIDs.Remove(id);
-            playerNames.RemoveAt(index);
-            playerTypes.RemoveAt(index);
-            playerNetworkReadyFlags.RemoveAt(index);
-            playerTurnTakenFlags.RemoveAt(index);
+            playerConnectionToName.Remove(id);
         }
+        //// get the index of the id
+        //int index = playerIDs.FindIndex(x => x == id);
+        //if (index != -1)
+        //{
+        //    playerIDs.Remove(id);
+        //    playerNames.RemoveAt(index);
+        //    playerTypes.RemoveAt(index);
+        //    playerNetworkReadyFlags.RemoveAt(index);
+        //    playerTurnTakenFlags.RemoveAt(index);
+        //}
     }
 
     public int GetIntFromByteArray(int indexStart, ArraySegment<byte> payload)
@@ -160,7 +247,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         {
                             indexId = (uint)localPlayerID,
                             type = (uint)data.Type,
-                            count = (uint)playerIDs.Count,
+                            count = (uint)players.Count,
                             payload = data.byteArguments.ToArray()
                         };
                         NetworkServer.SendToAll(msg);
@@ -181,19 +268,43 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     if (isServer)
                     {
                         // we've played so we're no longer on the ready list
-                        int playerIndex = localPlayerID;
-                        playerTurnTakenFlags[playerIndex] = true;
-                        // find next player to ok to play and send them a message
-                        int nextPlayerId = -1;
-                        for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                        //int playerIndex = localPlayerID;
+                        PlayerInfo player;
+                        if (players.TryGetValue(localPlayerName, out player))
                         {
-                            if (!playerTurnTakenFlags[i])
+                            player.playerTurnTakenFlag = true;
+                            players[localPlayerName] = player;
+                            //playerTurnTakenFlags[playerIndex] = true;
+                        }
+
+                        // find next player to play and send them a message
+                        int nextPlayerId = -1;
+                        string nextPlayerName = "";
+
+                        if (players.Count > 1)
+                        {
+                            foreach (string key in players.Keys)
                             {
-                                nextPlayerId = i;
-                                Debug.Log("first player not done is " + i);
-                                break;
+                                player = players[key];
+                                if (!player.playerTurnTakenFlag)
+                                {
+                                    nextPlayerName = key;
+                                    nextPlayerId = player.playerID;
+                                    Debug.Log("first player not done is " + player.playerID);
+                                    break;
+                                }
                             }
                         }
+                        
+                        //for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                        //{
+                        //    if (!playerTurnTakenFlags[i])
+                        //    {
+                        //        nextPlayerId = i;
+                        //        Debug.Log("first player not done is " + i);
+                        //        break;
+                        //    }
+                        //}
 
                         if (nextPlayerId == -1)
                         {
@@ -201,9 +312,18 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             GamePhase nextPhase = manager.GetNextPhase();
 
                             // need to increment the turn and set all the players to ready again
-                            for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                            //for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                            //{
+                            //    playerTurnTakenFlags[i] = false;
+                            //}
+                            if (players.Count > 1)
                             {
-                                playerTurnTakenFlags[i] = false;
+                                foreach (string key in players.Keys.ToList<string>())
+                                {
+                                    player = players[key];
+                                    player.playerTurnTakenFlag = false;
+                                    players[key] = player;
+                                }
                             }
 
                             // tell all the clients to go to the next phase
@@ -459,23 +579,43 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 // end turn is handled here because the player list is kept
                 // in this class
                 Debug.Log("server received end phase message from sender: " + senderId);
-                Debug.Log("player turn count : " + playerTurnTakenFlags.Count);
-                // note this player's turn has ended      
+
+                // note this player's turn has ended
+                PlayerInfo player;
                 int playerIndex = (int)senderId;
-                Debug.Log("player index : " +playerIndex);
-                playerTurnTakenFlags[playerIndex] = true;
+                string playerName = playerConnectionToName[playerIndex];
+                players.TryGetValue(playerName, out player);
+                Debug.Log("player index : " +playerIndex + " " + playerName);
+                player.playerTurnTakenFlag = true;
+                players[playerName] = player;
                 Debug.Log("got here");
                 // find next player to ok to play and send them a message
                 int nextPlayerId = -1;
-                for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                string nextPlayerName = "";
+
+                if (players.Count > 1)
                 {
-                    if (!playerTurnTakenFlags[i])
+                    foreach (string key in players.Keys)
                     {
-                        nextPlayerId = playerIDs[i];
-                        break;
+                        player = players[key];
+                        if (!player.playerTurnTakenFlag)
+                        {
+                            nextPlayerName = key;
+                            nextPlayerId = player.playerID;
+                            break;
+                        }
                     }
                 }
-                Debug.Log("got here 2");
+               
+                //int nextPlayerId = -1;
+                //for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                //{
+                //    if (!playerTurnTakenFlags[i])
+                //    {
+                //        nextPlayerId = playerIDs[i];
+                //        break;
+                //    }
+                //}
                 if (nextPlayerId == -1)
                 {
                     Debug.Log("got here 3");
@@ -483,12 +623,20 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                     Debug.Log("getting next phase : " + nextPhase);
 
                     // need to increment the turn and set all the players to ready again
-                    for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                    //for (int i = 0; i < playerTurnTakenFlags.Count; i++)
+                    //{
+                    //    playerTurnTakenFlags[i] = false;
+                    //}
+                    if(players.Count > 1)
                     {
-                        playerTurnTakenFlags[i] = false;
+                        foreach (string key in players.Keys.ToList<string>())
+                        {
+                            player = players[key];
+                            player.playerTurnTakenFlag = false;
+                            players[key] = player;
+                        }
                     }
-                    // 
-
+                   
                     Debug.Log("sending start next phase");
                     // tell all the clients to go to the next phase
                     msg.indexId = (uint)localPlayerID;
@@ -546,39 +694,63 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                         uint count = msg.count;
                         Debug.Log("client received message to start the game " + count);
                         int element = 0;
+                        PlayerInfo player;
                         for (int i = 0; i < count; i++)
                         {
                             // the id is the order in the list
-                            int existingPlayer = playerIDs.FindIndex(x => x == i);
-                            int actualInt = existingPlayer; 
+                            //int existingPlayer = playerIDs.FindIndex(x => x == i);
+                            //int actualInt = existingPlayer; 
                             
-                            if (existingPlayer == -1)
-                            {
-                                actualInt = GetIntFromByteArray(element, msg.payload);
-                                playerIDs.Add(i);
+                            //if (existingPlayer == -1)
+                            //{
+                            // player type
+                            int    playerType = GetIntFromByteArray(element, msg.payload);                           
+                             //    playerIDs.Add(i);
                                 // then get player type
 
-                                playerTypes.Add((PlayerType)actualInt);
-                                // get length of player name
+                           //     playerTypes.Add((PlayerType)actualInt);
+                            // get length of player name
                                 element += 4;
-                                actualInt = GetIntFromByteArray(element, msg.payload);
+                                int nameLength = GetIntFromByteArray(element, msg.payload);
 
                                 // get player name
                                 element += 4;
-                                ArraySegment<byte> name = msg.payload.Slice(element, actualInt);
-                                playerNames.Add(Encoding.ASCII.GetString(name));
+                                ArraySegment<byte> name = msg.payload.Slice(element, nameLength);
+                                string playerName = (Encoding.ASCII.GetString(name));
 
-                                element += actualInt;
-                                Debug.Log("player being added : " + playerIDs[i] + " " + playerTypes[i] +
-                                    " " + playerNames[i]);
+                                element += nameLength;
+
+                            if (players.TryGetValue(playerName, out player))
+                            {
+                                player.playerType = (PlayerType)playerType;
+                                player.playerID = (int)senderId;
+                                players[playerName] = player;
+                            }
+                            else
+                            {
+                                player.playerID = (int)senderId;
+                                player.playerType = (PlayerType)playerType;
+                                player.playerNetworkReadyFlag = true;
+                                player.playerTurnTakenFlag = false;
+                                players.TryAdd(playerName, player);
+                            }
+                            
+                            if(playerConnectionToName.ContainsKey((int)senderId)) {
+                                playerConnectionToName[(int)senderId] = playerName;
                             } else
                             {
-                                // when a game is reset we only need the player type again
-                                Debug.Log("existing player is being reset");
-                                actualInt = GetIntFromByteArray(element, msg.payload);
-                                playerTypes[existingPlayer] = (PlayerType)actualInt;
-                                Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
+                                playerConnectionToName.TryAdd((int)senderId, playerName);
                             }
+                                Debug.Log("player being added : " + senderId + " " + playerType +
+                                    " " + playerName);
+                            //} else
+                            //{
+                            //    // when a game is reset we only need the player type again
+                            //    Debug.Log("existing player is being reset");
+                            //    actualInt = GetIntFromByteArray(element, msg.payload);
+                            //    playerTypes[existingPlayer] = (PlayerType)actualInt;
+                            //    Debug.Log("player " + playerNames[existingPlayer] + " already exists! new type is: " + playerTypes[existingPlayer]);
+                            //}
                             
 
                            
@@ -597,14 +769,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             // turn the first element into an int
                             int discardCount = BitConverter.ToInt32(msg.payload);
                             int playerIndex = (int)msg.indexId;
-
+                            string playerName = playerConnectionToName[playerIndex];
                             Debug.Log("setting player discard to " + discardCount);
 
                             // share with other players
                             //NetworkServer.SendToAll(msg);
 
                             // let the game manager display the new info
-                            manager.DisplayGameStatusOpponent("Player " + playerNames[playerIndex] +
+                            manager.DisplayGameStatusOpponent("Player " + playerName +
                                 " discarded " + discardCount + " cards.");
                         }
                     }
@@ -720,19 +892,34 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
     public bool CheckReadyToStart()
     {
         bool readyToStart = true;
-        if (playerIDs.Count < 2)
+        if (players.Count < 2)
         {
             readyToStart = false;
         } else
         {
-            for (int i = 0; i < playerIDs.Count; i++)
+            PlayerInfo player;
+            if (players.Count > 1)
             {
-                if (playerTypes[i] == PlayerType.Any)
+                foreach (string key in players.Keys)
                 {
-                    readyToStart = false;
-                    break;
+                    player = players[key];
+                    if (player.playerType == PlayerType.Any)
+                    {
+                        Debug.Log("playertype is set to ANY, so can't start game");
+                        readyToStart = false;
+                        break;
+                    }
                 }
             }
+           
+            //for (int i = 0; i < playerIDs.Count; i++)
+            //{
+            //    if (playerTypes[i] == PlayerType.Any)
+            //    {
+            //        readyToStart = false;
+            //        break;
+            //    }
+            //}
         }
        
         return readyToStart;
@@ -750,6 +937,7 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                 case CardMessageType.SharePlayerType:
                     {
                         uint count = msg.count;
+                        PlayerInfo player;
 
                         Debug.Log("server received a player's type!" + count);
                         if (count == 1)
@@ -757,9 +945,12 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             // turn the first element into an int
                             PlayerType playerType = (PlayerType)BitConverter.ToInt32(msg.payload);
                             int playerIndex = (int)msg.indexId;
-                            playerTypes[playerIndex] = playerType;
-                            playerTurnTakenFlags[playerIndex] = true;
-                            Debug.Log("setting player type to " + playerType);
+                            string playerName = playerConnectionToName[playerIndex];
+                            player = players[playerName];
+                            player.playerType = playerType;
+                            player.playerTurnTakenFlag = true;
+                            players[playerName] = player;
+                            Debug.Log("setting opponent player type to " + playerType);
 
                             // check to see if we've got a player type for everybody!
                             if (CheckReadyToStart())
@@ -767,10 +958,20 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                                 Debug.Log("Ready to start!");
                                 manager.RealGameStart();
                                 // get the turn taking flags ready to go again
-                                for (int i=0; i<playerTurnTakenFlags.Count; i++)
+                                if (players.Count > 1)
                                 {
-                                    playerTurnTakenFlags[i] = false;
+                                    foreach (string key in players.Keys.ToList<string>())
+                                    {
+                                        player = players[key];
+                                        player.playerTurnTakenFlag = false;
+                                        players[key] = player;
+                                    }
                                 }
+                               
+                                //for (int i=0; i<playerTurnTakenFlags.Count; i++)
+                                //{
+                                //    playerTurnTakenFlags[i] = false;
+                                //}
                             }
                         }
                     }
@@ -785,14 +986,14 @@ public class RGNetworkPlayerList : NetworkBehaviour, IRGObserver
                             // turn the first element into an int
                             int discardCount = BitConverter.ToInt32(msg.payload);
                             int playerIndex = (int)msg.indexId;
-                            
+                            string playerName = playerConnectionToName[playerIndex];
                             Debug.Log("setting player discard to " + discardCount);
 
                             // share with other players
                             //NetworkServer.SendToAll(msg);
 
                             // let the game manager display the new info
-                            manager.DisplayGameStatusOpponent("Player " + playerNames[playerIndex] + 
+                            manager.DisplayGameStatusOpponent("Player " + playerName + 
                                 " discarded " + discardCount + " cards.");
                         }
                     }

@@ -4,11 +4,13 @@ using UnityEngine;
 using Mirror;
 using Mirror.Examples.Chat;
 using TMPro;
+using System;
 
 public class RGNetworkManager : NetworkManager
 {
     public GameObject playerListPrefab;
-   
+    bool mErrorHappened = false;
+
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -21,7 +23,7 @@ public class RGNetworkManager : NetworkManager
 
     public override void OnStartClient()
     {
-        base.OnStartClient();
+            base.OnStartClient();
     }
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
@@ -54,8 +56,20 @@ public class RGNetworkManager : NetworkManager
     public override void OnClientDisconnect()
     {
         base.OnClientDisconnect();
+        RGNetworkLoginUI.HasLoadedScene = false;
         RGNetworkLoginUI.s_instance.gameObject.SetActive(true);
         RGNetworkLoginUI.s_instance.playernameInput.text = "";
         RGNetworkLoginUI.s_instance.playernameInput.ActivateInputField();
+
+    }
+
+    public override void OnServerError(NetworkConnectionToClient conn, 
+        TransportError error, string reason) { 
+    Debug.Log("Caught an error! "+reason);
+    }
+
+    public override void OnClientError(TransportError error, string reason)
+    {
+        Debug.Log("Caught a client error! " + reason);
     }
 }

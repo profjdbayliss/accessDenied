@@ -1495,9 +1495,9 @@ public class CardPlayer : MonoBehaviour
             }
 
             // now discard all facilities annihilated
+            DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, -1);
             DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, -1);
             opponent.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
-
         }
         else
         {
@@ -1891,11 +1891,12 @@ public class CardPlayer : MonoBehaviour
                         // let's discard all the cards on the facility in question
                         manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, true, facilityCard.UniqueID);
                         manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyFacility, true, facilityCard.UniqueID);
+                        manager.actualPlayer.DiscardAllInactiveCards(DiscardFromWhere.Hand, true, facilityCard.UniqueID);
 
                         facilityCard.AttackingCards.Clear();
                         facilityCard.state = CardState.CardNeedsToBeDiscarded;
 
-                        // now discard the facility itself
+                        // now discard the facility and all its cards     
                         DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, facilityCard.UniqueID);
                         DiscardAllInactiveCards(DiscardFromWhere.MyFacility, false, facilityCard.UniqueID);
 
@@ -1933,6 +1934,9 @@ public class CardPlayer : MonoBehaviour
                     // add card to its displayed cards
                     StackCards(facility, cardGameObject, opponentDropZone, GamePhase.Defense);
                     card.state = CardState.CardInPlay;
+                    card.WhichFacilityZone = selectedCard.WhichFacilityZone;
+                    ActiveCards.TryAdd(card.UniqueID, cardGameObject);
+
                     Debug.Log("opponent player updates added " + card.data.data.cardID + " to the active list of size " + ActiveCards.Count);
                     card.Play(this, opponent, selectedCard);
                     cardGameObject.SetActive(true);
@@ -2051,7 +2055,7 @@ public class CardPlayer : MonoBehaviour
             playsForMessage.Add((int)update.WhatToDo);
             playsForMessage.Add(update.UniqueFacilityID);
             playsForMessage.Add(update.CardID);
-            //Debug.Log("adding update to send to opponent: " + update.UniqueFacilityID + " and card id " + update.CardID + " for phase " + phase);
+            Debug.Log("adding update to send to opponent: " + update.UniqueFacilityID + " and card id " + update.CardID + " for phase " + phase);
         }
 
         // we've given the updates away, so let's make sure to 

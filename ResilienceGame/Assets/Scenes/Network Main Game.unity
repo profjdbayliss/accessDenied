@@ -21141,7 +21141,6 @@ MonoBehaviour:
   gameCanvas: {fileID: 1994761812}
   startScreen: {fileID: 1214050761}
   waitingScreen: {fileID: 2102340440}
-  tiles: {fileID: 0}
   playerStatusText: {fileID: 1979625480}
   opponentStatusText: {fileID: 1395385048}
   activePlayerText: {fileID: 0}

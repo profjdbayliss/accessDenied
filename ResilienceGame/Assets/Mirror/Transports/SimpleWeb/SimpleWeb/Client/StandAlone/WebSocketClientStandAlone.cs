@@ -102,7 +102,7 @@ namespace Mirror.SimpleWeb
             }
             catch (ThreadInterruptedException e) { Log.InfoException(e); }
             catch (ThreadAbortException e) { Log.InfoException(e); }
-            catch (Exception e) { Log.Exception(e); }
+            catch (Exception e) { Log.Exception(e); throw; }
             finally
             {
                 // close here in case connect fails

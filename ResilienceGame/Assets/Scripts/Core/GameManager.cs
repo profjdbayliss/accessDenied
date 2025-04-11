@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 2;
+    public readonly int MAX_DISCARDS = 20;
     public readonly int MAX_DEFENSE = 1;
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
@@ -94,7 +94,6 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject waitingScreen;
-    public GameObject tiles;
 
     // game status text
     public TextMeshProUGUI playerStatusText;
@@ -153,9 +152,26 @@ public class GameManager : MonoBehaviour, IRGObservable
             background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
            // Debug.Log(background);
             hasStartedAlready = true;
-        } else
+        }
+        else
         {
+            startScreen.SetActive(true);
+            webEnergyCardReader = energyDeckReader.GetComponent<WebCardReader>();
+            webWaterCardReader = waterDeckReader.GetComponent<WebCardReader>();
+            energyCardReader = energyDeckReader.GetComponent<CardReader>();
+            waterCardReader = waterDeckReader.GetComponent<CardReader>();
+
+
+            // Set dialogue runner for tutorial
+            runner = yarnSpinner.GetComponent<DialogueRunner>();
+            background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+            // Debug.Log(background);
+            hasStartedAlready = true;
             Debug.Log("start is being run multiple times!");
+            mStartGameRun = false;
+            mIsNetworkListReady = false;
+            energyCardReader.IsDone = true;
+            waterCardReader.IsDone = true;
         }
 
     }
@@ -258,6 +274,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 if (mRGNetworkPlayerList != null)
                 {
                     mIsNetworkListReady = true;
+                    Debug.Log("network ready!");
                 }
             }
 
@@ -267,6 +284,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // this follows the network init and also
                 // takes a while to happen
                 isInit = true;
+                Debug.Log("game initialized!");
             }
         }
 
@@ -559,10 +577,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 tmpList.Add((int)playerType);
                 msg = new Message(CardMessageType.SharePlayerType, tmpList);
                 AddMessage(msg);
+                Debug.Log("sending player type to server");
             }
             else
             {
                 RGNetworkPlayerList.instance.SetPlayerType(playerType);
+                Debug.Log("setting local player type!");
             }
         }
         mStartGameRun = true;
@@ -613,22 +633,41 @@ public class GameManager : MonoBehaviour, IRGObservable
         //}
 
         // set up the opponent name text
-        if (RGNetworkPlayerList.instance.playerIDs.Count > 1)
+        if (RGNetworkPlayerList.instance.players.Count > 1)
         {
+            // WORK: there are only 2 players now, but when there
+            // are more this needs a rewrite!
             Debug.Log("player ids greater than zero for realstart");
-            if (RGNetworkPlayerList.instance.localPlayerID == 0)
+            string localPlayerName = RGNetworkPlayerList.instance.localPlayerName;
+            PlayerInfo opponent;
+            foreach (string key in RGNetworkPlayerList.instance.players.Keys)
             {
-                mOpponentName.text = RGNetworkPlayerList.instance.playerNames[1];
-                mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[1];
-                opponentType = RGNetworkPlayerList.instance.playerTypes[1];
+                if (key!=localPlayerName)
+                {
+                    opponent = RGNetworkPlayerList.instance.players[key];
+                    mOpponentName.text = key;
+                    mOpponentDeckType.text = "" + opponent.playerType;
+                    opponentType = opponent.playerType;
+                    break;
+                }
+            }
+            //PlayerInfo player = RGNetworkPlayerList.instance.players[
+            //    RGNetworkPlayerList.instance.localPlayerName];
+
+            //if (RGNetworkPlayerList.instance.localPlayerID == 0)
+            //{
+
+            //    mOpponentName.text = RGNetworkPlayerList.instance.playerNames[1];
+            //    mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[1];
+            //    opponentType = RGNetworkPlayerList.instance.playerTypes[1];
                
-            }
-            else
-            {
-                mOpponentName.text = RGNetworkPlayerList.instance.playerNames[0];
-                mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
-                opponentType = RGNetworkPlayerList.instance.playerTypes[0];
-            }
+            //}
+            //else
+            //{
+            //    mOpponentName.text = RGNetworkPlayerList.instance.playerNames[0];
+            //    mOpponentDeckType.text = "" + RGNetworkPlayerList.instance.playerTypes[0];
+            //    opponentType = RGNetworkPlayerList.instance.playerTypes[0];
+            //}
 
             // WORK: this assumes the players don't play the same type of deck
             if (opponentType == PlayerType.Energy)
@@ -1358,4 +1397,6 @@ public class GameManager : MonoBehaviour, IRGObservable
 
         mRestarted = true;
     }
+
+  
 }
