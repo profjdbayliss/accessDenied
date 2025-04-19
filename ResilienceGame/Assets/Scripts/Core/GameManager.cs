@@ -87,13 +87,15 @@ public class GameManager : MonoBehaviour, IRGObservable
     public TextMeshProUGUI mTurnText;
     public TextMeshProUGUI mPhaseText;
     public TextMeshProUGUI mPlayerName;
-    public TextMeshProUGUI mPlayerDeckType;
     public TextMeshProUGUI mOpponentName;
-    public TextMeshProUGUI mOpponentDeckType;
     public GameObject mEndPhaseButton;
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject waitingScreen;
+    public Image PlayerTypeIcon;
+    public Image OpponentTypeIcon;
+    public Sprite PowerIcon;
+    public Sprite WaterIcon;
 
     // game status text
     public TextMeshProUGUI playerStatusText;
@@ -559,8 +561,18 @@ public class GameManager : MonoBehaviour, IRGObservable
             mTurnText.text = "Turn: " + GetTurn();
             mPhaseText.text = "Phase: " + mGamePhase.ToString();
             mPlayerName.text = RGNetworkPlayerList.instance.localPlayerName;
-            mPlayerDeckType.text = "" + playerType;
-
+            //mPlayerDeckType.text = "" + playerType;
+            switch(playerType)
+            {
+                case PlayerType.Energy:
+                    PlayerTypeIcon.sprite = PowerIcon;
+                    break;
+                case PlayerType.Water:
+                    PlayerTypeIcon.sprite = WaterIcon;
+                    break;
+                default:
+                    break;
+            }
 
             mRGNetworkPlayerList.SetupGameManager(this);
 
@@ -646,7 +658,18 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     opponent = RGNetworkPlayerList.instance.players[key];
                     mOpponentName.text = key;
-                    mOpponentDeckType.text = "" + opponent.playerType;
+                    //mOpponentDeckType.text = "" + opponent.playerType;
+                    switch (opponent.playerType)
+                    {
+                        case PlayerType.Energy:
+                            OpponentTypeIcon.sprite = PowerIcon;
+                            break;
+                        case PlayerType.Water:
+                            OpponentTypeIcon.sprite = WaterIcon;
+                            break;
+                        default:
+                            break;
+                    }
                     opponentType = opponent.playerType;
                     break;
                 }
