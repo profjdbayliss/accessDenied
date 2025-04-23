@@ -62,6 +62,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     bool mWaitingForInstantCardResolution = false;
     bool mRestarted = false;
     public GameObject PlayHaltButton;
+
     //public GameObject AllDiscardArea;
     Card mCacheInstantCard = null;
     Updates mCacheInstantCardPlayInfo;
@@ -1421,5 +1422,5 @@ public class GameManager : MonoBehaviour, IRGObservable
         mRestarted = true;
     }
 
-  
+
 }

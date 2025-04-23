@@ -12,6 +12,8 @@ public class RGNetworkLoginUI : MonoBehaviour
     [SerializeField] internal Button hostButton;
     [SerializeField] internal Button clientButton;
     public GameObject messageBox;
+    public GameObject StartScreen;
+    public Toggle TutorialToggle;
     public TextMeshProUGUI messageBoxText;
 
     public static RGNetworkLoginUI s_instance;
@@ -60,4 +62,21 @@ public class RGNetworkLoginUI : MonoBehaviour
         Debug.Log("hiding message box");
         MessageInfo.ShouldDisplayMessage = false;
     }
+
+    public  void HideStartScreen()
+    {
+        StartScreen.SetActive(false);
+    }
+
+    public void ShowStartScreen()
+    {
+        StartScreen.SetActive(true );
+    }
+
+    public void ToggleTutorial()
+    {
+        MessageInfo.ShowTutorial = TutorialToggle.isOn;
+    }
+
+   
 }
