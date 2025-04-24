@@ -331,6 +331,9 @@ public class CardPlayer : MonoBehaviour
         }
 
         // set the info on the card front
+        GameObject background = default;
+        GameObject attack=default;
+        GameObject defend = default;
         RawImage[] tempRaws = tempCardObj.GetComponentsInChildren<RawImage>();
         for (int i = 0; i < tempRaws.Length; i++)
         {
@@ -338,9 +341,12 @@ public class CardPlayer : MonoBehaviour
             {
                 tempRaws[i].texture = tempCard.data.front.img;
             }
-            else if (tempRaws[i].name == "Background")
+            else 
+            if (tempRaws[i].name == "Background")
             {
                 tempRaws[i].color = tempCard.data.front.titleColor;
+                background = tempRaws[i].gameObject;
+                Debug.Log("background hit");
             }
         }
 
@@ -358,6 +364,9 @@ public class CardPlayer : MonoBehaviour
                 {
                     tempImage[i].enabled = false;
                 }
+
+                
+                
             }
             else if (tempImage[i].name.Equals("RightCardSlot"))
             {
@@ -371,6 +380,40 @@ public class CardPlayer : MonoBehaviour
                     tempImage[i].enabled = false;
                 }
             }
+            else
+            if (tempImage[i].name == "AttackBackground")
+            {
+                Debug.Log("attack hit");
+                tempImage[i].color = tempCard.data.front.titleColor;
+                attack = tempImage[i].gameObject;
+            }
+            else
+                if (tempImage[i].name == "DefenseBackground")
+            {
+                tempImage[i].color = tempCard.data.front.titleColor;
+                defend = tempImage[i].gameObject;
+            }
+        }
+
+        // make sure the correct background image is enabled for this card
+        if (tempCard.data.data.cardType == CardType.Defense)
+        {
+            attack.SetActive(false);
+            defend.SetActive(true);
+            background.SetActive(false);
+        }
+        else
+        if (tempCard.data.data.cardType == CardType.Vulnerability)
+        {
+            attack.SetActive(true);
+            defend.SetActive(false);
+            background.SetActive(false);
+        }
+        else
+        {
+            attack.SetActive(false);
+            defend.SetActive(false);
+            background.SetActive(true);
         }
 
         TextMeshProUGUI[] tempTexts = tempCardObj.GetComponentsInChildren<TextMeshProUGUI>(true);
