@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 using System.Linq;
-using Yarn.Unity;
+//using Yarn.Unity;
 using System.Xml;
 using UnityEngine.PlayerLoop;
 using System.ComponentModel;
@@ -93,6 +93,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public GameObject gameCanvas;
     public GameObject startScreen;
     public GameObject waitingScreen;
+    public GameObject TutorialGoals;
     public Image PlayerTypeIcon;
     public Image OpponentTypeIcon;
     public Sprite PowerIcon;
@@ -106,11 +107,20 @@ public class GameManager : MonoBehaviour, IRGObservable
     public Color activePlayerColor;
 
     // Tutorial 
-    public GameObject yarnSpinner;
-    private DialogueRunner runner;
-    private GameObject background;
-    private bool skip;
-    private bool skipClicked;
+    //public GameObject yarnSpinner;
+    //private DialogueRunner runner;
+    //private GameObject background;
+    //private bool skip;
+    //private bool skipClicked;
+    public GameObject DiscardTutorial;
+    public Toggle DiscardCheckboxTutorial;
+    GameObject mCurrentTutorialObj;
+    bool mDoTutorial = false;
+    bool mTutorialDiscardDone = false;
+    bool mTutorialDefenseDone = false;
+    bool mTutorialVulnDone = false;
+    bool mTutorialMitigationDone = false;
+    bool mTutorialConnectionDone = false;
 
 
     // end game info
@@ -151,9 +161,28 @@ public class GameManager : MonoBehaviour, IRGObservable
 
 
             // Set dialogue runner for tutorial
-            runner = yarnSpinner.GetComponent<DialogueRunner>();
-            background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
-           // Debug.Log(background);
+            //runner = yarnSpinner.GetComponent<DialogueRunner>();
+            //background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+           
+            if (MessageInfo.ShowTutorial)
+            {
+                Debug.Log("tutorial is active!");
+                TutorialGoals.SetActive(true);
+                mDoTutorial = true;
+                mTutorialDiscardDone = false;
+                mTutorialDefenseDone = false;
+                mTutorialVulnDone = false;
+                mTutorialMitigationDone = false;
+                mTutorialConnectionDone = false;
+                DiscardTutorial.SetActive(false);
+                mCurrentTutorialObj = DiscardTutorial;
+            } else
+            {
+                Debug.Log("tutorial turned off!");
+                TutorialGoals.SetActive(false);
+                mDoTutorial = false;
+            }
+
             hasStartedAlready = true;
         }
         else
@@ -166,8 +195,9 @@ public class GameManager : MonoBehaviour, IRGObservable
 
 
             // Set dialogue runner for tutorial
-            runner = yarnSpinner.GetComponent<DialogueRunner>();
-            background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+            //runner = yarnSpinner.GetComponent<DialogueRunner>();
+            //background = yarnSpinner.transform.GetChild(0).GetChild(0).gameObject;
+
             // Debug.Log(background);
             hasStartedAlready = true;
             Debug.Log("start is being run multiple times!");
@@ -177,6 +207,11 @@ public class GameManager : MonoBehaviour, IRGObservable
             waterCardReader.IsDone = true;
         }
 
+    }
+
+    public void TurnOffTutorialWindow()
+    {
+        mCurrentTutorialObj.SetActive(false);
     }
 
     // Set up the main player of the game
@@ -307,7 +342,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             mPhaseText.text = mGamePhase.ToString();
             mPreviousGamePhase = phase;
 
-            SkipTutorial();
+            //SkipTutorial();
         }
 
         switch (phase)
@@ -317,11 +352,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                 // handled with specialty code outside of this
                 break;
             case GamePhase.DrawAndDiscard:
-                if (phaseJustChanged && !skip)
+                if (phaseJustChanged && mDoTutorial && !mTutorialDiscardDone)
                 {
-
-                    runner.StartDialogue("DrawAndDiscard");
-                    background.SetActive(true);
+                    mTutorialDiscardDone = true;
+                    mCurrentTutorialObj = DiscardTutorial;
+                    // display tutorial for discard window
+                    mCurrentTutorialObj.SetActive(true);
+                    //runner.StartDialogue("DrawAndDiscard");
+                    //background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -350,15 +388,23 @@ public class GameManager : MonoBehaviour, IRGObservable
                         if (mIsDiscardAllowed)
                         {
                             mNumberDiscarded += actualPlayer.HandlePlayCard(GamePhase.DrawAndDiscard, opponentPlayer);
+                            if (mDoTutorial && mNumberDiscarded>0)
+                            {
+                                // check the box for discarding here
+                                DiscardCheckboxTutorial.isOn = true;
+                            }
                         }
                     }
                 }
                 break;
             case GamePhase.Defense:
-                if (phaseJustChanged && !skip)
+                if (phaseJustChanged && mDoTutorial && !mTutorialDiscardDone)
                 {
-                    runner.StartDialogue("Defense"); 
-                    background.SetActive(true);
+                    mTutorialDefenseDone = true;
+                    // pop up tutorial defense window
+                    
+                    //runner.StartDialogue("Defense"); 
+                    //background.SetActive(true);
                 }
 
                 if (phaseJustChanged)
@@ -388,13 +434,18 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else if (mIsDefenseAllowed)
                 {
                     mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
+                    if (mDoTutorial)
+                    {
+                        // checkmark defense done
+                    }
                 }
                 break;
             case GamePhase.Vulnerability:
-                if (phaseJustChanged && !skip)
+                if (phaseJustChanged && mDoTutorial && !mTutorialVulnDone)
                 {
-                    runner.StartDialogue("Vulnerability");
-                    background.SetActive(true);
+                    mTutorialVulnDone = true;
+                    //runner.StartDialogue("Vulnerability");
+                    //background.SetActive(true);
                 }
                 if (!mWaitingForInstantCardResolution)
                 {
@@ -413,6 +464,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                         else
                         {
                             actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
+                            if (mDoTutorial)
+                            {
+                                // mark the checkbox true for vuln
+                            }
                         }
                     }
                     else
@@ -433,17 +488,24 @@ public class GameManager : MonoBehaviour, IRGObservable
                 }
                 break;
             case GamePhase.Mitigate:
-                if (phaseJustChanged && !skip)
+                if (phaseJustChanged && mDoTutorial && !mTutorialMitigationDone)
                 {
-                    runner.StartDialogue("Mitigate");
-                    background.SetActive(true);
+
+                    // show mitigation tutorial screen
+                    //runner.StartDialogue("Mitigate");
+                    //background.SetActive(true);
                 }
 
                 if (!phaseJustChanged)
                 {
                     if (mAllowMitigationPlayed)
                     {
-                        actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                        int count = actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
+                        if (mDoTutorial && count > 0)
+                        {
+                            // mitigation card was played
+                            // checkmark the mitigation box
+                        }
                     }
                 }
                 if (phaseJustChanged
@@ -463,26 +525,30 @@ public class GameManager : MonoBehaviour, IRGObservable
 
                 break;
             case GamePhase.Attack:
-                if (phaseJustChanged && !skip)
-                {
-                    runner.StartDialogue("Attack");
-                    background.SetActive(true);
-                }
+                //if (phaseJustChanged && !skip)
+                //{
+                //    runner.StartDialogue("Attack");
+                //    background.SetActive(true);
+                //}
 
                 if (phaseJustChanged)
                 {
-                    DisplayGameStatusPlayer("Attack dice have been rolled. Hit End Phase to continue.");
+                    DisplayGameStatusPlayer("Attack dice have been rolled.");
                     actualPlayer.HandleAttackPhase(opponentPlayer);
                     opponentPlayer.DiscardAllInactiveCards(DiscardFromWhere.MyPlayZone, false, -1);
+                    if (actualPlayer.HasUpdates())
+                    {
+                        DisplayGameStatusPlayer("Some attacks hit when dice were rolled.");
+                    }
                 }
-
+                EndPhase();
                 break;
             case GamePhase.AddStation:
-                if (phaseJustChanged && !skip)
-                {
-                    runner.StartDialogue("AddStation");
-                    background.SetActive(true);
-                }
+                //if (phaseJustChanged && !skip)
+                //{
+                //    runner.StartDialogue("AddStation");
+                //    background.SetActive(true);
+                //}
 
                 if (phaseJustChanged)
                 {
@@ -495,19 +561,17 @@ public class GameManager : MonoBehaviour, IRGObservable
                         AddMessage(new Message(CardMessageType.SendPlayedFacility, card.UniqueID, card.data.data.cardID));
                         DisplayGameStatusPlayer("Both players drew a station card. Please push End Phase to continue.");
                     }
-                    else
-                    {
-                        EndPhase();
-                    }
-
+                    EndPhase();
                 }
                 break;
             case GamePhase.AddConnections:
-                if (phaseJustChanged && !skip)
+                if (phaseJustChanged && mDoTutorial && !mTutorialConnectionDone)
                 {
-                    runner.StartDialogue("AddConnections");
-                    background.SetActive(true);
-                    skip = true;
+                    // show tutorial window for connections
+                    mTutorialConnectionDone = true;
+                    //runner.StartDialogue("AddConnections");
+                    //background.SetActive(true);
+                    //skip = true;
                 }
                 if (!phaseJustChanged)
                 {
@@ -542,6 +606,19 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
         }
 
+    }
+
+    bool CheckIfTutorialItemsDone()
+    {
+        bool done = false;
+
+        // check all checkboxes here
+        if(DiscardCheckboxTutorial.isOn)
+        {
+            done = true;
+        }
+
+        return done;
     }
 
     // Called when pressing the button to start
@@ -880,9 +957,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Attack:
                 {
                     SendUpdatesToOpponent(mGamePhase, actualPlayer);
-                    Debug.Log("actual player updates were added to message queue for attack");
                     SendUpdatesToOpponent(mGamePhase, opponentPlayer);
-                    Debug.Log("opponent updates were added to message queue for attack");
                 }
                 break;
 
@@ -909,6 +984,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                 break;
             default:
                 break;
+        }
+
+        if (mDoTutorial && CheckIfTutorialItemsDone())
+        {
+           TutorialGoals.SetActive(false);
+            mDoTutorial = false;
         }
 
         if (myTurn && allowNextPhase)
@@ -965,8 +1046,12 @@ public class GameManager : MonoBehaviour, IRGObservable
     public void AddUpdatesFromOpponent(ref List<Updates> updates, GamePhase phase)
     {
         Debug.Log("inside of addupdatesfromopponent method");
-        if (phase == GamePhase.Attack)
+        if (phase == GamePhase.Attack && updates.Count != 0)
         {
+            DisplayGameStatusOpponent("Opponent was attacked during the attack phase.");
+        } else if (phase == GamePhase.Attack && updates.Count == 0)
+        {
+            DisplayGameStatusOpponent("");
         }
         else
         if (updates.Count == 0 && phase != GamePhase.Attack)
@@ -1348,40 +1433,40 @@ public class GameManager : MonoBehaviour, IRGObservable
             }
         }
     }
-    //Sets dialogue to inactive
-    private void SkipTutorial()
-    {
-        if (!yarnSpinner.activeInHierarchy) { return; }
+    ////Sets dialogue to inactive
+    //private void SkipTutorial()
+    //{
+    //    if (!yarnSpinner.activeInHierarchy) { return; }
 
-        if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
-            || skipClicked)
-        {
-            skip = true;
-            runner.Stop();
-            yarnSpinner.SetActive(false);
-            background.SetActive(false);
-        }
-    }
+    //    if ((skip && mPreviousGamePhase != GamePhase.Start && mGamePhase == GamePhase.DrawAndDiscard)
+    //        || skipClicked)
+    //    {
+    //        skip = true;
+    //        runner.Stop();
+    //        yarnSpinner.SetActive(false);
+    //        background.SetActive(false);
+    //    }
+    //}
 
-    public void SkipClick()
-    {
-        skipClicked = true;
-        SkipTutorial();
-    }
+    //public void SkipClick()
+    //{
+    //    skipClicked = true;
+    //    SkipTutorial();
+    //}
 
-    public void ViewTutorial()
-    {
-        if (yarnSpinner.activeInHierarchy) { return; }
+    //public void ViewTutorial()
+    //{
+    //    if (yarnSpinner.activeInHierarchy) { return; }
 
-        runner.Stop();
+    //    runner.Stop();
 
-        yarnSpinner.SetActive(true);
-        background.SetActive(true);
-        skipClicked = false;
-        skip = false;
-        Debug.Log(mGamePhase.ToString());
-        runner.StartDialogue(mGamePhase.ToString());
-    }
+    //    yarnSpinner.SetActive(true);
+    //    background.SetActive(true);
+    //    skipClicked = false;
+    //    skip = false;
+    //    Debug.Log(mGamePhase.ToString());
+    //    runner.StartDialogue(mGamePhase.ToString());
+    //}
 
     public void ResetForNewGame()
     {

@@ -6,5 +6,5 @@ public class MessageInfo : MonoBehaviour
 {
     public static bool ShouldDisplayMessage = false;
     public static string Message = "";
-    public static bool ShowTutorial = false;
+    public static bool ShowTutorial = true;
 }

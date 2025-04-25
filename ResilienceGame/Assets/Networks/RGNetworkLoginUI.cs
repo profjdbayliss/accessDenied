@@ -76,6 +76,7 @@ public class RGNetworkLoginUI : MonoBehaviour
     public void ToggleTutorial()
     {
         MessageInfo.ShowTutorial = TutorialToggle.isOn;
+        Debug.Log("tutorial is set to: " + TutorialToggle.isOn);
     }
 
    
