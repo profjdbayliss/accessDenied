@@ -1,0 +1,34 @@
+﻿Duplication,Type,PlayedOn,Title,TitleColor,Image,Background,YellowCircle,Worth,Cost,Category Image 1,col,row,Description
+1,Discussion,any,Rules,0xFFFF00,images/QuickMeeting.png,images/CardBackground.png,,,,,,,"1. Discard a max of 2 cards, draw to have 5 cards.
+
+2. Choose 1 defense card to play on a facility
+    (if possible)
+
+3. Sum Facilities worth and spend up to that amount
+    to play vulnerabilities on your opponent. 
+    Choose to play any instant cards.
+
+4. Play mitigation cards on any vulnerabilities 
+    you have. Discard both vulnerability and 
+    mitigation card to appropriate player's 
+    discard pile.
+
+5. Roll for attacks on unmitigated vulnerabilities. 
+    >10 means attack is successful. Use counters 
+    to indicate harm to facility. Any total counts 
+    > facility+defense card worth total means 
+    facility has been lost and goes into the 
+    discard pile.
+
+6. Draw a new station (if possible)
+7. Add new connections between stations. Connections 
+   disappear when facilities are lost and may 
+   only be added (not changed).
+
+8. Repeat from #1.
+
+9. When you run out of cards OR a player loses all 
+   their facilities the game ends. Points are sum 
+   of facility worth + one point for every facility 
+   that has its number of connections >= the facility 
+   worth."
