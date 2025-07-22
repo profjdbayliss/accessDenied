@@ -24,7 +24,7 @@ There are two versions of the game in this repository - the physical card game a
 
 There's a short video on the basics of the game on YouTube.
 
-https://www.youtube.com/watch?v=C4_E_cjiAfk
+https://www.youtube.com/watch?v=85cTyN_aBkw
 
 
 **Credits**
