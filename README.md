@@ -20,6 +20,13 @@
 
 There are two versions of the game in this repository - the physical card game and the digital version of the same game made with the Unity game engine. Full instructions for how to play are in the physical card game directory. 
 
+**Short How To Play**
+
+There's a short video on the basics of the game on YouTube.
+
+https://www.youtube.com/watch?v=C4_E_cjiAfk
+
+
 **Credits**
 
 <b>Physical Card Game:</b>
