@@ -35,8 +35,8 @@ There are two versions of the game in this repository - the physical card game a
 - UI/UX: Dariel Ravelo-Ramos
 - Advisors: David I. Schwartz, David Abitbol
 
-** Acknowledgements **
+**Acknowledgements**
 
 This data was produced by Rochester Institute of Technology under United States Military Academy (USMA) Award Number W911NF-23-2-0036. USMA, as the Federal awarding agency, reserves a royalty-free, nonexclusive and irrevocable right to reproduce, publish, or otherwise use this data for Federal purposes, and to authorize others to do so in accordance with 2 CFR 200.315(b).
 
-We would also like to thank the myriad playtesters who helped make this game good.
+We would also like to thank the myriad playtesters who helped make this game fun.
