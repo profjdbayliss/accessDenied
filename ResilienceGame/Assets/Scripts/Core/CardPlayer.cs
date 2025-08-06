@@ -63,7 +63,7 @@ public class CardPlayer : MonoBehaviour
     public Dictionary<int, GameObject> ActiveCards = new Dictionary<int, GameObject>();
     public Dictionary<int, GameObject> ActiveFacilities = new Dictionary<int, GameObject>();
     public int handSize;
-    public int maxHandSize = 6;
+    public int maxHandSize = 5;
     public GameObject cardPrefab;
     public GameObject discardDropZone;
     public GameObject handDropZone;
@@ -92,8 +92,8 @@ public class CardPlayer : MonoBehaviour
     int mTotalFacilityValue = 0;
     int mValueSpentOnVulnerabilities = 0;
     int mFinalScore = 0;
-    List<Updates> mUpdatesThisPhase = new List<Updates>(6);
-    List<AttackUpdate> mAttackUpdates = new List<AttackUpdate>(6);
+    List<Updates> mUpdatesThisPhase = new List<Updates>(5);
+    List<AttackUpdate> mAttackUpdates = new List<AttackUpdate>(5);
     int mMaxFacilities = 0;
     int mDrawnFacilityZone = -1;
     List<int> mNewConnectionUniqueIDs = new List<int>();

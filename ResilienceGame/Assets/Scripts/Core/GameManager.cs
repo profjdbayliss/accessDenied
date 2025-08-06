@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour, IRGObservable
     public bool gameStarted = false;
 
     // var's for game rules
-    public readonly int MAX_DISCARDS = 20;
+    public readonly int MAX_DISCARDS = 2;
     public readonly int MAX_DEFENSE = 1;
     int mNumberDiscarded = 0;
     int mNumberDefense = 0;
@@ -114,6 +114,14 @@ public class GameManager : MonoBehaviour, IRGObservable
     //private bool skipClicked;
     public GameObject DiscardTutorial;
     public Toggle DiscardCheckboxTutorial;
+    public GameObject DefenseTutorial;
+    public Toggle DefenseCheckboxTutorial;
+    public GameObject VulnerabilityTutorial;
+    public Toggle VulnerabilityCheckboxTutorial;
+    public GameObject MitigationTutorial;
+    public Toggle MitigationCheckboxTutorial;
+    public GameObject ConnectionTutorial;
+    public Toggle ConnectionCheckboxTutorial;
     GameObject mCurrentTutorialObj;
     bool mDoTutorial = false;
     bool mTutorialDiscardDone = false;
@@ -176,6 +184,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                 mTutorialConnectionDone = false;
                 DiscardTutorial.SetActive(false);
                 mCurrentTutorialObj = DiscardTutorial;
+                DefenseTutorial.SetActive(false);
+                VulnerabilityTutorial.SetActive(false);
+                MitigationTutorial.SetActive(false);
+                ConnectionTutorial.SetActive(false);
             } else
             {
                 Debug.Log("tutorial turned off!");
@@ -336,6 +348,7 @@ public class GameManager : MonoBehaviour, IRGObservable
         // keep track of 
         bool phaseJustChanged = false;
         mGamePhase = phase;
+        
         if (!mGamePhase.Equals(mPreviousGamePhase))
         {
             phaseJustChanged = true;
@@ -390,19 +403,23 @@ public class GameManager : MonoBehaviour, IRGObservable
                             mNumberDiscarded += actualPlayer.HandlePlayCard(GamePhase.DrawAndDiscard, opponentPlayer);
                             if (mDoTutorial && mNumberDiscarded>0)
                             {
-                                // check the box for discarding here
-                                DiscardCheckboxTutorial.isOn = true;
+                                if (!DiscardCheckboxTutorial.isOn)
+                                {
+                                    DiscardCheckboxTutorial.isOn = true;
+                                   
+                                }
                             }
                         }
                     }
                 }
                 break;
             case GamePhase.Defense:
-                if (phaseJustChanged && mDoTutorial && !mTutorialDiscardDone)
+                if (phaseJustChanged && mDoTutorial && !mTutorialDefenseDone)
                 {
                     mTutorialDefenseDone = true;
                     // pop up tutorial defense window
-                    
+                    mCurrentTutorialObj = DefenseTutorial;
+                    mCurrentTutorialObj.SetActive(true);
                     //runner.StartDialogue("Defense"); 
                     //background.SetActive(true);
                 }
@@ -422,6 +439,7 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     mIsDefenseAllowed = false;
                     DisplayGameStatusPlayer(mPlayerName.text + " has played the maximum number of defense cards. Please hit end phase to continue.");
+
                 }
                 else
                 if (!actualPlayer.CheckForCardsOfType(CardType.Defense, actualPlayer.HandCards))
@@ -434,9 +452,14 @@ public class GameManager : MonoBehaviour, IRGObservable
                 else if (mIsDefenseAllowed)
                 {
                     mNumberDefense += actualPlayer.HandlePlayCard(GamePhase.Defense, opponentPlayer);
-                    if (mDoTutorial)
+                   
+                }
+                if (mDoTutorial && mNumberDefense>0)
+                {
+                    if (!DefenseCheckboxTutorial.isOn)
                     {
-                        // checkmark defense done
+                        DefenseCheckboxTutorial.isOn = true;
+                        
                     }
                 }
                 break;
@@ -444,6 +467,10 @@ public class GameManager : MonoBehaviour, IRGObservable
                 if (phaseJustChanged && mDoTutorial && !mTutorialVulnDone)
                 {
                     mTutorialVulnDone = true;
+                    // pop up tutorial defense window
+                    mTutorialVulnDone = true;
+                    mCurrentTutorialObj = VulnerabilityTutorial;
+                    mCurrentTutorialObj.SetActive(true);
                     //runner.StartDialogue("Vulnerability");
                     //background.SetActive(true);
                 }
@@ -451,12 +478,13 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     if (!phaseJustChanged)
                     {
+                        int amountSpent = actualPlayer.GetAmountSpentOnVulnerabilities();
                         if (!mAllowVulnerabilitiesPlayed)
                         {
                             // do nothing - most common scenario
                         }
                         else
-                        if (actualPlayer.GetAmountSpentOnVulnerabilities() >= actualPlayer.GetTotalFacilityValue())
+                        if (amountSpent >= actualPlayer.GetTotalFacilityValue())
                         {
                             mAllowVulnerabilitiesPlayed = false;
                             DisplayGameStatusPlayer(mPlayerName.text + " has spent their facility points. Please push End Phase to continue.");
@@ -464,9 +492,15 @@ public class GameManager : MonoBehaviour, IRGObservable
                         else
                         {
                             actualPlayer.HandlePlayCard(GamePhase.Vulnerability, opponentPlayer);
-                            if (mDoTutorial)
+                           
+                        }
+                        if (mDoTutorial && amountSpent > 0)
+                        {
+                            // mark the checkbox true for vuln
+                            if (!VulnerabilityCheckboxTutorial.isOn)
                             {
-                                // mark the checkbox true for vuln
+                                VulnerabilityCheckboxTutorial.isOn = true;
+                               
                             }
                         }
                     }
@@ -490,7 +524,10 @@ public class GameManager : MonoBehaviour, IRGObservable
             case GamePhase.Mitigate:
                 if (phaseJustChanged && mDoTutorial && !mTutorialMitigationDone)
                 {
-
+                    mTutorialMitigationDone = true;
+                    // pop up tutorial defense window
+                    mCurrentTutorialObj = MitigationTutorial;
+                    mCurrentTutorialObj.SetActive(true);
                     // show mitigation tutorial screen
                     //runner.StartDialogue("Mitigate");
                     //background.SetActive(true);
@@ -503,8 +540,13 @@ public class GameManager : MonoBehaviour, IRGObservable
                         int count = actualPlayer.HandlePlayCard(GamePhase.Mitigate, opponentPlayer);
                         if (mDoTutorial && count > 0)
                         {
-                            // mitigation card was played
-                            // checkmark the mitigation box
+                            if (!MitigationCheckboxTutorial.isOn)
+                            {
+                                // check the box
+                                MitigationCheckboxTutorial.isOn = true;
+                               
+                            }
+                                
                         }
                     }
                 }
@@ -569,6 +611,9 @@ public class GameManager : MonoBehaviour, IRGObservable
                 {
                     // show tutorial window for connections
                     mTutorialConnectionDone = true;
+                    // pop up tutorial defense window
+                    mCurrentTutorialObj = ConnectionTutorial;
+                    mCurrentTutorialObj.SetActive(true);
                     //runner.StartDialogue("AddConnections");
                     //background.SetActive(true);
                     //skip = true;
@@ -583,6 +628,12 @@ public class GameManager : MonoBehaviour, IRGObservable
                     {
                         Message msg = new Message(CardMessageType.AddConnections, playsForMessage);
                         AddMessage(msg);
+                        if (mDoTutorial && !ConnectionCheckboxTutorial.isOn)
+                        {
+                            // check the box
+                            ConnectionCheckboxTutorial.isOn = true;
+                            
+                        }
                     }
                 }
                 else
@@ -605,7 +656,7 @@ public class GameManager : MonoBehaviour, IRGObservable
             default:
                 break;
         }
-
+        
     }
 
     bool CheckIfTutorialItemsDone()
@@ -613,11 +664,13 @@ public class GameManager : MonoBehaviour, IRGObservable
         bool done = false;
 
         // check all checkboxes here
-        if(DiscardCheckboxTutorial.isOn)
+        if (DiscardCheckboxTutorial.isOn && DefenseCheckboxTutorial.isOn && VulnerabilityCheckboxTutorial.isOn &&
+            MitigationCheckboxTutorial.isOn && ConnectionCheckboxTutorial.isOn)
         {
-            done = true;
+            // we're done - turn the tutorial stuff off!
+            // yeah, in the future maybe say something here...
+           done = true;
         }
-
         return done;
     }
 

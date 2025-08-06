@@ -20,6 +20,10 @@
 
 There are two versions of the game in this repository - the physical card game and the digital version of the same game made with the Unity game engine. Full instructions for how to play are in the physical card game directory. 
 
+**Real Cards**
+
+If you like real cards that you can actually shuffle (rather than printing them out and putting them in card sleeves), there is now a printed version available at: https://www.thegamecrafter.com/games/access-denied2. Note that the cards have a UV finish so they are easier to shuffle and that this version has a minimal ($4.00) in profit per deck to support mainly new illustrations if it makes anything.
+
 **Short How To Play**
 
 There's a short video on the basics of the game on YouTube.
@@ -33,6 +37,7 @@ https://www.youtube.com/watch?v=85cTyN_aBkw
 
 - Designer: Jessica D. Bayliss, Ph.D.<
 - Illustrator: Diego Barillas
+- Some shop illustrations: Emmett McEvoy
 - Advisors: David I. Schwartz, David Abitbol
 - 
 <b>Digital Card Game:</b>
